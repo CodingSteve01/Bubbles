@@ -4,574 +4,718 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bubble Merge</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        :root {
-            --bubble-size: 60px;
-            --grid-gap: 10px;
-        }
-        
-        .dark {
-            --bg-color: #1f2937;
-            --text-color: #f3f4f6;
-            --grid-color: #374151;
-            --bubble-shadow: rgba(0, 0, 0, 0.3);
-        }
-        
-        .light {
-            --bg-color: #f3f4f6;
-            --text-color: #1f2937;
-            --grid-color: #e5e7eb;
-            --bubble-shadow: rgba(0, 0, 0, 0.1);
-        }
-        
-        body {
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            transition: background-color 0.3s, color 0.3s;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-        }
-        
-        .game-container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            gap: var(--grid-gap);
-            background-color: var(--grid-color);
-            border-radius: 10px;
-            padding: var(--grid-gap);
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .grid-cell {
-            width: var(--bubble-size);
-            height: var(--bubble-size);
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .bubble {
-            width: var(--bubble-size);
-            height: var(--bubble-size);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            position: absolute;
-            box-shadow: 0 4px 8px var(--bubble-shadow);
-            cursor: grab;
-            transition: transform 0.1s;
-            user-select: none;
-            z-index: 1;
-        }
-        
-        .bubble:active {
-            cursor: grabbing;
-            transform: scale(1.1);
-            z-index: 10;
-        }
-        
-        .bubble-merge {
-            animation: merge 0.3s ease-in-out;
-        }
-        
-        @keyframes merge {
+        /* Animation für Blasen */
+        @keyframes pop {
             0% { transform: scale(1); }
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
         
-        .bubble-pop {
-            animation: pop 0.5s ease-out;
+        @keyframes appear {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
         
-        @keyframes pop {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
+        @keyframes merge {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
         }
         
-        .new-bubble-indicator {
-            position: absolute;
-            top: -40px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.9);
-            color: #333;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            transition: opacity 0.3s;
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
         }
         
-        .points-indicator {
-            position: absolute;
-            font-weight: bold;
-            color: #4ade80;
-            animation: float-up 1s ease-out forwards;
-            pointer-events: none;
+        .pop-animation {
+            animation: pop 0.3s ease-in-out;
         }
         
-        @keyframes float-up {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-30px); opacity: 0; }
+        .appear-animation {
+            animation: appear 0.3s ease-in-out;
         }
         
-        .surprise-effect {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 100;
+        .merge-animation {
+            animation: merge 0.4s ease-in-out;
         }
         
-        .game-over-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
         }
         
-        .modal-content {
-            background-color: var(--bg-color);
-            padding: 30px;
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        
+        /* Farben für verschiedene Bubble-Level */
+        .bubble-0 { background-color: #f3f4f6; color: #1f2937; }
+        .bubble-1 { background-color: #93c5fd; color: #1e3a8a; }
+        .bubble-2 { background-color: #60a5fa; color: #1e3a8a; }
+        .bubble-3 { background-color: #3b82f6; color: #ffffff; }
+        .bubble-4 { background-color: #2563eb; color: #ffffff; }
+        .bubble-5 { background-color: #1d4ed8; color: #ffffff; }
+        .bubble-6 { background-color: #1e40af; color: #ffffff; }
+        .bubble-7 { background-color: #7c3aed; color: #ffffff; }
+        .bubble-8 { background-color: #6d28d9; color: #ffffff; }
+        .bubble-9 { background-color: #5b21b6; color: #ffffff; }
+        .bubble-10 { background-color: #4c1d95; color: #ffffff; }
+        .bubble-11 { background-color: #db2777; color: #ffffff; }
+        .bubble-12 { background-color: #be185d; color: #ffffff; }
+        .bubble-13 { background-color: #9d174d; color: #ffffff; }
+        .bubble-14 { background-color: #831843; color: #ffffff; }
+        .bubble-15 { background-color: #f59e0b; color: #ffffff; }
+        .bubble-16 { background-color: #d97706; color: #ffffff; }
+        .bubble-special { background: linear-gradient(45deg, #f59e0b, #d97706, #9d174d, #7c3aed, #2563eb); color: #ffffff; }
+        
+        .dark .bubble-0 { background-color: #374151; color: #f3f4f6; }
+        
+        /* Glassmorphism für die Spielfläche */
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             border-radius: 10px;
-            text-align: center;
-            max-width: 90%;
-            width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
         
-        .special-bubble {
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            border: 2px solid gold;
-            animation: pulse 2s infinite;
+        .dark .glassmorphism {
+            background: rgba(17, 24, 39, 0.75);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(55, 65, 81, 0.18);
         }
         
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        /* Hintergrund-Muster */
+        .bg-pattern {
+            background-image: radial-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
         
-        /* Responsive adjustments */
-        @media (max-width: 500px) {
-            :root {
-                --bubble-size: 50px;
-                --grid-gap: 8px;
-            }
-            
-            .game-container {
-                padding: 10px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            :root {
-                --bubble-size: 40px;
-                --grid-gap: 6px;
-            }
+        .dark .bg-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
         }
     </style>
 </head>
-<body :class="theme">
-    <div id="app" class="game-container">
-        <header class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold">Bubble Merge</h1>
-            <div class="flex space-x-2">
-                <button @click="toggleTheme" class="p-2 rounded-full" :class="theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'">
-                    <svg v-if="theme === 'dark'" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-all bg-pattern">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-md">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">{{ translate('gameTitle') }}</h1>
+            <div class="flex justify-center gap-2 mb-4">
+                <button @click="toggleTheme" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                    <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
                     </svg>
-                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                </button>
-                <button @click="switchLanguage" class="p-2 rounded-full" :class="theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
                     </svg>
                 </button>
+                <button @click="toggleLanguage" class="py-1 px-3 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium">
+                    {{ language === 'de' ? 'EN' : 'DE' }}
+                </button>
             </div>
-        </header>
-        
-        <div class="game-stats flex justify-between mb-4">
-            <div>
-                <div class="text-sm opacity-70">{{ translate({ en: 'Score', de: 'Punktestand' }) }}</div>
-                <div class="text-2xl font-bold">{{ score }}</div>
-            </div>
-            <div>
-                <div class="text-sm opacity-70">{{ translate({ en: 'Highest Bubble', de: 'Höchste Blase' }) }}</div>
-                <div class="text-2xl font-bold">{{ translate({ en: 'Level', de: 'Level' }) }} {{ highestBubble }}</div>
-            </div>
-        </div>
-        
-        <div class="next-bubble mb-4">
-            <div class="text-sm opacity-70">{{ translate({ en: 'Next Bubble', de: 'Nächste Blase' }) }}:</div>
-            <div class="flex items-center space-x-2">
-                <div :style="getBubbleStyle(nextBubble)" class="bubble static">
-                    {{ nextBubble }}
+            <div class="flex justify-between items-center mb-2 mx-2">
+                <div class="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                    {{ translate('score') }}: {{ score }}
                 </div>
-                <div v-if="specialNextBubble" class="text-sm text-yellow-400">
-                    {{ translate({ en: 'Special bubble!', de: 'Spezialblase!' }) }}
+                <div class="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                    {{ translate('highestBubble') }}: {{ translate('level') }} {{ highestLevel }}
+                </div>
+            </div>
+            <div class="glassmorphism p-4 mb-4">
+                <div class="text-lg font-medium text-gray-700 dark:text-gray-300">
+                    {{ translate('nextBubble') }}:
+                </div>
+                <div class="flex justify-center mt-2">
+                    <div :class="['bubble-' + nextBubble, 'w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg']">
+                        {{ nextBubble }}
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="relative">
-            <div ref="gameGrid" class="game-grid">
-                <div v-for="(cell, index) in gridCells" :key="index" class="grid-cell"></div>
-                
-                <div v-for="bubble in bubbles" 
-                     :key="bubble.id" 
-                     :style="getBubblePosition(bubble)"
-                     :class="['bubble', {'special-bubble': bubble.isSpecial}]"
-                     :style="[getBubblePosition(bubble), getBubbleStyle(bubble.value)]"
-                     @mousedown="startDrag($event, bubble)"
-                     @touchstart="startDrag($event, bubble)">
-                    {{ bubble.value }}
-                </div>
-                
-                <div v-for="indicator in pointsIndicators" 
-                     :key="indicator.id"
-                     class="points-indicator"
-                     :style="{ left: indicator.x + 'px', top: indicator.y + 'px' }">
-                    +{{ indicator.points }}
-                </div>
-                
-                <div v-if="showNewBubbleIndicator" class="new-bubble-indicator">
-                    {{ translate({ en: 'New bubble added', de: 'Neue Blase erscheint' }) }}
-                </div>
+
+        <!-- Game Board -->
+        <div class="glassmorphism p-4 rounded-lg mb-4">
+            <div class="grid grid-cols-5 gap-2 relative" :class="{'shake-animation': isShaking}">
+                <template v-for="(cell, index) in gameBoard" :key="index">
+                    <div 
+                        class="aspect-square rounded-full cursor-pointer flex items-center justify-center transition-all shadow-md relative"
+                        :class="[
+                            cell ? 'bubble-' + cell.value : 'bg-gray-200 dark:bg-gray-700', 
+                            cell?.isNew ? 'appear-animation' : '',
+                            cell?.isMerged ? 'merge-animation' : '',
+                            cell?.isPopping ? 'pop-animation' : ''
+                        ]"
+                        @click="selectBubble(index)"
+                        @mouseenter="highlightMoves(index)"
+                        @mouseleave="clearHighlights()"
+                    >
+                        <span v-if="cell" class="font-bold text-lg">{{ cell.value }}</span>
+                        <div v-if="selectedBubbleIndex === index" class="absolute inset-0 border-2 border-yellow-500 rounded-full"></div>
+                        <div v-if="highlightedCells.includes(index)" class="absolute inset-0 bg-yellow-500 bg-opacity-20 rounded-full"></div>
+                    </div>
+                </template>
             </div>
-            
-            <div v-if="surprise" class="surprise-effect" :style="surprise.style"></div>
         </div>
-        
-        <div class="flex justify-between mt-4">
-            <button @click="resetGame" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-                {{ translate({ en: 'Reset Game', de: 'Neu starten' }) }}
+
+        <!-- Game Controls -->
+        <div class="flex justify-between mb-6">
+            <button @click="resetGame" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition-colors">
+                {{ translate('playAgain') }}
             </button>
-            <button @click="showInstructions = true" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                {{ translate({ en: 'Instructions', de: 'Anleitung' }) }}
+            <button @click="showInstructions = !showInstructions" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg shadow-md transition-colors">
+                {{ translate('instructions') }}
             </button>
         </div>
-        
-        <div v-if="gameOver" class="game-over-modal">
-            <div class="modal-content">
-                <h2 class="text-2xl font-bold mb-4">{{ translate({ en: 'Game Over!', de: 'Spiel vorbei!' }) }}</h2>
-                <p class="mb-2">{{ translate({ en: 'Your Score', de: 'Dein Punktestand' }) }}: {{ score }}</p>
-                <p class="mb-4">{{ translate({ en: 'Highest Bubble', de: 'Höchste Blase' }) }}: {{ translate({ en: 'Level', de: 'Level' }) }} {{ highestBubble }}</p>
-                
-                <div v-if="isHighScore" class="bg-yellow-100 text-yellow-800 p-3 rounded-lg mb-4 animate-pulse">
-                    {{ translate({ en: 'New High Score!', de: 'Neuer Highscore!' }) }}
-                </div>
-                
-                <button @click="resetGame" class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors mb-4 w-full">
-                    {{ translate({ en: 'Play Again', de: 'Noch einmal spielen' }) }}
-                </button>
-                
-                <div class="text-center opacity-70 text-sm">
-                    {{ translate({ en: 'Tip: Try to create space by combining bubbles strategically!', de: 'Tipp: Versuche strategisch Platz zu schaffen, indem du Blasen kombinierst!' }) }}
-                </div>
-            </div>
-        </div>
-        
-        <div v-if="showInstructions" class="game-over-modal">
-            <div class="modal-content">
-                <h2 class="text-2xl font-bold mb-4">{{ translate({ en: 'How to Play', de: 'Spielanleitung' }) }}</h2>
-                <ol class="text-left mb-6 space-y-2">
-                    <li>1. {{ translate({ en: 'Drag bubbles to move them', de: 'Ziehe Blasen, um sie zu bewegen' }) }}</li>
-                    <li>2. {{ translate({ en: 'Merge identical bubbles to combine them', de: 'Verbinde gleiche Blasen, um sie zu verschmelzen' }) }}</li>
-                    <li>3. {{ translate({ en: 'Bubbles can merge horizontally, vertically, and diagonally', de: 'Blasen können horizontal, vertikal und diagonal verschmelzen' }) }}</li>
-                    <li>4. {{ translate({ en: 'A new bubble appears after each move', de: 'Nach jedem Zug erscheint eine neue Blase' }) }}</li>
-                    <li>5. {{ translate({ en: 'Create higher level bubbles for more points', de: 'Bilde möglichst hohe Blasen für mehr Punkte' }) }}</li>
-                    <li>6. {{ translate({ en: 'Game ends when the grid is full', de: 'Das Spiel endet, wenn das Feld voll ist' }) }}</li>
-                    <li>7. {{ translate({ en: 'Special bubbles appear occasionally with unique effects', de: 'Gelegentlich erscheinen Spezialblasen mit besonderen Effekten' }) }}</li>
+
+        <!-- Instructions Modal -->
+        <div v-if="showInstructions" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">{{ translate('gameTitle') }}</h2>
+                <ol class="list-decimal pl-6 mb-4 text-gray-700 dark:text-gray-300 space-y-2">
+                    <li>{{ translate('instruction1') }}</li>
+                    <li>{{ translate('instruction2') }}</li>
+                    <li>{{ translate('instruction3') }}</li>
+                    <li>{{ translate('instruction4') }}</li>
+                    <li>{{ translate('instruction5') }}</li>
                 </ol>
-                <button @click="showInstructions = false" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full">
-                    {{ translate({ en: 'Got It!', de: 'Verstanden!' }) }}
+                <div class="text-center">
+                    <button @click="showInstructions = false" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+                        {{ translate('play') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div v-if="isGameOver" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full text-center">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">{{ translate('gameOver') }}</h2>
+                <p class="mb-2 text-gray-700 dark:text-gray-300">{{ translate('yourScore') }}: {{ score }}</p>
+                <p class="mb-4 text-gray-700 dark:text-gray-300">{{ translate('highestBubble') }}: {{ translate('level') }} {{ highestLevel }}</p>
+                <button @click="resetGame" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition-colors">
+                    {{ translate('playAgain') }}
                 </button>
             </div>
+        </div>
+
+        <!-- Bonus Effect -->
+        <div v-if="showBonus" class="fixed inset-0 pointer-events-none flex items-center justify-center">
+            <div class="text-4xl font-bold text-yellow-500 pop-animation">+{{ bonusPoints }} {{ translate('bonusPoints') }}!</div>
         </div>
     </div>
 
     <script>
-        const { ref, reactive, computed, onMounted, watch } = Vue;
-        
-        // Localization plugin mock
-        const translate = ({ en, de }) => {
-            return app.language === 'en' ? en : de;
+        // Translations
+        const translations = {
+            en: {
+                gameTitle: 'Bubble Merge',
+                score: 'Score',
+                highestBubble: 'Highest Bubble',
+                level: 'Level',
+                nextBubble: 'Next Bubble',
+                playAgain: 'Play Again',
+                instructions: 'Instructions',
+                gameOver: 'Game Over!',
+                yourScore: 'Your Score',
+                instruction1: 'Drag bubbles to move them',
+                instruction2: 'Connect same bubbles to merge them',
+                instruction3: 'A new bubble appears after each move',
+                instruction4: 'Create higher level bubbles for more points',
+                instruction5: 'Game ends when the board is full',
+                play: 'Play',
+                bonusPoints: 'BONUS'
+            },
+            de: {
+                gameTitle: 'Bubble Merge',
+                score: 'Punktestand',
+                highestBubble: 'Höchste Blase',
+                level: 'Level',
+                nextBubble: 'Nächste Blase',
+                playAgain: 'Noch einmal spielen',
+                instructions: 'Anleitung',
+                gameOver: 'Spiel vorbei!',
+                yourScore: 'Dein Punktestand',
+                instruction1: 'Ziehe Blasen, um sie zu bewegen',
+                instruction2: 'Verbinde gleiche Blasen, um sie zu verschmelzen',
+                instruction3: 'Nach jedem Zug erscheint eine neue Blase',
+                instruction4: 'Bilde möglichst hohe Blasen für mehr Punkte',
+                instruction5: 'Das Spiel endet, wenn das Feld voll ist',
+                play: 'Spielen',
+                bonusPoints: 'BONUS'
+            }
         };
 
+        function translate(key) {
+            return translations[app.language][key] || key;
+        }
+
+        // Vue App
         const app = Vue.createApp({
-            setup() {
-                // Game state
-                const gridSize = 4;
-                const theme = ref('light');
-                const language = ref('de');
-                const gameGrid = ref(null);
-                const bubbles = ref([]);
-                const nextBubble = ref(1);
-                const specialNextBubble = ref(false);
-                const score = ref(0);
-                const highestBubble = ref(1);
-                const highScore = ref(0);
-                const gameOver = ref(false);
-                const isHighScore = ref(false);
-                const showInstructions = ref(false);
-                const showNewBubbleIndicator = ref(false);
-                const pointsIndicators = ref([]);
-                const surprise = ref(null);
-                const draggingBubble = ref(null);
-                const bubbleStartPos = { x: 0, y: 0 };
-                const pointerStartPos = { x: 0, y: 0 };
-                const gridCells = Array(gridSize * gridSize).fill(null);
-                const specialBubbleChance = 0.1; // 10% chance for special bubble
-                const movesUntilSpecialBubble = ref(Math.floor(Math.random() * 5) + 5); // 5-10 moves
-                const movesCount = ref(0);
-                
-                // Game difficulty and progression
-                const difficultyLevel = ref(1);
-                const consecutiveMerges = ref(0);
-                const lastMoveTime = ref(Date.now());
-                const bubbleColors = {
-                    1: { bg: '#FF9AA2', text: '#000' },
-                    2: { bg: '#FFB7B2', text: '#000' },
-                    3: { bg: '#FFDAC1', text: '#000' },
-                    4: { bg: '#E2F0CB', text: '#000' },
-                    5: { bg: '#B5EAD7', text: '#000' },
-                    6: { bg: '#C7CEEA', text: '#000' },
-                    7: { bg: '#B7B6F9', text: '#000' },
-                    8: { bg: '#9FA0FF', text: '#fff' },
-                    9: { bg: '#818DFF', text: '#fff' },
-                    10: { bg: '#6D7DFF', text: '#fff' },
-                    11: { bg: '#5E6DFF', text: '#fff' },
-                    12: { bg: '#4E5DFF', text: '#fff' },
-                    13: { bg: '#3F4FF4', text: '#fff' },
-                    14: { bg: '#2F3FE9', text: '#fff' },
-                    15: { bg: '#1F2FDF', text: '#fff' },
-                    16: { bg: '#102BD4', text: '#fff' }
+            data() {
+                return {
+                    gameBoard: Array(25).fill(null),
+                    score: 0,
+                    highScore: 0,
+                    highestLevel: 1,
+                    nextBubble: 1,
+                    isGameOver: false,
+                    showInstructions: false,
+                    language: 'de',
+                    isDarkMode: false,
+                    selectedBubbleIndex: null,
+                    highlightedCells: [],
+                    isShaking: false,
+                    showBonus: false,
+                    bonusPoints: 0,
+                    comboCounter: 0,
+                    specialBubbleChance: 0.05, // 5% chance for special bubble
+                    consecutiveMoves: 0,
+                    hasLocalStorage: false
                 };
-                
-                // Load game from local storage
-                const loadGame = () => {
-                    try {
-                        const savedGame = localStorage.getItem('bubbleMergeGame');
-                        if (savedGame) {
-                            const gameData = JSON.parse(savedGame);
-                            bubbles.value = gameData.bubbles || [];
-                            nextBubble.value = gameData.nextBubble || 1;
-                            score.value = gameData.score || 0;
-                            highestBubble.value = gameData.highestBubble || 1;
-                            highScore.value = gameData.highScore || 0;
-                            difficultyLevel.value = gameData.difficultyLevel || 1;
-                            theme.value = gameData.theme || 'light';
-                            language.value = gameData.language || 'de';
-                            
-                            // Add IDs if they're missing (for backward compatibility)
-                            bubbles.value.forEach((bubble, index) => {
-                                if (!bubble.id) bubble.id = Date.now() + index;
-                            });
-                        } else {
-                            initializeGame();
-                        }
-                    } catch (error) {
-                        console.error("Error loading game: ", error);
-                        initializeGame();
+            },
+            created() {
+                // Check if localStorage is available
+                try {
+                    this.hasLocalStorage = typeof localStorage !== 'undefined';
+                    if (this.hasLocalStorage) {
+                        const savedHighScore = localStorage.getItem('bubbleMergeHighScore');
+                        const savedHighestLevel = localStorage.getItem('bubbleMergeHighestLevel');
+                        const savedTheme = localStorage.getItem('bubbleMergeTheme');
+                        const savedLanguage = localStorage.getItem('bubbleMergeLanguage');
+                        
+                        if (savedHighScore) this.highScore = parseInt(savedHighScore);
+                        if (savedHighestLevel) this.highestLevel = parseInt(savedHighestLevel);
+                        if (savedTheme) this.isDarkMode = savedTheme === 'dark';
+                        if (savedLanguage) this.language = savedLanguage;
                     }
-                };
+                } catch (e) {
+                    console.log('LocalStorage not available:', e);
+                    this.hasLocalStorage = false;
+                }
                 
-                // Save game to local storage
-                const saveGame = () => {
-                    try {
-                        const gameData = {
-                            bubbles: bubbles.value,
-                            nextBubble: nextBubble.value,
-                            score: score.value,
-                            highestBubble: highestBubble.value,
-                            highScore: highScore.value,
-                            difficultyLevel: difficultyLevel.value,
-                            theme: theme.value,
-                            language: language.value
-                        };
-                        localStorage.setItem('bubbleMergeGame', JSON.stringify(gameData));
-                    } catch (error) {
-                        console.error("Error saving game: ", error);
-                    }
-                };
+                // Set theme
+                this.applyTheme();
                 
-                // Initialize game
-                const initializeGame = () => {
-                    bubbles.value = [];
-                    nextBubble.value = getNextBubbleValue();
-                    specialNextBubble.value = false;
-                    score.value = 0;
-                    highestBubble.value = 1;
-                    difficultyLevel.value = 1;
-                    consecutiveMerges.value = 0;
-                    gameOver.value = false;
-                    movesCount.value = 0;
+                // Start the game
+                this.initGame();
+            },
+            methods: {
+                initGame() {
+                    // Clear the board
+                    this.gameBoard = Array(25).fill(null);
+                    this.score = 0;
+                    this.isGameOver = false;
+                    this.comboCounter = 0;
+                    this.consecutiveMoves = 0;
                     
                     // Add initial bubbles
-                    for (let i = 0; i < 3; i++) {
-                        addRandomBubble();
+                    for (let i = 0; i < 5; i++) {
+                        this.addRandomBubble();
                     }
                     
-                    // Initialize next bubble
-                    updateNextBubble();
-                };
-                
-                // Reset game
-                const resetGame = () => {
-                    initializeGame();
-                    saveGame();
-                    gameOver.value = false;
-                };
-                
-                // Generate next bubble value based on difficulty
-                const getNextBubbleValue = () => {
-                    // As game progresses, increase chances of higher numbers
-                    const baseValue = Math.random() < 0.7 ? 1 : 2;
+                    // Set next bubble
+                    this.generateNextBubble();
+                },
+                generateNextBubble() {
+                    // 80% chance for level 1, 15% for level 2, 5% for level 3
+                    let randomValue;
+                    const rand = Math.random();
                     
-                    // Higher chance for level 2 bubbles as difficulty increases
-                    if (difficultyLevel.value > 3 && Math.random() < 0.2) {
-                        return 2;
-                    }
-                    
-                    // Tiny chance for level 3 bubble in higher difficulties
-                    if (difficultyLevel.value > 5 && Math.random() < 0.05) {
-                        return 3;
-                    }
-                    
-                    return baseValue;
-                };
-                
-                // Update next bubble
-                const updateNextBubble = () => {
-                    nextBubble.value = getNextBubbleValue();
-                    
-                    // Check if it's time for a special bubble
-                    movesCount.value++;
-                    movesUntilSpecialBubble.value--;
-                    
-                    if (movesUntilSpecialBubble.value <= 0 && Math.random() < specialBubbleChance) {
-                        specialNextBubble.value = true;
-                        movesUntilSpecialBubble.value = Math.floor(Math.random() * 10) + 10; // Reset counter
+                    if (this.consecutiveMoves > 10 && Math.random() < this.specialBubbleChance) {
+                        // Special bubble with random value between 5 and highest level - 2
+                        const minLevel = Math.min(5, this.highestLevel - 2);
+                        const maxLevel = Math.max(minLevel, Math.min(this.highestLevel - 1, 8));
+                        randomValue = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+                        this.consecutiveMoves = 0; // Reset consecutive moves
+                    } else if (rand < 0.8) {
+                        randomValue = 1;
+                    } else if (rand < 0.95) {
+                        randomValue = 2;
                     } else {
-                        specialNextBubble.value = false;
+                        randomValue = 3;
                     }
-                };
-                
-                // Add random bubble to the grid
-                const addRandomBubble = () => {
-                    if (isBoardFull()) {
-                        gameOver.value = true;
-                        checkHighScore();
+                    
+                    this.nextBubble = randomValue;
+                },
+                addRandomBubble() {
+                    const emptyCells = this.gameBoard.map((cell, index) => cell === null ? index : -1).filter(index => index !== -1);
+                    
+                    if (emptyCells.length === 0) {
+                        // Check if any moves are possible
+                        const canMove = this.checkForPossibleMoves();
+                        if (!canMove) {
+                            this.gameOver();
+                        }
+                        return false;
+                    }
+                    
+                    const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                    
+                    this.gameBoard[randomIndex] = {
+                        value: this.nextBubble,
+                        isNew: true,
+                        isMerged: false,
+                        isPopping: false
+                    };
+                    
+                    // Generate next bubble
+                    this.generateNextBubble();
+                    
+                    // Remove isNew flag after animation
+                    setTimeout(() => {
+                        if (this.gameBoard[randomIndex]) {
+                            this.gameBoard[randomIndex].isNew = false;
+                        }
+                    }, 300);
+                    
+                    return true;
+                },
+                selectBubble(index) {
+                    // If no bubble is selected and the cell is not empty
+                    if (this.selectedBubbleIndex === null && this.gameBoard[index]) {
+                        this.selectedBubbleIndex = index;
                         return;
                     }
                     
-                    // Find empty cells
-                    const emptyCells = [];
+                    // If a bubble is already selected
+                    if (this.selectedBubbleIndex !== null) {
+                        // If clicking on the same bubble, deselect it
+                        if (this.selectedBubbleIndex === index) {
+                            this.selectedBubbleIndex = null;
+                            return;
+                        }
+                        
+                        // If clicking on an empty cell, move the bubble
+                        if (!this.gameBoard[index]) {
+                            // Check if the move is valid (adjacent horizontal, vertical or diagonal)
+                            if (this.isValidMove(this.selectedBubbleIndex, index)) {
+                                this.moveBubble(this.selectedBubbleIndex, index);
+                                this.selectedBubbleIndex = null;
+                                this.consecutiveMoves++;
+                                return;
+                            } else {
+                                // Invalid move - shake the board
+                                this.shakeBoard();
+                                return;
+                            }
+                        }
+                        
+                        // If clicking on another bubble with the same value, merge them
+                        if (this.gameBoard[index] && 
+                            this.gameBoard[this.selectedBubbleIndex] && 
+                            this.gameBoard[index].value === this.gameBoard[this.selectedBubbleIndex].value) {
+                            if (this.isValidMove(this.selectedBubbleIndex, index)) {
+                                this.mergeBubbles(this.selectedBubbleIndex, index);
+                                this.selectedBubbleIndex = null;
+                                this.consecutiveMoves++;
+                            } else {
+                                // Invalid move - shake the board
+                                this.shakeBoard();
+                            }
+                            return;
+                        }
+                        
+                        // If clicking on a different bubble, switch selection
+                        this.selectedBubbleIndex = this.gameBoard[index] ? index : null;
+                    }
+                },
+                isValidMove(fromIndex, toIndex) {
+                    const fromRow = Math.floor(fromIndex / 5);
+                    const fromCol = fromIndex % 5;
+                    const toRow = Math.floor(toIndex / 5);
+                    const toCol = toIndex % 5;
                     
-                    for (let row = 0; row < gridSize; row++) {
-                        for (let col = 0; col < gridSize; col++) {
-                            const isEmpty = !bubbles.value.some(b => b.row === row && b.col === col);
-                            if (isEmpty) {
-                                emptyCells.push({ row, col });
+                    // Check if the move is to an adjacent cell (horizontal, vertical, or diagonal)
+                    return Math.abs(fromRow - toRow) <= 1 && Math.abs(fromCol - toCol) <= 1;
+                },
+                highlightMoves(index) {
+                    if (!this.gameBoard[index]) return;
+                    
+                    const row = Math.floor(index / 5);
+                    const col = index % 5;
+                    const highlighted = [];
+                    
+                    // Check all adjacent cells (horizontal, vertical, diagonal)
+                    for (let r = Math.max(0, row - 1); r <= Math.min(4, row + 1); r++) {
+                        for (let c = Math.max(0, col - 1); c <= Math.min(4, col + 1); c++) {
+                            const checkIndex = r * 5 + c;
+                            if (checkIndex !== index) {
+                                // Empty cell or same value bubble
+                                if (!this.gameBoard[checkIndex] || 
+                                    (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === this.gameBoard[index].value)) {
+                                    highlighted.push(checkIndex);
+                                }
                             }
                         }
                     }
                     
-                    if (emptyCells.length === 0) return;
+                    this.highlightedCells = highlighted;
+                },
+                clearHighlights() {
+                    this.highlightedCells = [];
+                },
+                moveBubble(fromIndex, toIndex) {
+                    // Move the bubble
+                    this.gameBoard[toIndex] = { ...this.gameBoard[fromIndex] };
+                    this.gameBoard[fromIndex] = null;
                     
-                    // Select random empty cell
-                    const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                    // Check for matches
+                    setTimeout(() => {
+                        this.checkMatches(toIndex);
+                    }, 100);
+                },
+                mergeBubbles(fromIndex, toIndex) {
+                    const value = this.gameBoard[fromIndex].value;
+                    const newValue = value + 1;
                     
-                    // Add new bubble
-                    const newBubble = {
-                        id: Date.now(),
-                        value: nextBubble.value,
-                        row: randomCell.row,
-                        col: randomCell.col,
-                        isNew: true,
-                        isSpecial: specialNextBubble.value
+                    // Update highest level
+                    if (newValue > this.highestLevel) {
+                        this.highestLevel = newValue;
+                        this.saveHighestLevel();
+                    }
+                    
+                    // Merge the bubbles - the target position gets the new value
+                    this.gameBoard[toIndex] = {
+                        value: newValue,
+                        isNew: false,
+                        isMerged: true,
+                        isPopping: false
                     };
                     
-                    bubbles.value.push(newBubble);
-                    showNewBubbleIndicator.value = true;
+                    // Remove the source bubble
+                    this.gameBoard[fromIndex] = null;
                     
-                    // Hide new bubble indicator after 1 second
-                    setTimeout(() => {
-                        showNewBubbleIndicator.value = false;
-                    }, 1000);
+                    // Calculate score (higher level merges give exponentially more points)
+                    const mergePoints = Math.pow(2, newValue);
+                    this.score += mergePoints;
                     
-                    // Update next bubble
-                    updateNextBubble();
-                    
-                    // Save game state
-                    saveGame();
-                    
-                    // Check for game over
-                    if (isBoardFull() && !hasPossibleMoves()) {
-                        gameOver.value = true;
-                        checkHighScore();
+                    // Update high score if needed
+                    if (this.score > this.highScore) {
+                        this.highScore = this.score;
+                        this.saveHighScore();
                     }
-                };
-                
-                // Check if the board is full
-                const isBoardFull = () => {
-                    return bubbles.value.length >= gridSize * gridSize;
-                };
-                
-                // Check if there are possible moves (same-value bubbles adjacent)
-                const hasPossibleMoves = () => {
-                    for (let i = 0; i < bubbles.value.length; i++) {
-                        const bubble = bubbles.value[i];
-                        
-                        // Check all 8 directions (horizontal, vertical, diagonal)
-                        const directions = [
-                            { dr: -1, dc: 0 },  // up
-                            { dr: 1, dc: 0 },   // down
-                            { dr: 0, dc: -1 },  // left
-                            { dr: 0, dc: 1 },   // right
-                            { dr: -1, dc: -1 }, // up-left
-                            { dr: -1, dc: 1 },  // up-right
-                            { dr: 1, dc: -1 },  // down-left
-                            { dr: 1, dc: 1 }    // down-right
-                        ];
-                        
-                        for (const dir of directions) {
-                            const newRow = bubble.row + dir.dr;
-                            const newCol = bubble.col + dir.dc;
+                    
+                    // Increment combo counter
+                    this.comboCounter++;
+                    
+                    // Add bonus for combos
+                    if (this.comboCounter > 1) {
+                        const bonusMultiplier = Math.min(this.comboCounter, 5); // Cap at 5x
+                        this.bonusPoints = mergePoints * (bonusMultiplier - 1);
+                        this.score += this.bonusPoints;
+                        this.showBonusEffect();
+                    }
+                    
+                    // Remove isMerged flag after animation
+                    setTimeout(() => {
+                        if (this.gameBoard[toIndex]) {
+                            this.gameBoard[toIndex].isMerged = false;
                             
-                            // Check if the new position is valid
-                            if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-                                // Find if there's a bubble at this position
-                                const adjacentBubble = bubbles.value.find(b => b.row === newRow && b.col === newCol);
+                            // Check for matches after merging
+                            this.checkMatches(toIndex);
+                        }
+                    }, 400);
+                },
+                checkMatches(index) {
+                    if (!this.gameBoard[index]) return;
+                    
+                    const row = Math.floor(index / 5);
+                    const col = index % 5;
+                    const value = this.gameBoard[index].value;
+                    
+                    const matches = [];
+                    
+                    // Check horizontal, vertical, and diagonal matches
+                    
+                    // Horizontal check
+                    let horizontalMatches = [index];
+                    
+                    // Check left
+                    for (let c = col - 1; c >= 0; c--) {
+                        const checkIndex = row * 5 + c;
+                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
+                            horizontalMatches.push(checkIndex);
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // Check right
+                    for (let c = col + 1; c < 5; c++) {
+                        const checkIndex = row * 5 + c;
+                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
+                            horizontalMatches.push(checkIndex);
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (horizontalMatches.length >= 3) {
+                        matches.push(...horizontalMatches);
+                    }
+                    
+                    // Vertical check
+                    let verticalMatches = [index];
+                    
+                    // Check up
+                    for (let r = row - 1; r >= 0; r--) {
+                        const checkIndex = r * 5 + col;
+                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
+                            verticalMatches.push(checkIndex);
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // Check down
+                    for (let r = row + 1; r < 5; r++) {
+                        const checkIndex = r * 5 + col;
+                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
+                            verticalMatches.push(checkIndex);
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (verticalMatches.length >= 3) {
+                        matches.push(...verticalMatches);
+                    }
+                    
+                    // Diagonal check (top-left to bottom-right)
+                    let diagonal1Matches = [index];
+                    
+                    // Check top-left
+                    for (let offset = 1; row - offset >= 0 && col - offset >= 0; offset++) {
+                        const checkIndex = (row - offset) * 5 + (col - offset);
+                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
+                            diagonal1Matches.push(checkIndex);
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // Check bottom-right
+                    for (let offset = 1; row + offset < 5 && col + offset < 5; offset++) {
+                        const checkIndex = (row + offset) * 5 + (col + offset);
+                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
+                            diagonal1Matches.push(checkIndex);
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (diagonal1Matches.length >= 3) {
+                        matches.push(...diagonal1Matches);
+                    }
+                    
+                    // Diagonal check (top-right to bottom-left)
+                    let diagonal2Matches = [index];
+                    
+                    // Check top-right
+                    for (let offset = 1; row - offset >= 0 && col + offset < 5; offset++) {
+                        const checkIndex = (row - offset) * 5 + (col + offset);
+                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
+                            diagonal2Matches.push(checkIndex);
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // Check bottom-left
+                    for (let offset = 1; row + offset < 5 && col - offset >= 0; offset++) {
+                        const checkIndex = (row + offset) * 5 + (col - offset);
+                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
+                            diagonal2Matches.push(checkIndex);
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (diagonal2Matches.length >= 3) {
+                        matches.push(...diagonal2Matches);
+                    }
+                    
+                    // Remove duplicates
+                    const uniqueMatches = [...new Set(matches)];
+                    
+                    if (uniqueMatches.length >= 3) {
+                        // Add popping animation to all matches
+                        uniqueMatches.forEach(matchIndex => {
+                            if (this.gameBoard[matchIndex]) {
+                                this.gameBoard[matchIndex].isPopping = true;
+                            }
+                        });
+                        
+                        // Wait for animation to complete
+                        setTimeout(() => {
+                            // Remove the matches
+                            uniqueMatches.forEach(matchIndex => {
+                                this.gameBoard[matchIndex] = null;
+                            });
+                            
+                            // Calculate score for popping (value * matches * 2)
+                            const popPoints = value * uniqueMatches.length * 2;
+                            this.score += popPoints;
+                            
+                            // Increment combo counter
+                            this.comboCounter++;
+                            
+                            // Add bonus for combos
+                            if (this.comboCounter > 1) {
+                                const bonusMultiplier = Math.min(this.comboCounter, 5); // Cap at 5x
+                                this.bonusPoints = popPoints * (bonusMultiplier - 1);
+                                this.score += this.bonusPoints;
+                                this.showBonusEffect();
+                            }
+                            
+                            // Update high score if needed
+                            if (this.score > this.highScore) {
+                                this.highScore = this.score;
+                                this.saveHighScore();
+                            }
+                            
+                            // Add a new bubble after popping
+                            setTimeout(() => {
+                                this.addRandomBubble();
+                            }, 300);
+                        }, 300);
+                        
+                        return;
+                    }
+                    
+                    // Reset combo counter if no matches
+                    this.comboCounter = 0;
+                    
+                    // Add a new bubble after the move
+                    setTimeout(() => {
+                        this.addRandomBubble();
+                    }, 300);
+                },
+                checkForPossibleMoves() {
+                    // Check if there are any empty cells
+                    const hasEmptyCells = this.gameBoard.some(cell => cell === null);
+                    if (hasEmptyCells) return true;
+                    
+                    // Check if there are any adjacent cells with the same value
+                    for (let i = 0; i < this.gameBoard.length; i++) {
+                        const row = Math.floor(i / 5);
+                        const col = i % 5;
+                        const value = this.gameBoard[i]?.value;
+                        
+                        if (!value) continue;
+                        
+                        // Check adjacent cells
+                        for (let r = Math.max(0, row - 1); r <= Math.min(4, row + 1); r++) {
+                            for (let c = Math.max(0, col - 1); c <= Math.min(4, col + 1); c++) {
+                                if (r === row && c === col) continue; // Skip self
                                 
-                                // If there's a bubble with the same value, there's a possible move
-                                if (adjacentBubble && adjacentBubble.value === bubble.value) {
+                                const checkIndex = r * 5 + c;
+                                if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
                                     return true;
                                 }
                             }
@@ -579,637 +723,80 @@
                     }
                     
                     return false;
-                };
-                
-                // Check for high score
-                const checkHighScore = () => {
-                    if (score.value > highScore.value) {
-                        highScore.value = score.value;
-                        isHighScore.value = true;
-                        saveGame();
+                },
+                gameOver() {
+                    this.isGameOver = true;
+                },
+                resetGame() {
+                    this.initGame();
+                },
+                saveHighScore() {
+                    if (this.hasLocalStorage) {
+                        try {
+                            localStorage.setItem('bubbleMergeHighScore', this.highScore.toString());
+                        } catch (e) {
+                            console.log('Error saving high score:', e);
+                        }
+                    }
+                },
+                saveHighestLevel() {
+                    if (this.hasLocalStorage) {
+                        try {
+                            localStorage.setItem('bubbleMergeHighestLevel', this.highestLevel.toString());
+                        } catch (e) {
+                            console.log('Error saving highest level:', e);
+                        }
+                    }
+                },
+                toggleTheme() {
+                    this.isDarkMode = !this.isDarkMode;
+                    this.applyTheme();
+                    
+                    if (this.hasLocalStorage) {
+                        try {
+                            localStorage.setItem('bubbleMergeTheme', this.isDarkMode ? 'dark' : 'light');
+                        } catch (e) {
+                            console.log('Error saving theme preference:', e);
+                        }
+                    }
+                },
+                applyTheme() {
+                    if (this.isDarkMode) {
+                        document.documentElement.classList.add('dark');
                     } else {
-                        isHighScore.value = false;
+                        document.documentElement.classList.remove('dark');
                     }
-                };
-                
-                // Toggle theme
-                const toggleTheme = () => {
-                    theme.value = theme.value === 'light' ? 'dark' : 'light';
-                    saveGame();
-                };
-                
-                // Switch language
-                const switchLanguage = () => {
-                    language.value = language.value === 'de' ? 'en' : 'de';
-                    saveGame();
-                };
-                
-                // Get bubble style based on value
-                const getBubbleStyle = (value) => {
-                    const color = bubbleColors[value] || { bg: '#555', text: '#fff' };
-                    return {
-                        backgroundColor: color.bg,
-                        color: color.text
-                    };
-                };
-                
-                // Get bubble position
-                const getBubblePosition = (bubble) => {
-                    const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubble-size'));
-                    const gridGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--grid-gap'));
+                },
+                toggleLanguage() {
+                    this.language = this.language === 'de' ? 'en' : 'de';
                     
-                    // Calculate position based on row and column
-                    const x = bubble.col * (cellSize + gridGap) + gridGap;
-                    const y = bubble.row * (cellSize + gridGap) + gridGap;
-                    
-                    // If being dragged, use the drag position
-                    if (draggingBubble.value && draggingBubble.value.id === bubble.id) {
-                        const rect = gameGrid.value.getBoundingClientRect();
-                        const dragX = bubble.dragX - rect.left;
-                        const dragY = bubble.dragY - rect.top;
-                        
-                        return {
-                            transform: `translate(${dragX}px, ${dragY}px)`,
-                            zIndex: '100'
-                        };
-                    }
-                    
-                    return {
-                        transform: `translate(${x}px, ${y}px)`
-                    };
-                };
-                
-                // Start dragging a bubble
-                const startDrag = (event, bubble) => {
-                    // Prevent default to avoid browser drag behavior
-                    event.preventDefault();
-                    
-                    // Get touch or mouse position
-                    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-                    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-                    
-                    const rect = gameGrid.value.getBoundingClientRect();
-                    const gridX = clientX - rect.left;
-                    const gridY = clientY - rect.top;
-                    
-                    // Set up dragging state
-                    draggingBubble.value = bubble;
-                    draggingBubble.value.dragX = clientX;
-                    draggingBubble.value.dragY = clientY;
-                    
-                    const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubble-size'));
-                    const gridGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--grid-gap'));
-                    
-                    // Store starting position
-                    bubbleStartPos.x = bubble.col * (cellSize + gridGap) + gridGap;
-                    bubbleStartPos.y = bubble.row * (cellSize + gridGap) + gridGap;
-                    pointerStartPos.x = gridX;
-                    pointerStartPos.y = gridY;
-                    
-                    // Add event listeners for drag and end
-                    if (event.touches) {
-                        window.addEventListener('touchmove', dragMove);
-                        window.addEventListener('touchend', dragEnd);
-                    } else {
-                        window.addEventListener('mousemove', dragMove);
-                        window.addEventListener('mouseup', dragEnd);
-                    }
-                };
-                
-                // Handle drag movement
-                const dragMove = (event) => {
-                    if (!draggingBubble.value) return;
-                    
-                    // Get touch or mouse position
-                    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-                    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-                    
-                    // Update bubble position
-                    draggingBubble.value.dragX = clientX;
-                    draggingBubble.value.dragY = clientY;
-                };
-                
-                // End dragging
-                const dragEnd = (event) => {
-                    if (!draggingBubble.value) return;
-                    
-                    // Remove event listeners
-                    window.removeEventListener('mousemove', dragMove);
-                    window.removeEventListener('mouseup', dragEnd);
-                    window.removeEventListener('touchmove', dragMove);
-                    window.removeEventListener('touchend', dragEnd);
-                    
-                    // Get the grid rectangle
-                    const rect = gameGrid.value.getBoundingClientRect();
-                    
-                    // Get the final mouse/touch position relative to the grid
-                    const clientX = event.changedTouches ? event.changedTouches[0].clientX : event.clientX;
-                    const clientY = event.changedTouches ? event.changedTouches[0].clientY : event.clientY;
-                    const gridX = clientX - rect.left;
-                    const gridY = clientY - rect.top;
-                    
-                    // Calculate cell size and grid gap
-                    const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubble-size'));
-                    const gridGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--grid-gap'));
-                    
-                    // Calculate the row and column based on position
-                    const col = Math.floor((gridX - gridGap) / (cellSize + gridGap));
-                    const row = Math.floor((gridY - gridGap) / (cellSize + gridGap));
-                    
-                    // Validate new position is within grid bounds
-                    if (col >= 0 && col < gridSize && row >= 0 && row < gridSize) {
-                        // Check if the cell is empty
-                        const targetCell = bubbles.value.find(b => b.row === row && b.col === col && b.id !== draggingBubble.value.id);
-                        
-                        if (!targetCell) {
-                            // Move the bubble to the new position
-                            const oldRow = draggingBubble.value.row;
-                            const oldCol = draggingBubble.value.col;
-                            draggingBubble.value.row = row;
-                            draggingBubble.value.col = col;
-                            
-                            // Only count as a move if the bubble actually moved
-                            if (oldRow !== row || oldCol !== col) {
-                                // Check for merges after moving
-                                checkForMerges(draggingBubble.value);
-                                
-                                // Record move time for pace calculation
-                                const currentTime = Date.now();
-                                const timeDiff = currentTime - lastMoveTime.value;
-                                lastMoveTime.value = currentTime;
-                                
-                                // Adjust difficulty based on move pace and game progression
-                                adjustDifficulty(timeDiff);
-                                
-                                // Add a new bubble after each move
-                                addRandomBubble();
-                            }
-                        } else if (targetCell.value === draggingBubble.value.value) {
-                            // Merge bubbles if they have the same value
-                            mergeBubbles(draggingBubble.value, targetCell);
+                    if (this.hasLocalStorage) {
+                        try {
+                            localStorage.setItem('bubbleMergeLanguage', this.language);
+                        } catch (e) {
+                            console.log('Error saving language preference:', e);
                         }
                     }
-                    
-                    // Clear dragging state
-                    draggingBubble.value = null;
-                };
-                
-                // Check for potential merges after a move
-                const checkForMerges = (bubble) => {
-                    // Direction vectors for all 8 directions
-                    const directions = [
-                        { dr: -1, dc: 0 },  // up
-                        { dr: 1, dc: 0 },   // down
-                        { dr: 0, dc: -1 },  // left
-                        { dr: 0, dc: 1 },   // right
-                        { dr: -1, dc: -1 }, // up-left
-                        { dr: -1, dc: 1 },  // up-right
-                        { dr: 1, dc: -1 },  // down-left
-                        { dr: 1, dc: 1 }    // down-right
-                    ];
-                    
-                    let mergeFound = false;
-                    
-                    // Check all 8 directions for potential merges
-                    for (const dir of directions) {
-                        const newRow = bubble.row + dir.dr;
-                        const newCol = bubble.col + dir.dc;
-                        
-                        // Validate position is within grid
-                        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-                            // Find if there's a bubble at this position
-                            const adjacentBubble = bubbles.value.find(b => 
-                                b.row === newRow && 
-                                b.col === newCol && 
-                                b.id !== bubble.id
-                            );
-                            
-                            // If there's a bubble with the same value, merge them
-                            if (adjacentBubble && adjacentBubble.value === bubble.value) {
-                                mergeBubbles(bubble, adjacentBubble);
-                                mergeFound = true;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // Update consecutive merges counter
-                    if (mergeFound) {
-                        consecutiveMerges.value++;
-                    } else {
-                        consecutiveMerges.value = 0;
-                    }
-                    
-                    return mergeFound;
-                };
-                
-                // Merge two bubbles
-                const mergeBubbles = (bubble1, bubble2) => {
-                    // Remove the second bubble
-                    bubbles.value = bubbles.value.filter(b => b.id !== bubble2.id);
-                    
-                    // Update the value of the first bubble
-                    bubble1.value++;
-                    
-                    // Check if this is a special bubble
-                    if (bubble1.isSpecial || bubble2.isSpecial) {
-                        handleSpecialBubbleMerge(bubble1);
-                    }
-                    
-                    // Add merge animation class
-                    bubble1.merging = true;
+                },
+                shakeBoard() {
+                    this.isShaking = true;
                     setTimeout(() => {
-                        const index = bubbles.value.findIndex(b => b.id === bubble1.id);
-                        if (index !== -1) {
-                            bubbles.value[index].merging = false;
-                        }
-                    }, 300);
-                    
-                    // Update highest bubble value
-                    if (bubble1.value > highestBubble.value) {
-                        highestBubble.value = bubble1.value;
-                        
-                        // Show surprise effect for milestone bubbles
-                        if (bubble1.value >= 8 && bubble1.value % 2 === 0) {
-                            showMilestoneSurprise(bubble1);
-                        }
-                    }
-                    
-                    // Calculate points
-                    const points = Math.pow(2, bubble1.value);
-                    score.value += points;
-                    
-                    // Show points indicator
-                    const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bubble-size'));
-                    const gridGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--grid-gap'));
-                    const x = bubble1.col * (cellSize + gridGap) + gridGap + cellSize / 2;
-                    const y = bubble1.row * (cellSize + gridGap) + gridGap;
-                    
-                    pointsIndicators.value.push({
-                        id: Date.now(),
-                        points,
-                        x,
-                        y
-                    });
-                    
-                    // Remove points indicator after animation
-                    setTimeout(() => {
-                        pointsIndicators.value.shift();
-                    }, 1000);
-                    
-                    // Check for chain reactions (bubbles that can now be merged)
-                    setTimeout(() => {
-                        checkForMerges(bubble1);
-                    }, 300);
-                    
-                    // Save game state
-                    saveGame();
-                };
-                
-                // Handle special bubble merge effects
-                const handleSpecialBubbleMerge = (bubble) => {
-                    // Mark as no longer special
-                    bubble.isSpecial = false;
-                    
-                    // Determine a random special effect
-                    const effectType = Math.floor(Math.random() * 4);
-                    
-                    switch (effectType) {
-                        case 0: // Clear same-value bubbles
-                            clearSameValueBubbles(bubble);
-                            break;
-                        case 1: // Clear row/column
-                            clearRowOrColumn(bubble);
-                            break;
-                        case 2: // Power up a random bubble
-                            powerUpRandomBubble();
-                            break;
-                        case 3: // Extra points
-                            awardBonusPoints();
-                            break;
-                    }
-                };
-                
-                // Clear all bubbles with the same value
-                const clearSameValueBubbles = (bubble) => {
-                    const value = bubble.value;
-                    const bubblesToRemove = bubbles.value.filter(b => 
-                        b.id !== bubble.id && b.value === value
-                    );
-                    
-                    // Award points for each removed bubble
-                    let bonusPoints = 0;
-                    bubblesToRemove.forEach(b => {
-                        bonusPoints += Math.pow(2, b.value);
-                        showPopAnimation(b);
-                    });
-                    
-                    // Show surprise message
-                    showSurpriseEffect(translate({ 
-                        en: 'All level ' + value + ' bubbles cleared!', 
-                        de: 'Alle Level ' + value + ' Blasen gelöscht!'
-                    }));
-                    
-                    // Remove bubbles after animation
-                    setTimeout(() => {
-                        bubbles.value = bubbles.value.filter(b => 
-                            bubblesToRemove.findIndex(rb => rb.id === b.id) === -1
-                        );
-                        
-                        // Add bonus points
-                        score.value += bonusPoints;
-                        
-                        // Show bonus points indicator
-                        if (bonusPoints > 0) {
-                            pointsIndicators.value.push({
-                                id: Date.now(),
-                                points: bonusPoints,
-                                x: 100,
-                                y: 100
-                            });
-                            
-                            setTimeout(() => {
-                                pointsIndicators.value.shift();
-                            }, 1000);
-                        }
+                        this.isShaking = false;
                     }, 500);
-                };
-                
-                // Clear row or column containing the bubble
-                const clearRowOrColumn = (bubble) => {
-                    const isRow = Math.random() < 0.5;
-                    const bubblesToRemove = isRow
-                        ? bubbles.value.filter(b => b.id !== bubble.id && b.row === bubble.row)
-                        : bubbles.value.filter(b => b.id !== bubble.id && b.col === bubble.col);
-                    
-                    // Award points for each removed bubble
-                    let bonusPoints = 0;
-                    bubblesToRemove.forEach(b => {
-                        bonusPoints += Math.pow(2, b.value);
-                        showPopAnimation(b);
-                    });
-                    
-                    // Show surprise message
-                    showSurpriseEffect(translate({ 
-                        en: isRow ? 'Row cleared!' : 'Column cleared!', 
-                        de: isRow ? 'Reihe gelöscht!' : 'Spalte gelöscht!'
-                    }));
-                    
-                    // Remove bubbles after animation
+                },
+                showBonusEffect() {
+                    this.showBonus = true;
                     setTimeout(() => {
-                        bubbles.value = bubbles.value.filter(b => 
-                            bubblesToRemove.findIndex(rb => rb.id === b.id) === -1
-                        );
-                        
-                        // Add bonus points
-                        score.value += bonusPoints;
-                        
-                        // Show bonus points indicator
-                        if (bonusPoints > 0) {
-                            pointsIndicators.value.push({
-                                id: Date.now(),
-                                points: bonusPoints,
-                                x: 100,
-                                y: 100
-                            });
-                            
-                            setTimeout(() => {
-                                pointsIndicators.value.shift();
-                            }, 1000);
-                        }
-                    }, 500);
-                };
-                
-                // Power up a random bubble (increase its value by 1)
-                const powerUpRandomBubble = () => {
-                    if (bubbles.value.length < 2) return;
-                    
-                    // Select a random bubble excluding the one just merged
-                    const eligibleBubbles = bubbles.value.filter(b => !b.isSpecial);
-                    if (eligibleBubbles.length === 0) return;
-                    
-                    const randomIndex = Math.floor(Math.random() * eligibleBubbles.length);
-                    const bubbleToUpgrade = eligibleBubbles[randomIndex];
-                    
-                    // Upgrade the bubble
-                    const index = bubbles.value.findIndex(b => b.id === bubbleToUpgrade.id);
-                    if (index !== -1) {
-                        bubbles.value[index].value++;
-                        bubbles.value[index].poweringUp = true;
-                        
-                        // Update highest bubble if needed
-                        if (bubbles.value[index].value > highestBubble.value) {
-                            highestBubble.value = bubbles.value[index].value;
-                        }
-                        
-                        // Show animation
-                        setTimeout(() => {
-                            if (index < bubbles.value.length) {
-                                bubbles.value[index].poweringUp = false;
-                            }
-                        }, 500);
-                        
-                        // Show surprise message
-                        showSurpriseEffect(translate({ 
-                            en: 'Random bubble upgraded!', 
-                            de: 'Zufällige Blase aufgewertet!'
-                        }));
-                    }
-                };
-                
-                // Award bonus points
-                const awardBonusPoints = () => {
-                    const bonusMultiplier = Math.floor(Math.random() * 3) + 2; // 2x to 4x
-                    const basePoints = Math.pow(2, highestBubble.value);
-                    const bonusPoints = basePoints * bonusMultiplier;
-                    
-                    // Add points
-                    score.value += bonusPoints;
-                    
-                    // Show bonus points indicator in center
-                    pointsIndicators.value.push({
-                        id: Date.now(),
-                        points: bonusPoints,
-                        x: 100,
-                        y: 100
-                    });
-                    
-                    setTimeout(() => {
-                        pointsIndicators.value.shift();
+                        this.showBonus = false;
                     }, 1000);
-                    
-                    // Show surprise message
-                    showSurpriseEffect(translate({ 
-                        en: bonusMultiplier + 'x points bonus!', 
-                        de: bonusMultiplier + 'x Punkte Bonus!'
-                    }));
-                };
-                
-                // Show pop animation for a bubble
-                const showPopAnimation = (bubble) => {
-                    const index = bubbles.value.findIndex(b => b.id === bubble.id);
-                    if (index !== -1) {
-                        bubbles.value[index].popping = true;
-                    }
-                };
-                
-                // Show milestone surprise effect
-                const showMilestoneSurprise = (bubble) => {
-                    const messages = {
-                        8: { en: 'Great job! Level 8 reached!', de: 'Super! Level 8 erreicht!' },
-                        10: { en: 'Amazing! Level 10!', de: 'Fantastisch! Level 10!' },
-                        12: { en: 'Incredible! Level 12!', de: 'Unglaublich! Level 12!' },
-                        14: { en: 'Magnificent! Level 14!', de: 'Großartig! Level 14!' },
-                        16: { en: 'Legendary! Level 16!', de: 'Legendär! Level 16!' }
-                    };
-                    
-                    const message = messages[bubble.value] || 
-                        { en: 'New high level!', de: 'Neues hohes Level!' };
-                    
-                    showSurpriseEffect(translate(message));
-                    
-                    // Add confetti effect for high levels
-                    if (bubble.value >= 10) {
-                        showConfetti();
-                    }
-                };
-                
-                // Show surprise effect with message
-                const showSurpriseEffect = (message) => {
-                    surprise.value = {
-                        message,
-                        style: {
-                            textAlign: 'center',
-                            padding: '20px',
-                            fontSize: '1.5rem',
-                            fontWeight: 'bold',
-                            color: '#FFD700',
-                            textShadow: '0 0 10px rgba(255, 215, 0, 0.8)',
-                            animation: 'fadeInOut 2s forwards'
-                        }
-                    };
-                    
-                    // Add style for animation
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        @keyframes fadeInOut {
-                            0% { opacity: 0; transform: scale(0.5); }
-                            20% { opacity: 1; transform: scale(1.2); }
-                            70% { opacity: 1; transform: scale(1); }
-                            100% { opacity: 0; transform: scale(1.1); }
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    
-                    // Remove surprise after animation
-                    setTimeout(() => {
-                        surprise.value = null;
-                        document.head.removeChild(style);
-                    }, 2000);
-                };
-                
-                // Show confetti celebration effect
-                const showConfetti = () => {
-                    const confettiCount = 100;
-                    const container = document.createElement('div');
-                    container.className = 'surprise-effect';
-                    
-                    for (let i = 0; i < confettiCount; i++) {
-                        const confetti = document.createElement('div');
-                        confetti.className = 'confetti';
-                        confetti.style.cssText = `
-                            position: absolute;
-                            width: ${Math.random() * 10 + 5}px;
-                            height: ${Math.random() * 10 + 5}px;
-                            background-color: hsl(${Math.random() * 360}, 100%, 70%);
-                            top: -10px;
-                            left: ${Math.random() * 100}%;
-                            opacity: ${Math.random() * 0.5 + 0.5};
-                            animation: confetti-fall ${Math.random() * 2 + 2}s linear forwards;
-                        `;
-                        container.appendChild(confetti);
-                    }
-                    
-                    // Add style for animation
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        @keyframes confetti-fall {
-                            0% { transform: translateY(0) rotate(0deg); }
-                            100% { transform: translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg); }
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    
-                    // Add to body and remove after animation
-                    document.body.appendChild(container);
-                    setTimeout(() => {
-                        document.body.removeChild(container);
-                        document.head.removeChild(style);
-                    }, 4000);
-                };
-                
-                // Adjust difficulty based on gameplay
-                const adjustDifficulty = (timeDiff) => {
-                    // Increase difficulty based on highest bubble and score
-                    const baseDifficulty = Math.floor(highestBubble.value / 2);
-                    const scoreDifficulty = Math.floor(score.value / 1000);
-                    
-                    // Consider move pace (faster moves = higher skill)
-                    const paceModifier = timeDiff < 1000 ? 1 : 0;
-                    
-                    // Consider consecutive merges (combo bonus)
-                    const comboModifier = Math.min(consecutiveMerges.value, 3);
-                    
-                    // Calculate new difficulty
-                    const newDifficulty = baseDifficulty + scoreDifficulty + paceModifier + comboModifier;
-                    difficultyLevel.value = Math.max(1, Math.min(10, newDifficulty));
-                };
-                
-                // Load game on mount
-                onMounted(() => {
-                    loadGame();
-                    
-                    // Fall back to initializing game if loading failed
-                    if (bubbles.value.length === 0) {
-                        initializeGame();
-                    }
-                });
-                
-                // Watch for game state changes
-                watch([bubbles, score, highestBubble], () => {
-                    if (!gameOver.value) {
-                        saveGame();
-                    }
-                });
-                
-                return {
-                    theme,
-                    language,
-                    gameGrid,
-                    gridCells,
-                    bubbles,
-                    nextBubble,
-                    specialNextBubble,
-                    score,
-                    highestBubble,
-                    gameOver,
-                    isHighScore,
-                    showInstructions,
-                    showNewBubbleIndicator,
-                    pointsIndicators,
-                    surprise,
-                    translate,
-                    toggleTheme,
-                    switchLanguage,
-                    resetGame,
-                    startDrag,
-                    getBubbleStyle,
-                    getBubblePosition
-                };
+                }
             }
         });
-        
+
+        // Make translate function available to the template
         app.config.globalProperties.translate = translate;
+        
+        // Mount the app
         app.mount('#app');
     </script>
 </body>
