@@ -533,7 +533,7 @@
         </div>
 
         <div class="action-buttons">
-            <button id="place-bubble" class="btn">Neue Blase platzieren</button>
+            <button id="place-bubble" class="btn">Neue Blasen (x1-3)</button>
             <button id="shuffle-board" class="btn">Blasen neu mischen</button>
         </div>
     </div>
@@ -553,7 +553,9 @@
                     <li>Tippe auf eine Blase, um sie auszuwählen.</li>
                     <li>Tippe auf ein leeres Feld, um sie dorthin zu bewegen.</li>
                     <li>Tippe auf eine gleichwertige Blase, um beide zu fusionieren.</li>
-                    <li>Drücke auf "Neue Blase platzieren", um die nächste Blase ins Spiel zu bringen.</li>
+                    <li>Nach jedem Zug erscheint automatisch eine neue Blase.</li>
+                    <li>Drücke auf "Neue Blasen", um zusätzliche Blasen ins Spiel zu bringen.</li>
+                    <li>Alle 3 Züge erscheint eine Bonusblase!</li>
                     <li>Drücke auf "Blasen neu mischen", wenn du keine Züge mehr hast (kostet Punkte!).</li>
                 </ul>
 
@@ -591,9 +593,10 @@
         const GRID_SIZE = 5;
         const MAX_LEVEL = 12;
         const SPECIAL_BUBBLE_CHANCE = 0.05;
-        const INITIAL_BUBBLES = 8;
+        const INITIAL_BUBBLES = 10;
         const CHAIN_REACTION_DELAY = 200;
         const SHUFFLE_COST = 50;
+        const ADD_BUBBLE_INTERVAL = 3; // Füge alle 3 Züge eine Bonusblase hinzu
 
         // Spielzustand
         let state = {
@@ -605,6 +608,7 @@
             nextBubbles: [1, 1, 1],
             gameOver: false,
             selectedBubble: null,
+            moveCount: 0,
             achievements: [
                 { id: 'level5', title: 'Aufsteiger', description: 'Erreiche eine Level 5 Blase', unlocked: false, reward: 500 },
                 { id: 'level8', title: 'Bubble-Meister', description: 'Erreiche eine Level 8 Blase', unlocked: false, reward: 1000 },
@@ -666,7 +670,8 @@
                     specialBubblesFound: state.specialBubblesFound,
                     muted: state.muted,
                     darkMode: state.darkMode,
-                    tutorialSeen: state.tutorialSeen
+                    tutorialSeen: state.tutorialSeen,
+                    moveCount: state.moveCount
                 });
                 
                 try {
@@ -712,6 +717,7 @@
                     state.muted = parsedData.muted || false;
                     state.darkMode = parsedData.darkMode || false;
                     state.tutorialSeen = parsedData.tutorialSeen || false;
+                    state.moveCount = parsedData.moveCount || 0;
                     
                     updateStats();
                     renderGrid();
@@ -799,6 +805,7 @@
             state.bestCombo = 0;
             state.gameOver = false;
             state.selectedBubble = null;
+            state.moveCount = 0;
             state.nextBubbles = [
                 getRandomBubbleLevel(1, 2),
                 getRandomBubbleLevel(1, 2),
@@ -1115,6 +1122,20 @@
             // Sound abspielen
             playSound('move');
             
+            // Zugzähler erhöhen
+            state.moveCount++;
+            
+            // Prüfen, ob eine Bonusblase hinzugefügt werden sollte
+            if (state.moveCount % ADD_BUBBLE_INTERVAL === 0) {
+                setTimeout(() => {
+                    if (countEmptyCells() > 0) {
+                        addRandomBubble();
+                        showNotification("Bonusblase hinzugefügt!");
+                        renderGrid();
+                    }
+                }, CHAIN_REACTION_DELAY * 2);
+            }
+            
             // Kettenreaktion prüfen
             setTimeout(() => {
                 checkChainReaction(toX, toY);
@@ -1316,7 +1337,34 @@
         function handlePlaceBubble() {
             if (state.gameOver) return;
             
-            // Hervorheben der freien Felder
+            // Anzahl der freien Felder zählen
+            const emptyCellCount = countEmptyCells();
+            
+            if (emptyCellCount === 0) {
+                showNotification('Kein Platz für neue Blasen! Verschmelze erst einige Blasen.');
+                return;
+            }
+            
+            // Mehrere Blasen gleichzeitig platzieren, wenn viel Platz ist
+            if (emptyCellCount >= 8) {
+                // Füge 3 Blasen direkt hinzu, wenn viel Platz ist
+                for (let i = 0; i < 3 && countEmptyCells() > 0; i++) {
+                    addRandomBubble();
+                }
+                renderGrid();
+                showNotification('3 neue Blasen hinzugefügt!');
+                return;
+            } else if (emptyCellCount >= 5) {
+                // Füge 2 Blasen direkt hinzu, wenn mittelmäßig Platz ist
+                for (let i = 0; i < 2 && countEmptyCells() > 0; i++) {
+                    addRandomBubble();
+                }
+                renderGrid();
+                showNotification('2 neue Blasen hinzugefügt!');
+                return;
+            }
+            
+            // Hervorheben der freien Felder für die manuelle Platzierung
             const emptyCells = [];
             for (let y = 0; y < GRID_SIZE; y++) {
                 for (let x = 0; x < GRID_SIZE; x++) {
@@ -1328,11 +1376,6 @@
                         }
                     }
                 }
-            }
-            
-            if (emptyCells.length === 0) {
-                showNotification('Kein Platz für neue Blasen! Verschmelze erst einige Blasen.');
-                return;
             }
             
             // Deselektieren, falls eine Blase ausgewählt ist
@@ -1351,6 +1394,18 @@
                     highlightedCells.forEach(cell => cell.classList.remove('highlight'));
                 }
             }, 3000);
+        }
+        
+        function countEmptyCells() {
+            let count = 0;
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (state.grid[y][x] === null) {
+                        count++;
+                    }
+                }
+            }
+            return count;
         }
 
         function placeNextBubble(x, y) {
@@ -1376,12 +1431,9 @@
                 // Kettenreaktion prüfen
                 setTimeout(() => {
                     if (!checkChainReaction(x, y)) {
-                        // Keine Kettenreaktion, neue zufällige Blase hinzufügen
-                        // (aber nicht immer, um das Spiel nicht zu schwer zu machen)
-                        if (Math.random() < 0.3) {
-                            addRandomBubble();
-                            renderGrid();
-                        }
+                        // Nach jedem Zug eine neue Blase hinzufügen (100% Chance)
+                        addRandomBubble();
+                        renderGrid();
                         
                         // Feld-Check
                         checkFilledGrid();
@@ -1413,56 +1465,74 @@
             if (state.gameOver) return true;
             
             // Prüfen, ob es leere Zellen gibt
-            const hasEmptyCell = state.grid.some(row => row.some(cell => cell === null));
+            const emptyCells = countEmptyCells();
+            const hasEmptyCell = emptyCells > 0;
             
-            if (!hasEmptyCell) {
-                // Prüfen, ob noch Züge möglich sind
-                let movesAvailable = false;
-                
-                // Alle Zellen durchgehen
-                for (let y = 0; y < GRID_SIZE && !movesAvailable; y++) {
-                    for (let x = 0; x < GRID_SIZE && !movesAvailable; x++) {
-                        const bubble = state.grid[y][x];
-                        if (!bubble) continue;
+            // Wenn noch leere Zellen da sind, ist es kein Game Over
+            if (hasEmptyCell) {
+                return false;
+            }
+            
+            // Prüfen, ob noch Züge möglich sind
+            let movesAvailable = false;
+            
+            // Alle Zellen durchgehen
+            for (let y = 0; y < GRID_SIZE && !movesAvailable; y++) {
+                for (let x = 0; x < GRID_SIZE && !movesAvailable; x++) {
+                    const bubble = state.grid[y][x];
+                    if (!bubble) continue;
+                    
+                    // Nachbarn prüfen
+                    const directions = [
+                        { x: 0, y: -1 },  // Oben
+                        { x: 1, y: -1 },  // Oben rechts
+                        { x: 1, y: 0 },   // Rechts
+                        { x: 1, y: 1 },   // Unten rechts
+                        { x: 0, y: 1 },   // Unten
+                        { x: -1, y: 1 },  // Unten links
+                        { x: -1, y: 0 },  // Links
+                        { x: -1, y: -1 }  // Oben links
+                    ];
+                    
+                    for (const dir of directions) {
+                        const newX = x + dir.x;
+                        const newY = y + dir.y;
                         
-                        // Nachbarn prüfen
-                        const directions = [
-                            { x: 0, y: -1 },  // Oben
-                            { x: 1, y: -1 },  // Oben rechts
-                            { x: 1, y: 0 },   // Rechts
-                            { x: 1, y: 1 },   // Unten rechts
-                            { x: 0, y: 1 },   // Unten
-                            { x: -1, y: 1 },  // Unten links
-                            { x: -1, y: 0 },  // Links
-                            { x: -1, y: -1 }  // Oben links
-                        ];
-                        
-                        for (const dir of directions) {
-                            const newX = x + dir.x;
-                            const newY = y + dir.y;
+                        if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+                            const neighborBubble = state.grid[newY][newX];
                             
-                            if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
-                                const neighborBubble = state.grid[newY][newX];
-                                
-                                if (neighborBubble && 
-                                    ((bubble.level === neighborBubble.level) || 
-                                     (bubble.special && neighborBubble.special && bubble.special !== neighborBubble.special))) {
-                                    movesAvailable = true;
-                                    break;
-                                }
+                            if (neighborBubble && canMerge(x, y, newX, newY)) {
+                                movesAvailable = true;
+                                break;
                             }
                         }
                     }
                 }
-                
-                if (!movesAvailable) {
-                    state.gameOver = true;
-                    gameOverElement.classList.add('active');
-                    finalScoreElement.textContent = `Punkte: ${state.score}`;
-                    playSound('gameover');
-                    return true;
-                }
             }
+            
+            if (!movesAvailable) {
+                // Vor dem Game Over eine hilfreiche Nachricht anzeigen
+                showNotification("Keine Züge mehr möglich! Du kannst noch neu mischen...", 3000);
+                
+                // Kurze Verzögerung vor dem Game Over
+                setTimeout(() => {
+                    if (state.score >= SHUFFLE_COST) {
+                        // Automatisch neu mischen, wenn genug Punkte vorhanden sind
+                        shuffleBoard();
+                        showNotification("Blasen wurden automatisch neu gemischt!", 3000);
+                    } else {
+                        state.gameOver = true;
+                        gameOverElement.classList.add('active');
+                        finalScoreElement.textContent = `Punkte: ${state.score}`;
+                        playSound('gameover');
+                    }
+                }, 3000);
+                
+                return true;
+            }
+            
+            return false;
+        }
             
             return false;
         }
