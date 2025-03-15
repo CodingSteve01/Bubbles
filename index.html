@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Merge</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bubble-size: 60px;
+      --grid-gap: 8px;
+      --light-bg: #f0f9ff;
+      --dark-bg: #0f172a;
+      --light-text: #1e293b;
+      --dark-text: #f1f5f9;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .dark {
+      background-color: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .light {
+      background-color: var(--light-bg);
+      color: var(--light-text);
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(5, var(--bubble-size));
+      grid-template-rows: repeat(6, var(--bubble-size));
+      gap: var(--grid-gap);
+      margin: 0 auto;
+    }
+
+    .bubble {
+      width: var(--bubble-size);
+      height: var(--bubble-size);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      color: #fff;
+    }
+
+    .bubble:hover {
+      transform: scale(1.05);
+      z-index: 10;
+    }
+
+    .bubble-dragging {
+      cursor: grabbing;
+      z-index: 100;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .bubble-placeholder {
+      background-color: rgba(255, 255, 255, 0.2);
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+    }
+
+    .bubble-level-1 { background: linear-gradient(135deg, #60a5fa, #3b82f6); box-shadow: 0 2px 5px rgba(59, 130, 246, 0.5); }
+    .bubble-level-2 { background: linear-gradient(135deg, #34d399, #10b981); box-shadow: 0 2px 5px rgba(16, 185, 129, 0.5); }
+    .bubble-level-3 { background: linear-gradient(135deg, #a78bfa, #8b5cf6); box-shadow: 0 2px 5px rgba(139, 92, 246, 0.5); }
+    .bubble-level-4 { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 2px 5px rgba(245, 158, 11, 0.5); }
+    .bubble-level-5 { background: linear-gradient(135deg, #f87171, #ef4444); box-shadow: 0 2px 5px rgba(239, 68, 68, 0.5); }
+    .bubble-level-6 { background: linear-gradient(135deg, #c084fc, #a855f7); box-shadow: 0 2px 5px rgba(168, 85, 247, 0.5); }
+    .bubble-level-7 { background: linear-gradient(135deg, #fb923c, #f97316); box-shadow: 0 2px 5px rgba(249, 115, 22, 0.5); }
+    .bubble-level-8 { background: linear-gradient(135deg, #4ade80, #22c55e); box-shadow: 0 2px 5px rgba(34, 197, 94, 0.5); }
+    .bubble-level-9 { background: linear-gradient(135deg, #2dd4bf, #14b8a6); box-shadow: 0 2px 5px rgba(20, 184, 166, 0.5); }
+    .bubble-level-10 { background: linear-gradient(135deg, #e879f9, #d946ef); box-shadow: 0 2px 5px rgba(217, 70, 239, 0.5); }
+    .bubble-level-11 { background: linear-gradient(135deg, #facc15, #eab308); box-shadow: 0 2px 5px rgba(234, 179, 8, 0.5); }
+    .bubble-level-12 { background: linear-gradient(135deg, #38bdf8, #0ea5e9); box-shadow: 0 2px 5px rgba(14, 165, 233, 0.5); }
+    .bubble-level-special { 
+      background: linear-gradient(135deg, #f472b6, #ec4899, #d946ef, #8b5cf6, #3b82f6, #14b8a6, #22c55e);
+      background-size: 400% 400%;
+      animation: gradient 3s ease infinite;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.7);
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .bubble-special::after {
+      content: "★";
+      position: absolute;
+      font-size: 14px;
+      animation: spin 2s linear infinite;
+    }
+  
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .pop-animation {
+      animation: pop 0.5s ease-out;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .merge-animation {
+      animation: merge 0.5s ease-out;
+    }
+
+    @keyframes merge {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .pulse-animation {
+      animation: pulse 1s ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .new-bubble-animation {
+      animation: newBubble 0.6s ease-out;
+    }
+
+    @keyframes newBubble {
+      0% { transform: scale(0); }
+      60% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+
+    .btn-secondary {
+      background-color: #6b7280;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #4b5563;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 90%;
+      width: 500px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .dark .modal-content {
+      background-color: #1e293b;
+      color: white;
+    }
+
+    .fade-enter-active, .fade-leave-active {
+      transition: opacity 0.3s;
+    }
+
+    .fade-enter-from, .fade-leave-to {
+      opacity: 0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      :root {
+        --bubble-size: 50px;
+        --grid-gap: 6px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --bubble-size: 45px;
+        --grid-gap: 5px;
+      }
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      cursor: pointer;
+    }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      pointer-events: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body class="light min-h-screen flex flex-col items-center justify-center py-4">
+  <div id="app" class="container mx-auto px-4">
+    <!-- Game template will be rendered here -->
+  </div>
+
+  <script>
+    // Localization plugin
+    const localization = {
+      translations: {
+        en: {
+          'title': 'Bubble Merge',
+          'next-bubble': 'Next Bubble:',
+          'move-bubbles': 'Move bubbles and combine same numbers',
+          'after-each-move': 'After each move a new bubble appears',
+          'game-over': 'Game Over!',
+          'your-score': 'Your Score: {0}',
+          'highest-bubble': 'Highest Bubble: Level {0}',
+          'play-again': 'Play Again',
+          'how-to-play': 'How to Play',
+          'step1': '1. Drag bubbles to move them',
+          'step2': '2. Connect same bubbles to merge them',
+          'step3': '3. After each move a new bubble appears',
+          'step4': '4. Create highest bubbles for more points',
+          'step5': '5. Game ends when the board is full',
+          'play': 'Play',
+          'special-bubble': 'Special Bubble!',
+          'combo': '{0}x Combo!',
+          'level-up': 'Level Up!',
+          'new-high-score': 'New High Score!',
+          'high-score': 'High Score: {0}',
+          'hint': 'Hint',
+          'continue': 'Continue',
+          'save': 'Game Saved',
+          'loaded': 'Game Loaded',
+          'combo-bonus': '+{0} Combo Bonus!',
+          'chain-reaction': 'Chain Reaction!',
+          'special-power': 'Special Power Activated!',
+          'close': 'Close',
+          'settings': 'Settings',
+          'language': 'Language',
+          'theme': 'Theme',
+          'light': 'Light',
+          'dark': 'Dark',
+          'sound': 'Sound',
+          'on': 'On',
+          'off': 'Off',
+          'achievements': 'Achievements',
+          'stats': 'Statistics',
+          'games-played': 'Games Played: {0}',
+          'bubbles-merged': 'Bubbles Merged: {0}',
+          'max-level': 'Max Level Reached: {0}',
+          'total-score': 'Total Score: {0}',
+          'unlock-more': 'Unlock more achievements by playing!',
+          'power-up-1': 'Rainbow Bubble',
+          'power-up-2': 'Bomb Bubble',
+          'power-up-3': 'Time Freezer',
+          'continue-game': 'Continue Game',
+          'new-game': 'New Game',
+          'merge-nearby': 'Merge nearby bubbles automatically!',
+          'bonus-points': '+{0} Bonus Points!'
+        },
+        de: {
+          'title': 'Bubble Merge',
+          'next-bubble': 'Nächste Blase:',
+          'move-bubbles': 'Bewege Blasen und kombiniere gleiche Nummern',
+          'after-each-move': 'Nach jedem Zug erscheint eine neue Blase',
+          'game-over': 'Spiel vorbei!',
+          'your-score': 'Dein Punktestand: {0}',
+          'highest-bubble': 'Höchste Blase: Level {0}',
+          'play-again': 'Noch einmal spielen',
+          'how-to-play': 'Spielanleitung',
+          'step1': '1. Ziehe Blasen, um sie zu bewegen',
+          'step2': '2. Verbinde gleiche Blasen, um sie zu verschmelzen',
+          'step3': '3. Nach jedem Zug erscheint eine neue Blase',
+          'step4': '4. Bilde möglichst hohe Blasen für mehr Punkte',
+          'step5': '5. Das Spiel endet, wenn das Feld voll ist',
+          'play': 'Spielen',
+          'special-bubble': 'Spezial-Blase!',
+          'combo': '{0}x Combo!',
+          'level-up': 'Level aufgestiegen!',
+          'new-high-score': 'Neuer Highscore!',
+          'high-score': 'Highscore: {0}',
+          'hint': 'Tipp',
+          'continue': 'Fortsetzen',
+          'save': 'Spiel gespeichert',
+          'loaded': 'Spiel geladen',
+          'combo-bonus': '+{0} Combo Bonus!',
+          'chain-reaction': 'Kettenreaktion!',
+          'special-power': 'Spezialfähigkeit aktiviert!',
+          'close': 'Schließen',
+          'settings': 'Einstellungen',
+          'language': 'Sprache',
+          'theme': 'Design',
+          'light': 'Hell',
+          'dark': 'Dunkel',
+          'sound': 'Ton',
+          'on': 'An',
+          'off': 'Aus',
+          'achievements': 'Erfolge',
+          'stats': 'Statistik',
+          'games-played': 'Gespielte Spiele: {0}',
+          'bubbles-merged': 'Blasen verschmolzen: {0}',
+          'max-level': 'Max. Level erreicht: {0}',
+          'total-score': 'Gesamtpunktzahl: {0}',
+          'unlock-more': 'Schalte weitere Erfolge frei, indem du spielst!',
+          'power-up-1': 'Regenbogen-Blase',
+          'power-up-2': 'Bomben-Blase',
+          'power-up-3': 'Zeitbremse',
+          'continue-game': 'Spiel fortsetzen',
+          'new-game': 'Neues Spiel',
+          'merge-nearby': 'Verschmelze benachbarte Blasen automatisch!',
+          'bonus-points': '+{0} Bonuspunkte!'
+        }
+      },
+      currentLang: 'de',
+      
+      // Übersetzungsfunktion gemäß den Präferenzen des Nutzers
+      translate(key) {
+        return this.translations[this.currentLang][key] || key;
+      },
+      
+      // Ersetze Platzhalter in Übersetzungen
+      translateWithParams(key, ...params) {
+        let text = this.translate(key);
+        params.forEach((param, index) => {
+          text = text.replace(`{${index}}`, param);
+        });
+        return text;
+      }
+    };
+    
+    // Alias für die Translate-Funktion
+    function translate(key) {
+      return localization.translations[localization.currentLang][key] || key;
+    }
+    
+    // Ersetze-Funktion für Platzhalter
+    translate.replace = function(text, param) {
+      return text.replace('{0}', param);
+    };
+
+    const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        // Spieleinstellungen und -zustand
+        const gameState = reactive({
+          board: [],
+          nextBubble: null,
+          score: 0,
+          highScore: 0,
+          highestBubble: 1,
+          gameOver: false,
+          boardSize: { rows: 6, cols: 5 },
+          isDragging: false,
+          draggedBubble: null,
+          dragPosition: { x: 0, y: 0 },
+          originPosition: { row: 0, col: 0 },
+          targetPosition: { row: 0, col: 0 },
+          placeholderVisible: false,
+          gameStarted: false,
+          showTutorial: false,
+          showGameOver: false,
+          combo: 0,
+          maxCombo: 0,
+          showSettings: false,
+          theme: 'light',
+          soundEnabled: true,
+          notifications: [],
+          achievements: [],
+          stats: {
+            gamesPlayed: 0,
+            bubblesPopped: 0,
+            highestLevel: 1,
+            totalScore: 0
+          },
+          specialBubbleChance: 0.05, // 5% Chance für Spezialblasen
+          lastMove: null,
+          hintTimeout: null,
+          hintVisible: false,
+          showConfetti: false,
+          powerUps: [],
+          activePowerUp: null,
+          specialPowerActive: false,
+          chainReactionCount: 0
+        });
+        
+        // Referenz für die Spielumgebung
+        const gameBoard = ref(null);
+        
+        // Berechnung der leeren Positionen im Spielfeld
+        const emptyPositions = computed(() => {
+          const empty = [];
+          for (let row = 0; row < gameState.boardSize.rows; row++) {
+            for (let col = 0; col < gameState.boardSize.cols; col++) {
+              if (!gameState.board[row][col]) {
+                empty.push({ row, col });
+              }
+            }
+          }
+          return empty;
+        });
+        
+        // Berechnung, ob das Spiel zu Ende ist
+        const isGameOver = computed(() => {
+          // Wenn noch leere Positionen vorhanden sind, ist das Spiel nicht vorbei
+          if (emptyPositions.value.length > 0) return false;
+          
+          // Überprüfe, ob noch Verschmelzungen möglich sind
+          for (let row = 0; row < gameState.boardSize.rows; row++) {
+            for (let col = 0; col < gameState.boardSize.cols; col++) {
+              const bubble = gameState.board[row][col];
+              if (!bubble) continue;
+              
+              // Überprüfe alle Nachbarpositionen (horizontal, vertikal, diagonal)
+              const directions = [
+                {r: -1, c: 0},  // oben
+                {r: 1, c: 0},   // unten
+                {r: 0, c: -1},  // links
+                {r: 0, c: 1},   // rechts
+                {r: -1, c: -1}, // oben links
+                {r: -1, c: 1},  // oben rechts
+                {r: 1, c: -1},  // unten links
+                {r: 1, c: 1}    // unten rechts
+              ];
+              
+              for (const dir of directions) {
+                const newRow = row + dir.r;
+                const newCol = col + dir.c;
+                
+                // Überprüfe, ob die Position gültig ist
+                if (newRow >= 0 && newRow < gameState.boardSize.rows && 
+                    newCol >= 0 && newCol < gameState.boardSize.cols) {
+                  const neighbor = gameState.board[newRow][newCol];
+                  
+                  // Wenn der Nachbar die gleiche Stufe hat, sind Verschmelzungen möglich
+                  if (neighbor && neighbor.level === bubble.level) {
+                    return false;
+                  }
+                  
+                  // Wenn einer eine Spezialblase ist, sind auch Verschmelzungen möglich
+                  if ((neighbor && neighbor.isSpecial) || bubble.isSpecial) {
+                    return false;
+                  }
+                }
+              }
+            }
+          }
+          
+          // Wenn keine Verschmelzungen mehr möglich sind, ist das Spiel vorbei
+          return true;
+        });
+        
+        // Lade gespeicherte Daten aus dem LocalStorage
+        const loadFromLocalStorage = () => {
+          try {
+            // Lade den Highscore
+            const savedHighScore = localStorage.getItem('bubbleMergeHighScore');
+            if (savedHighScore) {
+              gameState.highScore = parseInt(savedHighScore);
+            }
+            
+            // Lade Statistiken
+            const savedStats = localStorage.getItem('bubbleMergeStats');
+            if (savedStats) {
+              gameState.stats = JSON.parse(savedStats);
+            }
+            
+            // Lade das Theme
+            const savedTheme = localStorage.getItem('bubbleMergeTheme');
+            if (savedTheme) {
+              gameState.theme = savedTheme;
+              document.body.className = savedTheme;
+            }
+            
+            // Lade Sound-Einstellungen
+            const soundEnabled = localStorage.getItem('bubbleMergeSound');
+            if (soundEnabled !== null) {
+              gameState.soundEnabled = soundEnabled === 'true';
+            }
+            
+            // Lade gespeicherten Spielstand
+            const savedGame = localStorage.getItem('bubbleMergeGameState');
+            if (savedGame) {
+              const parsedGame = JSON.parse(savedGame);
+              // Überprüfe, ob das gespeicherte Spiel gültig ist
+              if (parsedGame && parsedGame.board && !parsedGame.gameOver) {
+                return parsedGame;
+              }
+            }
+          } catch (error) {
+            console.error('Error loading from localStorage:', error);
+          }
+          return null;
+        };
+        
+        // Speichere Daten im LocalStorage
+        const saveToLocalStorage = () => {
+          try {
+            // Speichere Highscore
+            localStorage.setItem('bubbleMergeHighScore', gameState.highScore);
+            
+            // Speichere Statistiken
+            localStorage.setItem('bubbleMergeStats', JSON.stringify(gameState.stats));
+            
+            // Speichere Theme
+            localStorage.setItem('bubbleMergeTheme', gameState.theme);
+            
+            // Speichere Sound-Einstellungen
+            localStorage.setItem('bubbleMergeSound', gameState.soundEnabled);
+            
+            // Speichere aktuellen Spielstand, wenn das Spiel nicht vorbei ist
+            if (gameState.gameStarted && !gameState.gameOver) {
+              const gameDataToSave = {
+                board: gameState.board,
+                nextBubble: gameState.nextBubble,
+                score: gameState.score,
+                highestBubble: gameState.highestBubble,
+                gameOver: gameState.gameOver
+              };
+              localStorage.setItem('bubbleMergeGameState', JSON.stringify(gameDataToSave));
+              showNotification(translate('save'));
+            }
+          } catch (error) {
+            console.error('Error saving to localStorage:', error);
+          }
+        };
+        
+        // Initialisiere das Spielbrett
+        const initBoard = () => {
+          gameState.board = Array(gameState.boardSize.rows).fill().map(() => 
+            Array(gameState.boardSize.cols).fill(null)
+          );
+        };
+        
+        // Generiere eine neue Blase
+        const generateBubble = (level = null, isSpecial = false) => {
+          // Falls keine Stufe angegeben ist, generiere eine zufällige zwischen 1 und 3
+          if (level === null) {
+            level = Math.floor(Math.random() * 3) + 1;
+          }
+          
+          // Bestimme, ob es eine Spezialblase sein soll
+          if (!isSpecial && Math.random() < gameState.specialBubbleChance) {
+            isSpecial = true;
+          }
+          
+          return { 
+            level, 
+            isSpecial,
+            id: Date.now() + Math.random().toString(36).substr(2, 9)
+          };
+        };
+        
+        // Platziere eine neue Blase auf dem Brett
+        const placeNewBubble = () => {
+          // Wenn keine leeren Positionen mehr vorhanden sind, ist das Spiel vorbei
+          if (emptyPositions.value.length === 0) {
+            endGame();
+            return;
+          }
+          
+          // Wähle eine zufällige leere Position
+          const randomIndex = Math.floor(Math.random() * emptyPositions.value.length);
+          const position = emptyPositions.value[randomIndex];
+          
+          // Platziere die nächste vorbereitete Blase oder generiere eine neue
+          const bubble = gameState.nextBubble || generateBubble();
+          gameState.board[position.row][position.col] = bubble;
+          
+          // Generiere die nächste Blase
+          gameState.nextBubble = generateBubble();
+          
+          // Animation für neue Blase
+          nextTick(() => {
+            const element = document.querySelector(`[data-row="${position.row}"][data-col="${position.col}"] .bubble`);
+            if (element) {
+              element.classList.add('new-bubble-animation');
+              setTimeout(() => {
+                element.classList.remove('new-bubble-animation');
+              }, 600);
+            }
+          });
+          
+          // Überprüfe nach dem Platzieren, ob automatische Verschmelzungen möglich sind
+          checkForAutoMerges(position.row, position.col);
+          
+          // Überprüfe, ob das Spiel vorbei ist
+          if (isGameOver.value) {
+            endGame();
+          } else {
+            // Stelle ggf. den Hinweis-Timer ein
+            setHintTimer();
+          }
+        };
+        
+        // Setze den Timer für den Hinweis
+        const setHintTimer = () => {
+          // Entferne vorherigen Timer
+          if (gameState.hintTimeout) {
+            clearTimeout(gameState.hintTimeout);
+          }
+          
+          // Setze neuen Timer (zeige Hinweis nach 10 Sekunden Inaktivität)
+          gameState.hintTimeout = setTimeout(() => {
+            if (!gameState.gameOver && !gameState.isDragging) {
+              showHint();
+            }
+          }, 10000);
+        };
+        
+        // Zeige einen Hinweis für mögliche Züge
+        const showHint = () => {
+          // Finde mögliche Verschmelzungen
+          const possibleMerges = findPossibleMerges();
+          
+          if (possibleMerges.length > 0) {
+            // Wähle eine zufällige Verschmelzungsmöglichkeit
+            const randomMerge = possibleMerges[Math.floor(Math.random() * possibleMerges.length)];
+            
+            // Hervorheben der möglichen Verschmelzung
+            gameState.hintVisible = true;
+            
+            nextTick(() => {
+              // Animiere die Blasen mit einem Pulsieren
+              const sourceElement = document.querySelector(`[data-row="${randomMerge.sourceRow}"][data-col="${randomMerge.sourceCol}"] .bubble`);
+              const targetElement = document.querySelector(`[data-row="${randomMerge.targetRow}"][data-col="${randomMerge.targetCol}"] .bubble`);
+              
+              if (sourceElement && targetElement) {
+                sourceElement.classList.add('pulse-animation');
+                targetElement.classList.add('pulse-animation');
+                
+                // Entferne die Animation nach einiger Zeit
+                setTimeout(() => {
+                  sourceElement.classList.remove('pulse-animation');
+                  targetElement.classList.remove('pulse-animation');
+                  gameState.hintVisible = false;
+                }, 2000);
+              }
+            });
+          }
+        };
+        
+        // Finde mögliche Verschmelzungen
+        const findPossibleMerges = () => {
+          const possibleMerges = [];
+          
+          for (let row = 0; row < gameState.boardSize.rows; row++) {
+            for (let col = 0; col < gameState.boardSize.cols; col++) {
+              const bubble = gameState.board[row][col];
+              if (!bubble) continue;
+              
+              // Überprüfe alle Nachbarpositionen (horizontal, vertikal, diagonal)
+              const directions = [
+                {r: -1, c: 0},  // oben
+                {r: 1, c: 0},   // unten
+                {r: 0, c: -1},  // links
+                {r: 0, c: 1},   // rechts
+                {r: -1, c: -1}, // oben links
+                {r: -1, c: 1},  // oben rechts
+                {r: 1, c: -1},  // unten links
+                {r: 1, c: 1}    // unten rechts
+              ];
+              
+              for (const dir of directions) {
+                const newRow = row + dir.r;
+                const newCol = col + dir.c;
+                
+                // Überprüfe, ob die Position gültig ist
+                if (newRow >= 0 && newRow < gameState.boardSize.rows && 
+                    newCol >= 0 && newCol < gameState.boardSize.cols) {
+                  const neighbor = gameState.board[newRow][newCol];
+                  
+                  // Wenn der Nachbar die gleiche Stufe hat oder eine Spezialblase involviert ist
+                  if (neighbor && (neighbor.level === bubble.level || neighbor.isSpecial || bubble.isSpecial)) {
+                    possibleMerges.push({
+                      sourceRow: row,
+                      sourceCol: col,
+                      targetRow: newRow,
+                      targetCol: newCol
+                    });
+                  }
+                }
+              }
+            }
+          }
+          
+          return possibleMerges;
+        };
+        
+        // Überprüfe nach automatischen Verschmelzungen
+        const checkForAutoMerges = (row, col) => {
+          const bubble = gameState.board[row][col];
+          if (!bubble) return;
+          
+          let mergedAny = false;
+          
+          // Überprüfe alle Nachbarpositionen (horizontal, vertikal, diagonal)
+          const directions = [
+            {r: -1, c: 0},  // oben
+            {r: 1, c: 0},   // unten
+            {r: 0, c: -1},  // links
+            {r: 0, c: 1},   // rechts
+            {r: -1, c: -1}, // oben links
+            {r: -1, c: 1},  // oben rechts
+            {r: 1, c: -1},  // unten links
+            {r: 1, c: 1}    // unten rechts
+          ];
+          
+          // Sammle alle möglichen Verschmelzungen
+          const mergeCandidates = [];
+          
+          for (const dir of directions) {
+            const newRow = row + dir.r;
+            const newCol = col + dir.c;
+            
+            // Überprüfe, ob die Position gültig ist
+            if (newRow >= 0 && newRow < gameState.boardSize.rows && 
+                newCol >= 0 && newCol < gameState.boardSize.cols) {
+              const neighbor = gameState.board[newRow][newCol];
+              
+              // Wenn der Nachbar die gleiche Stufe hat oder eine Spezialblase involviert ist
+              if (neighbor && (neighbor.level === bubble.level || neighbor.isSpecial || bubble.isSpecial)) {
+                mergeCandidates.push({ row: newRow, col: newCol });
+              }
+            }
+          }
+          
+          // Wenn Verschmelzungskandidaten gefunden wurden
+          if (mergeCandidates.length > 0) {
+            // Beginne mit einem zufälligen Kandidaten
+            const randomCandidate = mergeCandidates[Math.floor(Math.random() * mergeCandidates.length)];
+            mergeBubbles(row, col, randomCandidate.row, randomCandidate.col);
+            mergedAny = true;
+            
+            // Wenn mehrere Kandidaten vorhanden sind, erhöhe den Combo-Zähler
+            if (mergeCandidates.length > 1) {
+              gameState.combo++;
+              showNotification(translate.replace(translate('combo'), gameState.combo));
+              
+              // Zusätzliche Punkte für Combos
+              const comboBonus = gameState.combo * 5 * getBubbleLevel(row, col);
+              gameState.score += comboBonus;
+              showNotification(translate.replace(translate('combo-bonus'), comboBonus));
+            }
+            
+            // Bei mehr als 3 Kandidaten - Kettenreaktion
+            if (mergeCandidates.length >= 3) {
+              gameState.chainReactionCount++;
+              showNotification(translate('chain-reaction'));
+              
+              // Zusätzliche Punkte für Kettenreaktion
+              const chainBonus = 50 * gameState.chainReactionCount;
+              gameState.score += chainBonus;
+              showNotification(translate.replace(translate('bonus-points'), chainBonus));
+              
+              // Zeige Konfetti bei großen Kettenreaktionen
+              if (gameState.chainReactionCount >= 2) {
+                showConfetti();
+              }
+            }
+          }
+          
+          // Wenn keine Verschmelzung stattgefunden hat, setze Combo zurück
+          if (!mergedAny) {
+            gameState.combo = 0;
+            gameState.chainReactionCount = 0;
+          }
+          
+          // Aktualisiere den maximalen Combo-Wert
+          if (gameState.combo > gameState.maxCombo) {
+            gameState.maxCombo = gameState.combo;
+          }
+        };
+        
+        // Verschmelze zwei Blasen
+        const mergeBubbles = (row1, col1, row2, col2) => {
+          const bubble1 = gameState.board[row1][col1];
+          const bubble2 = gameState.board[row2][col2];
+          
+          if (!bubble1 || !bubble2) return;
+          
+          // Bestimme die neue Stufe und Spezialstatus
+          let newLevel = bubble1.level;
+          let isSpecial = bubble1.isSpecial || bubble2.isSpecial;
+          
+          // Wenn beide Blasen gleicher Stufe sind und keine Spezialblase dabei ist
+          if (bubble1.level === bubble2.level && !isSpecial) {
+            newLevel = bubble1.level + 1;
+            
+            // Aktualisiere die höchste erreichte Blase
+            if (newLevel > gameState.highestBubble) {
+              gameState.highestBubble = newLevel;
+              showNotification(translate('level-up'));
+              
+              // Ab Level 10 mit höherer Wahrscheinlichkeit Spezialblasen
+              if (newLevel >= 10) {
+                gameState.specialBubbleChance = 0.15;
+              }
+              
+              // Zeige Konfetti bei hohen Levels
+              if (newLevel >= 8) {
+                showConfetti();
+              }
+            }
+          } else if (isSpecial) {
+            // Bei Spezialblase: Wenn eine davon eine Spezialblase ist, verwende die höhere Stufe
+            newLevel = Math.max(bubble1.level, bubble2.level);
+            
+            // Erhöhe Stufe bei Spezialblase
+            newLevel++;
+            
+            // Wende Spezialeffekt an
+            applySpecialEffect(row1, col1);
+          }
+          
+          // Berechne Punkte für die Verschmelzung
+          const mergePoints = calculateMergePoints(bubble1.level, bubble2.level, isSpecial);
+          gameState.score += mergePoints;
+          
+          // Animiere die Verschmelzung
+          nextTick(() => {
+            const targetElement = document.querySelector(`[data-row="${row1}"][data-col="${col1}"] .bubble`);
+            const sourceElement = document.querySelector(`[data-row="${row2}"][data-col="${col2}"] .bubble`);
+            
+            if (targetElement && sourceElement) {
+              sourceElement.classList.add('pop-animation');
+              
+              setTimeout(() => {
+                // Entferne zweite Blase und aktualisiere erste Blase
+                gameState.board[row2][col2] = null;
+                gameState.board[row1][col1] = generateBubble(newLevel, isSpecial);
+                
+                // Starte Merge-Animation
+                nextTick(() => {
+                  const newElement = document.querySelector(`[data-row="${row1}"][data-col="${col1}"] .bubble`);
+                  if (newElement) {
+                    newElement.classList.add('merge-animation');
+                    setTimeout(() => {
+                      newElement.classList.remove('merge-animation');
+                    }, 500);
+                  }
+                });
+                
+                // Aktualisiere Statistik
+                gameState.stats.bubblesPopped++;
+                
+                // Überprüfe auf weitere mögliche Verschmelzungen
+                checkForAutoMerges(row1, col1);
+              }, 300);
+            }
+          });
+          
+          // Wenn Highscore erreicht wurde
+          if (gameState.score > gameState.highScore) {
+            gameState.highScore = gameState.score;
+            showNotification(translate('new-high-score'));
+          }
+          
+          // Speichere den Spielstand
+          saveToLocalStorage();
+        };
+        
+        // Berechne die Punkte für eine Verschmelzung
+        const calculateMergePoints = (level1, level2, isSpecial) => {
+          let basePoints = Math.pow(2, level1) + Math.pow(2, level2);
+          
+          // Bonus für Spezialblasen
+          if (isSpecial) {
+            basePoints *= 2;
+          }
+          
+          // Combo-Multiplikator
+          const comboMultiplier = gameState.combo > 0 ? gameState.combo : 1;
+          
+          return basePoints * comboMultiplier;
+        };
+        
+        // Wende Spezialeffekt der Spezialblasen an
+        const applySpecialEffect = (row, col) => {
+          // Mögliche Spezialeffekte
+          const effects = [
+            // Effekt 1: Entferne alle Blasen der gleichen Farbe (Level)
+            () => {
+              const bubbleLevel = gameState.board[row][col]?.level;
+              let count = 0;
+              
+              // Durchlaufe alle Blasen und entferne die mit dem gleichen Level
+              for (let r = 0; r < gameState.boardSize.rows; r++) {
+                for (let c = 0; c < gameState.boardSize.cols; c++) {
+                  if (gameState.board[r][c] && gameState.board[r][c].level === bubbleLevel) {
+                    // Animiere das Entfernen
+                    nextTick(() => {
+                      const element = document.querySelector(`[data-row="${r}"][data-col="${c}"] .bubble`);
+                      if (element) {
+                        element.classList.add('pop-animation');
+                      }
+                    });
+                    
+                    // Entferne die Blase nach der Animation
+                    setTimeout(() => {
+                      if (r !== row || c !== col) { // Nicht die Originalblase entfernen
+                        gameState.board[r][c] = null;
+                        count++;
+                      }
+                    }, 300);
+                  }
+                }
+              }
+              
+              // Füge Punkte für alle entfernten Blasen hinzu
+              gameState.score += count * Math.pow(2, bubbleLevel) * 3;
+              
+              // Zeige Benachrichtigung
+              showNotification(translate('special-power'));
+              showNotification(translate.replace(translate('bonus-points'), count * Math.pow(2, bubbleLevel) * 3));
+            },
+            
+            // Effekt 2: Entferne alle benachbarten Blasen
+            () => {
+              const directions = [
+                {r: -1, c: 0}, {r: 1, c: 0}, {r: 0, c: -1}, {r: 0, c: 1},
+                {r: -1, c: -1}, {r: -1, c: 1}, {r: 1, c: -1}, {r: 1, c: 1}
+              ];
+              
+              let count = 0;
+              let totalPoints = 0;
+              
+              // Entferne alle Nachbarblasen
+              for (const dir of directions) {
+                const newRow = row + dir.r;
+                const newCol = col + dir.c;
+                
+                if (newRow >= 0 && newRow < gameState.boardSize.rows && 
+                    newCol >= 0 && newCol < gameState.boardSize.cols && 
+                    gameState.board[newRow][newCol]) {
+                  
+                  // Berechne Punkte
+                  const bubbleLevel = gameState.board[newRow][newCol].level;
+                  totalPoints += Math.pow(2, bubbleLevel) * 2;
+                  count++;
+                  
+                  // Animiere das Entfernen
+                  nextTick(() => {
+                    const element = document.querySelector(`[data-row="${newRow}"][data-col="${newCol}"] .bubble`);
+                    if (element) {
+                      element.classList.add('pop-animation');
+                    }
+                  });
+                  
+                  // Entferne die Blase nach der Animation
+                  setTimeout(() => {
+                    gameState.board[newRow][newCol] = null;
+                  }, 300);
+                }
+              }
+              
+              // Füge Punkte hinzu
+              gameState.score += totalPoints;
+              
+              // Zeige Benachrichtigung
+              showNotification(translate('special-power'));
+              showNotification(translate.replace(translate('merge-nearby'), count));
+              showNotification(translate.replace(translate('bonus-points'), totalPoints));
+            },
+            
+            // Effekt 3: Verwandle benachbarte Blasen in höhere Stufen
+            () => {
+              const directions = [
+                {r: -1, c: 0}, {r: 1, c: 0}, {r: 0, c: -1}, {r: 0, c: 1},
+                {r: -1, c: -1}, {r: -1, c: 1}, {r: 1, c: -1}, {r: 1, c: 1}
+              ];
+              
+              // Verbessere alle Nachbarblasen
+              for (const dir of directions) {
+                const newRow = row + dir.r;
+                const newCol = col + dir.c;
+                
+                if (newRow >= 0 && newRow < gameState.boardSize.rows && 
+                    newCol >= 0 && newCol < gameState.boardSize.cols && 
+                    gameState.board[newRow][newCol]) {
+                  
+                  // Animiere die Verbesserung
+                  nextTick(() => {
+                    const element = document.querySelector(`[data-row="${newRow}"][data-col="${newCol}"] .bubble`);
+                    if (element) {
+                      element.classList.add('merge-animation');
+                      setTimeout(() => {
+                        element.classList.remove('merge-animation');
+                      }, 500);
+                    }
+                  });
+                  
+                  // Erhöhe den Level der Blase
+                  const currentLevel = gameState.board[newRow][newCol].level;
+                  gameState.board[newRow][newCol] = generateBubble(currentLevel + 1);
+                  
+                  // Zusätzliche Punkte
+                  gameState.score += Math.pow(2, currentLevel);
+                }
+              }
+              
+              // Zeige Benachrichtigung
+              showNotification(translate('power-up-1'));
+            }
+          ];
+          
+          // Wähle einen zufälligen Effekt
+          const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+          randomEffect();
+          
+          // Zeige Konfetti für Spezialeffekt
+          showConfetti();
+          
+          // Markiere Spezialfähigkeit als aktiv
+          gameState.specialPowerActive = true;
+          setTimeout(() => {
+            gameState.specialPowerActive = false;
+          }, 2000);
+        };
+        
+        // Ermittle die Stufe einer Blase
+        const getBubbleLevel = (row, col) => {
+          return gameState.board[row][col]?.level || 0;
+        };
+        
+        // Starte ein neues Spiel
+        const startNewGame = () => {
+          // Initialisiere das Brett
+          initBoard();
+          
+          // Setze Spielvariablen zurück
+          gameState.score = 0;
+          gameState.highestBubble = 1;
+          gameState.gameOver = false;
+          gameState.gameStarted = true;
+          gameState.showTutorial = false;
+          gameState.showGameOver = false;
+          gameState.combo = 0;
+          gameState.maxCombo = 0;
+          gameState.specialBubbleChance = 0.05;
+          gameState.chainReactionCount = 0;
+          
+          // Aktualisiere Statistiken
+          gameState.stats.gamesPlayed++;
+          saveToLocalStorage();
+          
+          // Platziere initiale Blasen (2-4 zufällige Blasen)
+          const initialBubbles = Math.floor(Math.random() * 3) + 2;
+          for (let i = 0; i < initialBubbles; i++) {
+            placeNewBubble();
+          }
+          
+          // Bereite die nächste Blase vor
+          gameState.nextBubble = generateBubble();
+          
+          // Setze den Hinweis-Timer
+          setHintTimer();
+          
+          // Lösche gespeicherten Spielstand, wenn ein neues Spiel gestartet wird
+          localStorage.removeItem('bubbleMergeGameState');
+        };
+        
+        // Beende das Spiel
+        const endGame = () => {
+          gameState.gameOver = true;
+          gameState.showGameOver = true;
+          
+          // Aktualisiere die höchste Stufe in den Statistiken
+          if (gameState.highestBubble > gameState.stats.highestLevel) {
+            gameState.stats.highestLevel = gameState.highestBubble;
+          }
+          
+          // Aktualisiere die Gesamtpunktzahl
+          gameState.stats.totalScore += gameState.score;
+          
+          // Speichere Statistiken
+          saveToLocalStorage();
+          
+          // Zeige Konfetti bei hohen Punktzahlen oder neuem Highscore
+          if (gameState.score > gameState.highScore * 0.8 || gameState.score > 5000) {
+            showConfetti();
+          }
+          
+          // Lösche gespeicherten Spielstand, wenn das Spiel vorbei ist
+          localStorage.removeItem('bubbleMergeGameState');
+        };
+        
+        // Zeige eine Benachrichtigung
+        const showNotification = (message) => {
+          // Füge die Nachricht zum Array hinzu
+          gameState.notifications.push({
+            id: Date.now(),
+            message
+          });
+          
+          // Entferne die Nachricht nach 3 Sekunden
+          setTimeout(() => {
+            gameState.notifications.shift();
+          }, 3000);
+        };
+        
+        // Zeige Konfetti-Animation
+        const showConfetti = () => {
+          gameState.showConfetti = true;
+          
+          // Erzeuge Konfetti-Elemente
+          nextTick(() => {
+            const confettiCount = 100;
+            const container = document.getElementById('app');
+            
+            for (let i = 0; i < confettiCount; i++) {
+              createConfettiPiece(container);
+            }
+            
+            // Beende die Konfetti-Animation nach einigen Sekunden
+            setTimeout(() => {
+              gameState.showConfetti = false;
+              const confettiElements = document.querySelectorAll('.confetti');
+              confettiElements.forEach(element => {
+                element.remove();
+              });
+            }, 3000);
+          });
+        };
+        
+        // Erzeuge ein einzelnes Konfetti-Stück
+        const createConfettiPiece = (container) => {
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          
+          // Zufällige Position im Container
+          const left = Math.random() * 100;
+          confetti.style.left = `${left}%`;
+          confetti.style.top = '-5px';
+          
+          // Zufällige Größe
+          const size = Math.random() * 10 + 5;
+          confetti.style.width = `${size}px`;
+          confetti.style.height = `${size}px`;
+          
+          // Zufällige Farbe
+          const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#a855f7', '#f97316', '#14b8a6'];
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.backgroundColor = color;
+          
+          // Zufällige Form
+          const shapes = ['circle', 'square', 'triangle'];
+          const shape = shapes[Math.floor(Math.random() * shapes.length)];
+          if (shape === 'circle') {
+            confetti.style.borderRadius = '50%';
+          } else if (shape === 'triangle') {
+            confetti.style.width = '0';
+            confetti.style.height = '0';
+            confetti.style.backgroundColor = 'transparent';
+            confetti.style.borderLeft = `${size/2}px solid transparent`;
+            confetti.style.borderRight = `${size/2}px solid transparent`;
+            confetti.style.borderBottom = `${size}px solid ${color}`;
+          }
+          
+          // Füge zum Container hinzu
+          container.appendChild(confetti);
+          
+          // Animiere das Fallen
+          const animation = confetti.animate([
+            { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+            { transform: `translate(${(Math.random() - 0.5) * 400}px, ${window.innerHeight}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+          ], {
+            duration: 2000 + Math.random() * 3000,
+            easing: 'cubic-bezier(0.37, 0, 0.63, 1)'
+          });
+          
+          // Entferne das Element nach Ende der Animation
+          animation.onfinish = () => confetti.remove();
+        };
+        
+        // Wechsle zwischen hellem und dunklem Design
+        const toggleTheme = () => {
+          gameState.theme = gameState.theme === 'light' ? 'dark' : 'light';
+          document.body.className = gameState.theme;
+          localStorage.setItem('bubbleMergeTheme', gameState.theme);
+        };
+        
+        // Event-Handler für das Ziehen von Blasen
+        const onDragStart = (event, row, col) => {
+          if (gameState.gameOver || !gameState.gameStarted) return;
+          
+          // Setze den Hinweis-Timer zurück
+          setHintTimer();
+          
+          const bubble = gameState.board[row][col];
+          if (!bubble) return;
+          
+          // Speichere die Informationen über die gezogene Blase
+          gameState.isDragging = true;
+          gameState.draggedBubble = bubble;
+          gameState.originPosition = { row, col };
+          
+          // Bestimme die Anfangsposition des Ziehens
+          const element = event.target;
+          const rect = element.getBoundingClientRect();
+          
+          // Berechne den Offset für das Ziehen
+          const offsetX = event.clientX - (rect.left + rect.width / 2);
+          const offsetY = event.clientY - (rect.top + rect.height / 2);
+          
+          gameState.dragPosition = { x: event.clientX - offsetX, y: event.clientY - offsetY };
+          
+          // Füge die Klasse für das Ziehen hinzu
+          element.classList.add('bubble-dragging');
+        };
+        
+        // Event-Handler für das Bewegen während des Ziehens
+        const onDragMove = (event) => {
+          if (!gameState.isDragging) return;
+          
+          // Aktualisiere die Position der gezogenen Blase
+          gameState.dragPosition = { x: event.clientX, y: event.clientY };
+          
+          // Bestimme die Zielposition
+          if (gameBoard.value) {
+            const boardRect = gameBoard.value.getBoundingClientRect();
+            
+            // Berechne die Zelle, über der sich der Mauszeiger befindet
+            const cellSize = boardRect.width / gameState.boardSize.cols;
+            const col = Math.floor((event.clientX - boardRect.left) / cellSize);
+            const row = Math.floor((event.clientY - boardRect.top) / cellSize);
+            
+            // Überprüfe, ob die Position gültig ist
+            if (row >= 0 && row < gameState.boardSize.rows &&
+                col >= 0 && col < gameState.boardSize.cols) {
+              
+              // Wenn die Position leer ist, zeige Platzhalter an
+              if (!gameState.board[row][col]) {
+                gameState.placeholderVisible = true;
+                gameState.targetPosition = { row, col };
+              }
+            }
+          }
+        };
+        
+        // Event-Handler für das Loslassen der Blase
+        const onDragEnd = () => {
+          if (!gameState.isDragging) return;
+          
+          // Entferne die Klasse für das Ziehen
+          const element = document.querySelector('.bubble-dragging');
+          if (element) {
+            element.classList.remove('bubble-dragging');
+          }
+          
+          // Wenn ein Platzhalter sichtbar ist, verschiebe die Blase
+          if (gameState.placeholderVisible) {
+            const { row: targetRow, col: targetCol } = gameState.targetPosition;
+            const { row: originRow, col: originCol } = gameState.originPosition;
+            
+            // Wenn die Zielposition leer ist, verschiebe die Blase
+            if (!gameState.board[targetRow][targetCol]) {
+              gameState.board[targetRow][targetCol] = gameState.draggedBubble;
+              gameState.board[originRow][originCol] = null;
+              
+              // Speichere den letzten Zug
+              gameState.lastMove = { 
+                from: { row: originRow, col: originCol },
+                to: { row: targetRow, col: targetCol }
+              };
+              
+              // Überprüfe nach automatischen Verschmelzungen
+              checkForAutoMerges(targetRow, targetCol);
+              
+              // Platziere eine neue Blase
+              setTimeout(() => {
+                placeNewBubble();
+              }, 500);
+            }
+          } else {
+            // Überprüfe, ob eine Verschmelzung stattfinden kann
+            const { row: originRow, col: originCol } = gameState.originPosition;
+            
+            // Bestimme die nächstgelegene Zelle mit derselben Blase
+            let nearestSameBubble = null;
+            let minDistance = Infinity;
+            
+            for (let row = 0; row < gameState.boardSize.rows; row++) {
+              for (let col = 0; col < gameState.boardSize.cols; col++) {
+                // Überspringe die Originalposition
+                if (row === originRow && col === originCol) continue;
+                
+                const bubble = gameState.board[row][col];
+                
+                // Wenn die Blase vorhanden ist und die gleiche Stufe hat oder eine Spezialblase involviert ist
+                if (bubble && (bubble.level === gameState.draggedBubble.level || 
+                               bubble.isSpecial || gameState.draggedBubble.isSpecial)) {
+                  
+                  // Berechne den Abstand zur Mausposition
+                  const element = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                  if (element) {
+                    const rect = element.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    const distance = Math.sqrt(
+                      Math.pow(gameState.dragPosition.x - centerX, 2) +
+                      Math.pow(gameState.dragPosition.y - centerY, 2)
+                    );
+                    
+                    // Wenn der Abstand kleiner ist als der bisher kleinste
+                    if (distance < minDistance) {
+                      minDistance = distance;
+                      nearestSameBubble = { row, col };
+                    }
+                  }
+                }
+              }
+            }
+            
+            // Wenn eine nahegelegene Blase gefunden wurde und der Abstand nicht zu groß ist
+            if (nearestSameBubble && minDistance < 100) {
+              mergeBubbles(nearestSameBubble.row, nearestSameBubble.col, originRow, originCol);
+              
+              // Platziere eine neue Blase
+              setTimeout(() => {
+                placeNewBubble();
+              }, 500);
+            }
+          }
+          
+          // Setze die Ziehvariablen zurück
+          gameState.isDragging = false;
+          gameState.draggedBubble = null;
+          gameState.placeholderVisible = false;
+        };
+        
+        // Behandle Touch-Events für mobile Geräte
+        const onTouchStart = (event, row, col) => {
+          // Hindere den Browser daran, die Seite zu scrollen
+          event.preventDefault();
+          
+          // Verwende den ersten Touch-Punkt
+          const touch = event.touches[0];
+          
+          // Rufe die Drag-Start-Funktion mit dem Touch-Event auf
+          onDragStart({ 
+            clientX: touch.clientX, 
+            clientY: touch.clientY, 
+            target: event.target 
+          }, row, col);
+        };
+        
+        const onTouchMove = (event) => {
+          if (!gameState.isDragging) return;
+          
+          // Hindere den Browser daran, die Seite zu scrollen
+          event.preventDefault();
+          
+          // Verwende den ersten Touch-Punkt
+          const touch = event.touches[0];
+          
+          // Rufe die Drag-Move-Funktion mit dem Touch-Event auf
+          onDragMove({ 
+            clientX: touch.clientX, 
+            clientY: touch.clientY 
+          });
+        };
+        
+        const onTouchEnd = () => {
+          // Rufe die Drag-End-Funktion auf
+          onDragEnd();
+        };
+        
+        // Initialisiere das Spiel beim Laden
+        onMounted(() => {
+          // Lade gespeicherte Daten
+          const savedGame = loadFromLocalStorage();
+          
+          // Wenn ein gespeichertes Spiel vorhanden ist, lade es
+          if (savedGame) {
+            gameState.board = savedGame.board;
+            gameState.nextBubble = savedGame.nextBubble;
+            gameState.score = savedGame.score;
+            gameState.highestBubble = savedGame.highestBubble;
+            gameState.gameOver = savedGame.gameOver;
+            gameState.gameStarted = true;
+            
+            showNotification(translate('loaded'));
+            
+            // Setze den Hinweis-Timer
+            setHintTimer();
+          } else {
+            // Zeige das Tutorial beim ersten Besuch
+            if (!localStorage.getItem('bubbleMergeTutorialSeen')) {
+              gameState.showTutorial = true;
+              localStorage.setItem('bubbleMergeTutorialSeen', 'true');
+            }
+          }
+          
+          // Setze das Theme
+          document.body.className = gameState.theme;
+          
+          // Registriere Event-Listener für globale Mausbewegungen und -loslassen
+          document.addEventListener('mousemove', onDragMove);
+          document.addEventListener('mouseup', onDragEnd);
+          document.addEventListener('touchmove', onTouchMove, { passive: false });
+          document.addEventListener('touchend', onTouchEnd);
+          
+          // Speichere regelmäßig den Spielstand
+          setInterval(() => {
+            if (gameState.gameStarted && !gameState.gameOver) {
+              saveToLocalStorage();
+            }
+          }, 30000); // Alle 30 Sekunden
+        });
+        
+        // Aufräumen beim Entladen der Komponente
+        const onUnmounted = () => {
+          document.removeEventListener('mousemove', onDragMove);
+          document.removeEventListener('mouseup', onDragEnd);
+          document.removeEventListener('touchmove', onTouchMove);
+          document.removeEventListener('touchend', onTouchEnd);
+          
+          if (gameState.hintTimeout) {
+            clearTimeout(gameState.hintTimeout);
+          }
+        };
+        
+        // Gib Variablen und Funktionen zurück, die im Template verwendet werden
+        return {
+          gameState,
+          gameBoard,
+          isGameOver,
+          emptyPositions,
+          startNewGame,
+          toggleTheme,
+          onDragStart,
+          onTouchStart,
+          translate,
+          showNotification
+        };
+      },
+      template: `
+        <div class="flex flex-col items-center justify-center min-h-screen p-4">
+          <!-- Spieltitel und Punktestand -->
+          <h1 class="text-3xl font-bold mb-4">{{ translate('title') }}</h1>
+          
+          <!-- Punkteanzeige und nächste Blase -->
+          <div class="flex flex-col sm:flex-row justify-between items-center w-full max-w-md mb-4">
+            <div class="text-xl mb-2 sm:mb-0">
+              <span>{{ translate('high-score') }}</span>
+              <span>{{ gameState.highScore }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="mr-2">{{ translate('next-bubble') }}</span>
+              <div v-if="gameState.nextBubble" 
+                   class="bubble" 
+                   :class="['bubble-level-' + gameState.nextBubble.level, gameState.nextBubble.isSpecial ? 'bubble-level-special' : '']"
+                   style="width: 40px; height: 40px;">
+                {{ gameState.nextBubble.level }}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Aktuelle Punktzahl -->
+          <div class="text-xl font-semibold mb-2">
+            {{ translate('your-score') }}
+            {{ gameState.score }}
+          </div>
+          
+          <!-- Höchste erreichte Blasenstufe -->
+          <div class="text-lg mb-4">
+            {{ translate('highest-bubble') }}
+            {{ gameState.highestBubble }}
+          </div>
+          
+          <!-- Spielbrett -->
+          <div ref="gameBoard" class="game-board mb-6">
+            <div v-for="(row, rowIndex) in gameState.board" 
+                 :key="'row-' + rowIndex" 
+                 class="flex">
+              <div v-for="(bubble, colIndex) in row" 
+                   :key="'cell-' + rowIndex + '-' + colIndex"
+                   :data-row="rowIndex" 
+                   :data-col="colIndex" 
+                   class="relative">
+                <div v-if="bubble" 
+                     class="bubble" 
+                     :class="['bubble-level-' + bubble.level, bubble.isSpecial ? 'bubble-level-special bubble-special' : '']" 
+                     @mousedown="onDragStart($event, rowIndex, colIndex)"
+                     @touchstart="onTouchStart($event, rowIndex, colIndex)">
+                  {{ bubble.level }}
+                </div>
+                <div v-else-if="gameState.placeholderVisible && gameState.targetPosition.row === rowIndex && gameState.targetPosition.col === colIndex" 
+                     class="bubble bubble-placeholder">
+                </div>
+                <div v-else class="bubble" style="opacity: 0"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Spielanleitung -->
+          <div v-if="!gameState.gameStarted && !gameState.showTutorial" class="text-center mb-4">
+            <p class="mb-2">{{ translate('move-bubbles') }}</p>
+            <p>{{ translate('after-each-move') }}</p>
+          </div>
+          
+          <!-- Spielsteuerungsbuttons -->
+          <div class="flex space-x-4 mt-4">
+            <button v-if="!gameState.gameStarted" 
+                    @click="startNewGame" 
+                    class="btn btn-primary">
+              {{ translate('play') }}
+            </button>
+            <button v-else-if="gameState.gameOver" 
+                    @click="startNewGame" 
+                    class="btn btn-primary">
+              {{ translate('play-again') }}
+            </button>
+            <button @click="gameState.showSettings = true" 
+                    class="btn btn-secondary">
+              {{ translate('settings') }}
+            </button>
+          </div>
+          
+          <!-- Design-Umschalter -->
+          <div class="theme-toggle" @click="toggleTheme">
+            <svg v-if="gameState.theme === 'light'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          
+          <!-- Benachrichtigungen -->
+          <div class="fixed top-5 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-2">
+            <div v-for="notification in gameState.notifications" 
+                 :key="notification.id" 
+                 class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md animation-fadeout">
+              {{ notification.message }}
+            </div>
+          </div>
+          
+          <!-- Gezogene Blase (folgt dem Mauszeiger) -->
+          <div v-if="gameState.isDragging && gameState.draggedBubble" 
+               class="bubble bubble-dragging" 
+               :class="['bubble-level-' + gameState.draggedBubble.level, gameState.draggedBubble.isSpecial ? 'bubble-level-special bubble-special' : '']"
+               :style="{
+                 position: 'fixed',
+                 left: (gameState.dragPosition.x - 30) + 'px',
+                 top: (gameState.dragPosition.y - 30) + 'px',
+                 zIndex: 1000
+               }">
+            {{ gameState.draggedBubble.level }}
+          </div>
+          
+          <!-- Tutorial Modal -->
+          <div v-if="gameState.showTutorial" class="modal">
+            <div class="modal-content">
+              <h2 class="text-2xl font-bold mb-4">{{ translate('how-to-play') }}</h2>
+              <ul class="mb-6 space-y-2">
+                <li>{{ translate('step1') }}</li>
+                <li>{{ translate('step2') }}</li>
+                <li>{{ translate('step3') }}</li>
+                <li>{{ translate('step4') }}</li>
+                <li>{{ translate('step5') }}</li>
+              </ul>
+              <div class="flex justify-center">
+                <button @click="gameState.showTutorial = false; startNewGame()" class="btn btn-primary">
+                  {{ translate('play') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Game Over Modal -->
+          <div v-if="gameState.showGameOver" class="modal">
+            <div class="modal-content">
+              <h2 class="text-2xl font-bold mb-4">{{ translate('game-over') }}</h2>
+              <div class="text-xl mb-3">{{ translate('your-score') }}</div>
+              <div class="text-3xl font-bold mb-4">{{ gameState.score }}</div>
+              <div class="mb-4">
+                <div>{{ translate('highest-bubble') }}</div>
+                <div class="text-xl font-bold">{{ gameState.highestBubble }}</div>
+              </div>
+              <div v-if="gameState.score >= gameState.highScore" class="text-xl text-green-500 mb-4">
+                {{ translate('new-high-score') }}
+              </div>
+              <div class="flex justify-center">
+                <button @click="gameState.showGameOver = false; startNewGame()" class="btn btn-primary">
+                  {{ translate('play-again') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Einstellungen Modal -->
+          <div v-if="gameState.showSettings" class="modal">
+            <div class="modal-content">
+              <h2 class="text-2xl font-bold mb-4">{{ translate('settings') }}</h2>
+              
+              <!-- Thema-Einstellung -->
+              <div class="mb-4">
+                <h3 class="font-bold mb-2">{{ translate('theme') }}</h3>
+                <div class="flex space-x-2">
+                  <button @click="gameState.theme = 'light'; document.body.className = 'light'" 
+                          :class="{'bg-blue-500 text-white': gameState.theme === 'light', 'bg-gray-200': gameState.theme !== 'light'}"
+                          class="px-3 py-1 rounded">
+                    {{ translate('light') }}
+                  </button>
+                  <button @click="gameState.theme = 'dark'; document.body.className = 'dark'" 
+                          :class="{'bg-blue-500 text-white': gameState.theme === 'dark', 'bg-gray-200': gameState.theme !== 'dark'}"
+                          class="px-3 py-1 rounded">
+                    {{ translate('dark') }}
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Sprach-Einstellung -->
+              <div class="mb-4">
+                <h3 class="font-bold mb-2">{{ translate('language') }}</h3>
+                <div class="flex space-x-2">
+                  <button @click="localization.currentLang = 'de'" 
+                          :class="{'bg-blue-500 text-white': localization.currentLang === 'de', 'bg-gray-200': localization.currentLang !== 'de'}"
+                          class="px-3 py-1 rounded">
+                    Deutsch
+                  </button>
+                  <button @click="localization.currentLang = 'en'" 
+                          :class="{'bg-blue-500 text-white': localization.currentLang === 'en', 'bg-gray-200': localization.currentLang !== 'en'}"
+                          class="px-3 py-1 rounded">
+                    English
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Sound-Einstellung -->
+              <div class="mb-4">
+                <h3 class="font-bold mb-2">{{ translate('sound') }}</h3>
+                <div class="flex space-x-2">
+                  <button @click="gameState.soundEnabled = true" 
+                          :class="{'bg-blue-500 text-white': gameState.soundEnabled, 'bg-gray-200': !gameState.soundEnabled}"
+                          class="px-3 py-1 rounded">
+                    {{ translate('on') }}
+                  </button>
+                  <button @click="gameState.soundEnabled = false" 
+                          :class="{'bg-blue-500 text-white': !gameState.soundEnabled, 'bg-gray-200': gameState.soundEnabled}"
+                          class="px-3 py-1 rounded">
+                    {{ translate('off') }}
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Statistiken -->
+              <div class="mb-4">
+                <h3 class="font-bold mb-2">{{ translate('stats') }}</h3>
+                <div class="space-y-1">
+                  <div>{{ translate('games-played') }}</div>
+                  <div>{{ gameState.stats.gamesPlayed }}</div>
+                  <div>{{ translate('bubbles-merged') }}</div>
+                  <div>{{ gameState.stats.bubblesPopped }}</div>
+                  <div>{{ translate('max-level') }}</div>
+                  <div>{{ gameState.stats.highestLevel }}</div>
+                  <div>{{ translate('total-score') }}</div>
+                  <div>{{ gameState.stats.totalScore }}</div>
+                </div>
+              </div>
+              
+              <div class="flex justify-end mt-4">
+                <button @click="gameState.showSettings = false; saveToLocalStorage()" class="btn btn-primary">
+                  {{ translate('close') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Fortsetzen-Button, wenn ein gespeichertes Spiel vorhanden ist -->
+          <div v-if="!gameState.gameStarted && localStorage.getItem('bubbleMergeGameState')" class="mt-4">
+            <button @click="loadFromLocalStorage(); gameState.gameStarted = true" class="btn btn-secondary">
+              {{ translate('continue-game') }}
+            </button>
+          </div>
+        </div>
+      `
+    }).mount('#app');
+  </script>
+</body>
+</html>
