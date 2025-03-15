@@ -2,802 +2,1244 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bubble Merge</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* Animation für Blasen */
-        @keyframes pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+        :root {
+            --bg-color: #f0f9ff;
+            --text-color: #1e293b;
+            --grid-color: #e2e8f0;
+            --grid-border: #94a3b8;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --bubble-colors: #f87171, #facc15, #4ade80, #60a5fa, #a78bfa, #f472b6, #fb923c, #22d3ee;
         }
-        
-        @keyframes appear {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --text-color: #f1f5f9;
+            --grid-color: #1e293b;
+            --grid-border: #475569;
+            --shadow-color: rgba(0, 0, 0, 0.3);
         }
-        
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 16px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .level {
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            background-color: var(--grid-color);
+            color: var(--text-color);
+            border: 1px solid var(--grid-border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1 / 1;
+            background-color: var(--grid-color);
+            border: 2px solid var(--grid-border);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        #next-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 16px;
+            padding: 12px;
+            background-color: var(--grid-color);
+            border: 2px solid var(--grid-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .next-label {
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        #next-bubble {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.2), inset 0 4px 8px rgba(255, 255, 255, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            will-change: transform;
+        }
+
+        .bubble-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 70%);
+            font-size: 1.2em;
+        }
+
+        .bubble.dragging {
+            opacity: 0.8;
+            z-index: 100;
+            cursor: grabbing;
+            transform: scale(1.1);
+            box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.2), inset 0 4px 8px rgba(255, 255, 255, 0.2), 0 10px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .bubble.merging {
+            z-index: 50;
+            animation: merge 0.4s forwards;
+        }
+
         @keyframes merge {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.4); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.3);
+                filter: brightness(1.5);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
-        
+
+        .new-bubble {
+            animation: pop 0.3s forwards;
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0);
+            }
+            70% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .score-popup {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            animation: float-up 1.2s forwards;
+            pointer-events: none;
+            z-index: 1000;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.8);
+            }
+            20% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1.2);
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(1);
+            }
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .grid-cell {
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background-color: var(--bg-color);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 90%;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal h2 {
+            margin-bottom: 16px;
+            font-size: 28px;
+        }
+
+        .modal p {
+            margin-bottom: 24px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .primary-button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .secondary-button {
+            background-color: var(--grid-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
         @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
-            100% { transform: translateX(0); }
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
-        
-        .pop-animation {
-            animation: pop 0.3s ease-in-out;
+
+        #tutorials-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 900;
+            pointer-events: none;
         }
-        
-        .appear-animation {
-            animation: appear 0.3s ease-in-out;
+
+        .tutorial {
+            position: absolute;
+            background-color: rgba(59, 130, 246, 0.9);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            max-width: 80%;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            pointer-events: all;
+            animation: bounce 1s infinite alternate;
         }
-        
-        .merge-animation {
-            animation: merge 0.4s ease-in-out;
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-5px); }
         }
-        
-        .shake-animation {
-            animation: shake 0.5s ease-in-out;
+
+        .tutorial:after {
+            content: '';
+            position: absolute;
+            border: 10px solid transparent;
         }
-        
-        .transition-all {
-            transition: all 0.3s ease;
+
+        .tutorial.bottom:after {
+            border-top-color: rgba(59, 130, 246, 0.9);
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
         }
-        
-        /* Farben für verschiedene Bubble-Level */
-        .bubble-0 { background-color: #f3f4f6; color: #1f2937; }
-        .bubble-1 { background-color: #93c5fd; color: #1e3a8a; }
-        .bubble-2 { background-color: #60a5fa; color: #1e3a8a; }
-        .bubble-3 { background-color: #3b82f6; color: #ffffff; }
-        .bubble-4 { background-color: #2563eb; color: #ffffff; }
-        .bubble-5 { background-color: #1d4ed8; color: #ffffff; }
-        .bubble-6 { background-color: #1e40af; color: #ffffff; }
-        .bubble-7 { background-color: #7c3aed; color: #ffffff; }
-        .bubble-8 { background-color: #6d28d9; color: #ffffff; }
-        .bubble-9 { background-color: #5b21b6; color: #ffffff; }
-        .bubble-10 { background-color: #4c1d95; color: #ffffff; }
-        .bubble-11 { background-color: #db2777; color: #ffffff; }
-        .bubble-12 { background-color: #be185d; color: #ffffff; }
-        .bubble-13 { background-color: #9d174d; color: #ffffff; }
-        .bubble-14 { background-color: #831843; color: #ffffff; }
-        .bubble-15 { background-color: #f59e0b; color: #ffffff; }
-        .bubble-16 { background-color: #d97706; color: #ffffff; }
-        .bubble-special { background: linear-gradient(45deg, #f59e0b, #d97706, #9d174d, #7c3aed, #2563eb); color: #ffffff; }
-        
-        .dark .bubble-0 { background-color: #374151; color: #f3f4f6; }
-        
-        /* Glassmorphism für die Spielfläche */
-        .glassmorphism {
-            background: rgba(255, 255, 255, 0.25);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
+
+        .tutorial.top:after {
+            border-bottom-color: rgba(59, 130, 246, 0.9);
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
         }
-        
-        .dark .glassmorphism {
-            background: rgba(17, 24, 39, 0.75);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            border: 1px solid rgba(55, 65, 81, 0.18);
+
+        .tutorial button {
+            background-color: white;
+            color: #3b82f6;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-weight: bold;
         }
-        
-        /* Hintergrund-Muster */
-        .bg-pattern {
-            background-image: radial-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
+
+        .game-info {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-color);
+            opacity: 0.8;
         }
-        
-        .dark .bg-pattern {
-            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+
+        @media (max-width: 600px) {
+            header {
+                padding: 0 8px;
+            }
+            
+            .score {
+                font-size: 20px;
+            }
+            
+            .level {
+                font-size: 14px;
+            }
+            
+            button {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+            
+            .icon {
+                width: 16px;
+                height: 16px;
+            }
+            
+            #next-bubble {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .modal-content {
+                padding: 24px;
+            }
+            
+            .modal h2 {
+                font-size: 24px;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-all bg-pattern">
-    <div id="app" class="container mx-auto px-4 py-8 max-w-md">
-        <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">{{ translate('gameTitle') }}</h1>
-            <div class="flex justify-center gap-2 mb-4">
-                <button @click="toggleTheme" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                    <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
-                    </svg>
-                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-                    </svg>
-                </button>
-                <button @click="toggleLanguage" class="py-1 px-3 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium">
-                    {{ language === 'de' ? 'EN' : 'DE' }}
-                </button>
-            </div>
-            <div class="flex justify-between items-center mb-2 mx-2">
-                <div class="text-xl font-semibold text-gray-700 dark:text-gray-300">
-                    {{ translate('score') }}: {{ score }}
-                </div>
-                <div class="text-xl font-semibold text-gray-700 dark:text-gray-300">
-                    {{ translate('highestBubble') }}: {{ translate('level') }} {{ highestLevel }}
-                </div>
-            </div>
-            <div class="glassmorphism p-4 mb-4">
-                <div class="text-lg font-medium text-gray-700 dark:text-gray-300">
-                    {{ translate('nextBubble') }}:
-                </div>
-                <div class="flex justify-center mt-2">
-                    <div :class="['bubble-' + nextBubble, 'w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg']">
-                        {{ nextBubble }}
-                    </div>
-                </div>
-            </div>
+<body>
+    <header>
+        <div class="score-container">
+            <div class="score">0</div>
+            <div class="level">Level 1</div>
         </div>
-
-        <!-- Game Board -->
-        <div class="glassmorphism p-4 rounded-lg mb-4">
-            <div class="grid grid-cols-5 gap-2 relative" :class="{'shake-animation': isShaking}">
-                <template v-for="(cell, index) in gameBoard" :key="index">
-                    <div 
-                        class="aspect-square rounded-full cursor-pointer flex items-center justify-center transition-all shadow-md relative"
-                        :class="[
-                            cell ? 'bubble-' + cell.value : 'bg-gray-200 dark:bg-gray-700', 
-                            cell?.isNew ? 'appear-animation' : '',
-                            cell?.isMerged ? 'merge-animation' : '',
-                            cell?.isPopping ? 'pop-animation' : ''
-                        ]"
-                        @click="selectBubble(index)"
-                        @mouseenter="highlightMoves(index)"
-                        @mouseleave="clearHighlights()"
-                    >
-                        <span v-if="cell" class="font-bold text-lg">{{ cell.value }}</span>
-                        <div v-if="selectedBubbleIndex === index" class="absolute inset-0 border-2 border-yellow-500 rounded-full"></div>
-                        <div v-if="highlightedCells.includes(index)" class="absolute inset-0 bg-yellow-500 bg-opacity-20 rounded-full"></div>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Game Controls -->
-        <div class="flex justify-between mb-6">
-            <button @click="resetGame" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition-colors">
-                {{ translate('playAgain') }}
+        <div class="controls">
+            <button id="theme-toggle" aria-label="Farbmodus umschalten">
+                <svg class="icon moon-icon" viewBox="0 0 24 24">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                </svg>
+                <svg class="icon sun-icon" style="display: none;" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2"></path>
+                    <path d="M12 20v2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 17.66 1.41 1.41"></path>
+                    <path d="M2 12h2"></path>
+                    <path d="M20 12h2"></path>
+                    <path d="m6.34 17.66-1.41 1.41"></path>
+                    <path d="m19.07 4.93-1.41 1.41"></path>
+                </svg>
             </button>
-            <button @click="showInstructions = !showInstructions" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg shadow-md transition-colors">
-                {{ translate('instructions') }}
+            <button id="restart-button" aria-label="Neustarten">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                </svg>
             </button>
         </div>
-
-        <!-- Instructions Modal -->
-        <div v-if="showInstructions" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">{{ translate('gameTitle') }}</h2>
-                <ol class="list-decimal pl-6 mb-4 text-gray-700 dark:text-gray-300 space-y-2">
-                    <li>{{ translate('instruction1') }}</li>
-                    <li>{{ translate('instruction2') }}</li>
-                    <li>{{ translate('instruction3') }}</li>
-                    <li>{{ translate('instruction4') }}</li>
-                    <li>{{ translate('instruction5') }}</li>
-                </ol>
-                <div class="text-center">
-                    <button @click="showInstructions = false" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
-                        {{ translate('play') }}
-                    </button>
-                </div>
+    </header>
+    
+    <div class="game-container" id="game-container">
+        <div class="grid-overlay" id="grid-overlay"></div>
+    </div>
+    
+    <div id="next-container">
+        <div class="next-label">Nächste Blase:</div>
+        <div id="next-bubble"></div>
+    </div>
+    
+    <div class="game-info">
+        <div>Bewege Blasen und kombiniere gleiche Nummern</div>
+        <div>Nach jedem Zug erscheint eine neue Blase</div>
+    </div>
+    
+    <div class="modal" id="game-over-modal">
+        <div class="modal-content">
+            <h2>Spiel vorbei!</h2>
+            <p>Dein Punktestand: <span id="final-score">0</span></p>
+            <p>Höchste Blase: Level <span id="highest-bubble">1</span></p>
+            <div class="button-group">
+                <button class="primary-button" id="play-again-button">Noch einmal spielen</button>
             </div>
-        </div>
-
-        <!-- Game Over Modal -->
-        <div v-if="isGameOver" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full text-center">
-                <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">{{ translate('gameOver') }}</h2>
-                <p class="mb-2 text-gray-700 dark:text-gray-300">{{ translate('yourScore') }}: {{ score }}</p>
-                <p class="mb-4 text-gray-700 dark:text-gray-300">{{ translate('highestBubble') }}: {{ translate('level') }} {{ highestLevel }}</p>
-                <button @click="resetGame" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition-colors">
-                    {{ translate('playAgain') }}
-                </button>
-            </div>
-        </div>
-
-        <!-- Bonus Effect -->
-        <div v-if="showBonus" class="fixed inset-0 pointer-events-none flex items-center justify-center">
-            <div class="text-4xl font-bold text-yellow-500 pop-animation">+{{ bonusPoints }} {{ translate('bonusPoints') }}!</div>
         </div>
     </div>
+    
+    <div class="modal" id="tutorial-modal">
+        <div class="modal-content">
+            <h2>Bubble Merge</h2>
+            <p>1. Ziehe Blasen, um sie zu bewegen<br>
+               2. Verbinde gleiche Blasen, um sie zu verschmelzen<br>
+               3. Nach jedem Zug erscheint eine neue Blase<br>
+               4. Bilde möglichst hohe Blasen für mehr Punkte<br>
+               5. Das Spiel endet, wenn das Feld voll ist</p>
+            <div class="button-group">
+                <button class="primary-button" id="start-game-button">Spielen</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tutorials-container"></div>
 
     <script>
-        // Translations
-        const translations = {
-            en: {
-                gameTitle: 'Bubble Merge',
-                score: 'Score',
-                highestBubble: 'Highest Bubble',
-                level: 'Level',
-                nextBubble: 'Next Bubble',
-                playAgain: 'Play Again',
-                instructions: 'Instructions',
-                gameOver: 'Game Over!',
-                yourScore: 'Your Score',
-                instruction1: 'Drag bubbles to move them',
-                instruction2: 'Connect same bubbles to merge them',
-                instruction3: 'A new bubble appears after each move',
-                instruction4: 'Create higher level bubbles for more points',
-                instruction5: 'Game ends when the board is full',
-                play: 'Play',
-                bonusPoints: 'BONUS'
-            },
-            de: {
-                gameTitle: 'Bubble Merge',
-                score: 'Punktestand',
-                highestBubble: 'Höchste Blase',
-                level: 'Level',
-                nextBubble: 'Nächste Blase',
-                playAgain: 'Noch einmal spielen',
-                instructions: 'Anleitung',
-                gameOver: 'Spiel vorbei!',
-                yourScore: 'Dein Punktestand',
-                instruction1: 'Ziehe Blasen, um sie zu bewegen',
-                instruction2: 'Verbinde gleiche Blasen, um sie zu verschmelzen',
-                instruction3: 'Nach jedem Zug erscheint eine neue Blase',
-                instruction4: 'Bilde möglichst hohe Blasen für mehr Punkte',
-                instruction5: 'Das Spiel endet, wenn das Feld voll ist',
-                play: 'Spielen',
-                bonusPoints: 'BONUS'
-            }
+        // Haupt-Game-State
+        const gameState = {
+            score: 0,
+            level: 1,
+            grid: [],
+            gridSize: 5,         // Kleineres Spielfeld für mehr Dynamik
+            bubbles: [],
+            nextBubble: null,
+            maxLevel: 1,
+            draggedBubble: null,
+            dragOffsetX: 0,
+            dragOffsetY: 0,
+            gameOver: false,
+            newGameStarted: false,
+            tutorialStep: 0,
+            moveMade: false      // Flag für den ersten Zug
         };
 
-        function translate(key) {
-            return translations[app.language][key] || key;
+        // Übersetzungs-Funktion
+        function translate(text) {
+            // Vereinfachte Version der Übersetzungsfunktion
+            return text.de;
         }
 
-        // Vue App
-        const app = Vue.createApp({
-            data() {
-                return {
-                    gameBoard: Array(25).fill(null),
-                    score: 0,
-                    highScore: 0,
-                    highestLevel: 1,
-                    nextBubble: 1,
-                    isGameOver: false,
-                    showInstructions: false,
-                    language: 'de',
-                    isDarkMode: false,
-                    selectedBubbleIndex: null,
-                    highlightedCells: [],
-                    isShaking: false,
-                    showBonus: false,
-                    bonusPoints: 0,
-                    comboCounter: 0,
-                    specialBubbleChance: 0.05, // 5% chance for special bubble
-                    consecutiveMoves: 0,
-                    hasLocalStorage: false
-                };
-            },
-            created() {
-                // Check if localStorage is available
-                try {
-                    this.hasLocalStorage = typeof localStorage !== 'undefined';
-                    if (this.hasLocalStorage) {
-                        const savedHighScore = localStorage.getItem('bubbleMergeHighScore');
-                        const savedHighestLevel = localStorage.getItem('bubbleMergeHighestLevel');
-                        const savedTheme = localStorage.getItem('bubbleMergeTheme');
-                        const savedLanguage = localStorage.getItem('bubbleMergeLanguage');
-                        
-                        if (savedHighScore) this.highScore = parseInt(savedHighScore);
-                        if (savedHighestLevel) this.highestLevel = parseInt(savedHighestLevel);
-                        if (savedTheme) this.isDarkMode = savedTheme === 'dark';
-                        if (savedLanguage) this.language = savedLanguage;
+        // DOM-Elemente - Hier 'let' statt 'const' für Elemente, die später aktualisiert werden
+        const gameContainer = document.getElementById('game-container');
+        let gridOverlay = document.getElementById('grid-overlay');
+        const nextBubbleContainer = document.getElementById('next-bubble');
+        const scoreElement = document.querySelector('.score');
+        const levelElement = document.querySelector('.level');
+        const themeToggle = document.getElementById('theme-toggle');
+        const moonIcon = document.querySelector('.moon-icon');
+        const sunIcon = document.querySelector('.sun-icon');
+        const restartButton = document.getElementById('restart-button');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreElement = document.getElementById('final-score');
+        const highestBubbleElement = document.getElementById('highest-bubble');
+        const playAgainButton = document.getElementById('play-again-button');
+        const tutorialModal = document.getElementById('tutorial-modal');
+        const startGameButton = document.getElementById('start-game-button');
+        const tutorialsContainer = document.getElementById('tutorials-container');
+
+        // Konstanten
+        const BUBBLE_COLORS = [
+            '#f87171', // rot
+            '#facc15', // gelb
+            '#4ade80', // grün
+            '#60a5fa', // blau
+            '#a78bfa', // lila
+            '#f472b6', // pink
+            '#fb923c', // orange
+            '#22d3ee'  // türkis
+        ];
+
+        // Hilfsfunktionen
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function calculateBubbleSize() {
+            const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
+            return (containerSize / gameState.gridSize) * 0.85;
+        }
+
+        function getBubblePosition(row, col) {
+            const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
+            const cellSize = containerSize / gameState.gridSize;
+            const bubbleSize = calculateBubbleSize();
+            const offsetX = (cellSize - bubbleSize) / 2;
+            const offsetY = (cellSize - bubbleSize) / 2;
+            
+            return {
+                x: col * cellSize + offsetX,
+                y: row * cellSize + offsetY
+            };
+        }
+
+        function getGridCellFromPosition(x, y) {
+            const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
+            const cellSize = containerSize / gameState.gridSize;
+            
+            const col = Math.floor(x / cellSize);
+            const row = Math.floor(y / cellSize);
+            
+            // Bounds check
+            if (row >= 0 && row < gameState.gridSize && col >= 0 && col < gameState.gridSize) {
+                return { row, col };
+            }
+            
+            return null;
+        }
+
+        function createBubbleElement(level, row, col, isNext = false) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble new-bubble';
+            
+            const size = isNext ? 60 : calculateBubbleSize();
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            
+            // Verbesserte Farbgebung mit Helligkeitsanpassung
+            const colorIndex = (level - 1) % BUBBLE_COLORS.length;
+            const baseColor = BUBBLE_COLORS[colorIndex];
+            
+            // Glasartiger Effekt basierend auf Level
+            bubble.style.backgroundColor = baseColor;
+            
+            const inner = document.createElement('div');
+            inner.className = 'bubble-inner';
+            inner.textContent = level;
+            bubble.appendChild(inner);
+            
+            if (!isNext) {
+                const pos = getBubblePosition(row, col);
+                bubble.style.left = `${pos.x}px`;
+                bubble.style.top = `${pos.y}px`;
+                
+                // Datenspeicherung für einfachen Zugriff
+                bubble.dataset.row = row;
+                bubble.dataset.col = col;
+                bubble.dataset.level = level;
+                
+                // Event-Listener für Desktop
+                bubble.addEventListener('mousedown', startDragging);
+                
+                // Event-Listener für Touch-Geräte
+                bubble.addEventListener('touchstart', handleTouchStart, { passive: false });
+            } else {
+                bubble.style.position = 'relative';
+                bubble.style.left = '0';
+                bubble.style.top = '0';
+            }
+            
+            return bubble;
+        }
+
+        function createRandomBubble() {
+            // Wahrscheinlichkeiten basierend auf dem aktuellen Spielfortschritt
+            // Mit fortschreitendem Spiel leicht höhere Chancen auf wertvollere Blasen
+            const maxPossibleLevel = Math.min(gameState.maxLevel, 4);
+            const progressFactor = Math.min(gameState.score / 2000, 1); // Progression bis 2000 Punkte
+            
+            let level;
+            const rand = Math.random();
+            
+            if (rand < 0.7 - (0.2 * progressFactor)) {
+                // Basis-Chance für Level 1 (sinkt von 70% auf 50% bei hoher Punktzahl)
+                level = 1;
+            } else if (rand < 0.9 - (0.1 * progressFactor)) {
+                // Chance für Level 2 (bleibt etwa bei 20%)
+                level = Math.min(2, maxPossibleLevel);
+            } else if (rand < 0.98) {
+                // Chance für Level 3 (steigt leicht an)
+                level = Math.min(3, maxPossibleLevel);
+            } else {
+                // Kleine Chance für höhere Level (bis zum bisher erreichten)
+                level = getRandomInt(1, maxPossibleLevel);
+            }
+            
+            return level;
+        }
+
+        function addNewBubble() {
+            // Finde eine leere Zelle
+            const emptyCells = [];
+            for (let row = 0; row < gameState.gridSize; row++) {
+                for (let col = 0; col < gameState.gridSize; col++) {
+                    if (!gameState.grid[row][col]) {
+                        emptyCells.push({ row, col });
                     }
-                } catch (e) {
-                    console.log('LocalStorage not available:', e);
-                    this.hasLocalStorage = false;
+                }
+            }
+            
+            // Wenn keine leeren Zellen mehr, Spiel vorbei
+            if (emptyCells.length === 0) {
+                gameOver();
+                return false;
+            }
+            
+            // Zufällige leere Zelle auswählen
+            const cellIndex = getRandomInt(0, emptyCells.length - 1);
+            const { row, col } = emptyCells[cellIndex];
+            
+            // Neue Blase mit dem vorbereiteten Level hinzufügen
+            const level = gameState.nextBubble;
+            const bubble = createBubbleElement(level, row, col);
+            gameContainer.appendChild(bubble);
+            gameState.grid[row][col] = level;
+            gameState.bubbles.push(bubble);
+            
+            // Neue nächste Blase vorbereiten
+            prepareNextBubble();
+            
+            // Prüfe, ob es mögliche Züge gibt
+            if (emptyCells.length === 1) {
+                setTimeout(checkForPossibleMoves, 300);
+            }
+            
+            return true;
+        }
+
+        function prepareNextBubble() {
+            gameState.nextBubble = createRandomBubble();
+            nextBubbleContainer.innerHTML = '';
+            const bubble = createBubbleElement(gameState.nextBubble, 0, 0, true);
+            nextBubbleContainer.appendChild(bubble);
+        }
+
+        function startDragging(e) {
+            if (gameState.gameOver) return;
+            
+            const bubble = e.currentTarget;
+            const rect = bubble.getBoundingClientRect();
+            
+            gameState.draggedBubble = bubble;
+            gameState.dragOffsetX = e.clientX - rect.left;
+            gameState.dragOffsetY = e.clientY - rect.top;
+            
+            bubble.classList.add('dragging');
+            
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDragging);
+            
+            e.preventDefault();
+        }
+
+        function handleTouchStart(e) {
+            if (gameState.gameOver) return;
+            
+            const bubble = e.currentTarget;
+            const touch = e.touches[0];
+            const rect = bubble.getBoundingClientRect();
+            
+            gameState.draggedBubble = bubble;
+            gameState.dragOffsetX = touch.clientX - rect.left;
+            gameState.dragOffsetY = touch.clientY - rect.top;
+            
+            bubble.classList.add('dragging');
+            
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd);
+            
+            e.preventDefault();
+        }
+
+        function handleTouchMove(e) {
+            if (!gameState.draggedBubble) return;
+            
+            const touch = e.touches[0];
+            onDrag({
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                preventDefault: () => e.preventDefault()
+            });
+        }
+
+        function handleTouchEnd() {
+            stopDragging();
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        }
+
+        function onDrag(e) {
+            if (!gameState.draggedBubble) return;
+            
+            const containerRect = gameContainer.getBoundingClientRect();
+            const x = e.clientX - containerRect.left - gameState.dragOffsetX;
+            const y = e.clientY - containerRect.top - gameState.dragOffsetY;
+            
+            gameState.draggedBubble.style.left = `${x}px`;
+            gameState.draggedBubble.style.top = `${y}px`;
+            
+            e.preventDefault();
+        }
+
+        function stopDragging() {
+            if (!gameState.draggedBubble) return;
+            
+            const bubble = gameState.draggedBubble;
+            const oldRow = parseInt(bubble.dataset.row);
+            const oldCol = parseInt(bubble.dataset.col);
+            const level = parseInt(bubble.dataset.level);
+            
+            // Position im Container
+            const containerRect = gameContainer.getBoundingClientRect();
+            const bubbleRect = bubble.getBoundingClientRect();
+            const bubbleCenterX = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
+            const bubbleCenterY = bubbleRect.top + bubbleRect.height / 2 - containerRect.top;
+            
+            // Zielzelle finden
+            const targetCell = getGridCellFromPosition(bubbleCenterX, bubbleCenterY);
+            
+            // Blase zurück zur Ausgangsposition animieren
+            bubble.classList.remove('dragging');
+            
+            let moveMade = false;
+            
+            if (targetCell) {
+                const { row, col } = targetCell;
+                
+                // Gleiche Zelle - kein Zug
+                if (row === oldRow && col === oldCol) {
+                    const pos = getBubblePosition(oldRow, oldCol);
+                    bubble.style.left = `${pos.x}px`;
+                    bubble.style.top = `${pos.y}px`;
+                    gameState.draggedBubble = null;
+                    return;
                 }
                 
-                // Set theme
-                this.applyTheme();
-                
-                // Start the game
-                this.initGame();
-            },
-            methods: {
-                initGame() {
-                    // Clear the board
-                    this.gameBoard = Array(25).fill(null);
-                    this.score = 0;
-                    this.isGameOver = false;
-                    this.comboCounter = 0;
-                    this.consecutiveMoves = 0;
+                // Prüfen, ob Zielzelle leer ist
+                if (!gameState.grid[row][col]) {
+                    // Einfach bewegen
+                    gameState.grid[oldRow][oldCol] = null;
+                    gameState.grid[row][col] = level;
                     
-                    // Add initial bubbles
-                    for (let i = 0; i < 5; i++) {
-                        this.addRandomBubble();
+                    bubble.dataset.row = row;
+                    bubble.dataset.col = col;
+                    
+                    const pos = getBubblePosition(row, col);
+                    bubble.style.left = `${pos.x}px`;
+                    bubble.style.top = `${pos.y}px`;
+                    
+                    moveMade = true;
+                    
+                    // Tutorial-Fortschritt
+                    if (gameState.tutorialStep === 1) {
+                        showTutorial(2);
                     }
+                } else if (gameState.grid[row][col] === level) {
+                    // Gleiche Blasen verschmelzen
+                    gameState.grid[oldRow][oldCol] = null;
+                    gameState.grid[row][col] = level + 1;
                     
-                    // Set next bubble
-                    this.generateNextBubble();
-                },
-                generateNextBubble() {
-                    // 80% chance for level 1, 15% for level 2, 5% for level 3
-                    let randomValue;
-                    const rand = Math.random();
+                    // Zielblase finden
+                    const targetBubble = gameState.bubbles.find(
+                        b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
+                    );
                     
-                    if (this.consecutiveMoves > 10 && Math.random() < this.specialBubbleChance) {
-                        // Special bubble with random value between 5 and highest level - 2
-                        const minLevel = Math.min(5, this.highestLevel - 2);
-                        const maxLevel = Math.max(minLevel, Math.min(this.highestLevel - 1, 8));
-                        randomValue = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
-                        this.consecutiveMoves = 0; // Reset consecutive moves
-                    } else if (rand < 0.8) {
-                        randomValue = 1;
-                    } else if (rand < 0.95) {
-                        randomValue = 2;
-                    } else {
-                        randomValue = 3;
+                    // Effekt und Animation
+                    mergeBubbles(bubble, targetBubble, level + 1, row, col);
+                    
+                    moveMade = true;
+                    
+                    // Tutorial-Fortschritt
+                    if (gameState.tutorialStep === 2) {
+                        showTutorial(3);
                     }
-                    
-                    this.nextBubble = randomValue;
-                },
-                addRandomBubble() {
-                    const emptyCells = this.gameBoard.map((cell, index) => cell === null ? index : -1).filter(index => index !== -1);
-                    
-                    if (emptyCells.length === 0) {
-                        // Check if any moves are possible
-                        const canMove = this.checkForPossibleMoves();
-                        if (!canMove) {
-                            this.gameOver();
-                        }
-                        return false;
-                    }
-                    
-                    const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-                    
-                    this.gameBoard[randomIndex] = {
-                        value: this.nextBubble,
-                        isNew: true,
-                        isMerged: false,
-                        isPopping: false
-                    };
-                    
-                    // Generate next bubble
-                    this.generateNextBubble();
-                    
-                    // Remove isNew flag after animation
-                    setTimeout(() => {
-                        if (this.gameBoard[randomIndex]) {
-                            this.gameBoard[randomIndex].isNew = false;
-                        }
-                    }, 300);
-                    
-                    return true;
-                },
-                selectBubble(index) {
-                    // If no bubble is selected and the cell is not empty
-                    if (this.selectedBubbleIndex === null && this.gameBoard[index]) {
-                        this.selectedBubbleIndex = index;
-                        return;
-                    }
-                    
-                    // If a bubble is already selected
-                    if (this.selectedBubbleIndex !== null) {
-                        // If clicking on the same bubble, deselect it
-                        if (this.selectedBubbleIndex === index) {
-                            this.selectedBubbleIndex = null;
-                            return;
-                        }
-                        
-                        // If clicking on an empty cell, move the bubble
-                        if (!this.gameBoard[index]) {
-                            // Check if the move is valid (adjacent horizontal, vertical or diagonal)
-                            if (this.isValidMove(this.selectedBubbleIndex, index)) {
-                                this.moveBubble(this.selectedBubbleIndex, index);
-                                this.selectedBubbleIndex = null;
-                                this.consecutiveMoves++;
-                                return;
-                            } else {
-                                // Invalid move - shake the board
-                                this.shakeBoard();
-                                return;
-                            }
-                        }
-                        
-                        // If clicking on another bubble with the same value, merge them
-                        if (this.gameBoard[index] && 
-                            this.gameBoard[this.selectedBubbleIndex] && 
-                            this.gameBoard[index].value === this.gameBoard[this.selectedBubbleIndex].value) {
-                            if (this.isValidMove(this.selectedBubbleIndex, index)) {
-                                this.mergeBubbles(this.selectedBubbleIndex, index);
-                                this.selectedBubbleIndex = null;
-                                this.consecutiveMoves++;
-                            } else {
-                                // Invalid move - shake the board
-                                this.shakeBoard();
-                            }
-                            return;
-                        }
-                        
-                        // If clicking on a different bubble, switch selection
-                        this.selectedBubbleIndex = this.gameBoard[index] ? index : null;
-                    }
-                },
-                isValidMove(fromIndex, toIndex) {
-                    const fromRow = Math.floor(fromIndex / 5);
-                    const fromCol = fromIndex % 5;
-                    const toRow = Math.floor(toIndex / 5);
-                    const toCol = toIndex % 5;
-                    
-                    // Check if the move is to an adjacent cell (horizontal, vertical, or diagonal)
-                    return Math.abs(fromRow - toRow) <= 1 && Math.abs(fromCol - toCol) <= 1;
-                },
-                highlightMoves(index) {
-                    if (!this.gameBoard[index]) return;
-                    
-                    const row = Math.floor(index / 5);
-                    const col = index % 5;
-                    const highlighted = [];
-                    
-                    // Check all adjacent cells (horizontal, vertical, diagonal)
-                    for (let r = Math.max(0, row - 1); r <= Math.min(4, row + 1); r++) {
-                        for (let c = Math.max(0, col - 1); c <= Math.min(4, col + 1); c++) {
-                            const checkIndex = r * 5 + c;
-                            if (checkIndex !== index) {
-                                // Empty cell or same value bubble
-                                if (!this.gameBoard[checkIndex] || 
-                                    (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === this.gameBoard[index].value)) {
-                                    highlighted.push(checkIndex);
-                                }
-                            }
-                        }
-                    }
-                    
-                    this.highlightedCells = highlighted;
-                },
-                clearHighlights() {
-                    this.highlightedCells = [];
-                },
-                moveBubble(fromIndex, toIndex) {
-                    // Move the bubble
-                    this.gameBoard[toIndex] = { ...this.gameBoard[fromIndex] };
-                    this.gameBoard[fromIndex] = null;
-                    
-                    // Check for matches
-                    setTimeout(() => {
-                        this.checkMatches(toIndex);
-                    }, 100);
-                },
-                mergeBubbles(fromIndex, toIndex) {
-                    const value = this.gameBoard[fromIndex].value;
-                    const newValue = value + 1;
-                    
-                    // Update highest level
-                    if (newValue > this.highestLevel) {
-                        this.highestLevel = newValue;
-                        this.saveHighestLevel();
-                    }
-                    
-                    // Merge the bubbles - the target position gets the new value
-                    this.gameBoard[toIndex] = {
-                        value: newValue,
-                        isNew: false,
-                        isMerged: true,
-                        isPopping: false
-                    };
-                    
-                    // Remove the source bubble
-                    this.gameBoard[fromIndex] = null;
-                    
-                    // Calculate score (higher level merges give exponentially more points)
-                    const mergePoints = Math.pow(2, newValue);
-                    this.score += mergePoints;
-                    
-                    // Update high score if needed
-                    if (this.score > this.highScore) {
-                        this.highScore = this.score;
-                        this.saveHighScore();
-                    }
-                    
-                    // Increment combo counter
-                    this.comboCounter++;
-                    
-                    // Add bonus for combos
-                    if (this.comboCounter > 1) {
-                        const bonusMultiplier = Math.min(this.comboCounter, 5); // Cap at 5x
-                        this.bonusPoints = mergePoints * (bonusMultiplier - 1);
-                        this.score += this.bonusPoints;
-                        this.showBonusEffect();
-                    }
-                    
-                    // Remove isMerged flag after animation
-                    setTimeout(() => {
-                        if (this.gameBoard[toIndex]) {
-                            this.gameBoard[toIndex].isMerged = false;
-                            
-                            // Check for matches after merging
-                            this.checkMatches(toIndex);
-                        }
-                    }, 400);
-                },
-                checkMatches(index) {
-                    if (!this.gameBoard[index]) return;
-                    
-                    const row = Math.floor(index / 5);
-                    const col = index % 5;
-                    const value = this.gameBoard[index].value;
-                    
-                    const matches = [];
-                    
-                    // Check horizontal, vertical, and diagonal matches
-                    
-                    // Horizontal check
-                    let horizontalMatches = [index];
-                    
-                    // Check left
-                    for (let c = col - 1; c >= 0; c--) {
-                        const checkIndex = row * 5 + c;
-                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                            horizontalMatches.push(checkIndex);
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    // Check right
-                    for (let c = col + 1; c < 5; c++) {
-                        const checkIndex = row * 5 + c;
-                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                            horizontalMatches.push(checkIndex);
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    if (horizontalMatches.length >= 3) {
-                        matches.push(...horizontalMatches);
-                    }
-                    
-                    // Vertical check
-                    let verticalMatches = [index];
-                    
-                    // Check up
-                    for (let r = row - 1; r >= 0; r--) {
-                        const checkIndex = r * 5 + col;
-                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                            verticalMatches.push(checkIndex);
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    // Check down
-                    for (let r = row + 1; r < 5; r++) {
-                        const checkIndex = r * 5 + col;
-                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                            verticalMatches.push(checkIndex);
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    if (verticalMatches.length >= 3) {
-                        matches.push(...verticalMatches);
-                    }
-                    
-                    // Diagonal check (top-left to bottom-right)
-                    let diagonal1Matches = [index];
-                    
-                    // Check top-left
-                    for (let offset = 1; row - offset >= 0 && col - offset >= 0; offset++) {
-                        const checkIndex = (row - offset) * 5 + (col - offset);
-                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                            diagonal1Matches.push(checkIndex);
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    // Check bottom-right
-                    for (let offset = 1; row + offset < 5 && col + offset < 5; offset++) {
-                        const checkIndex = (row + offset) * 5 + (col + offset);
-                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                            diagonal1Matches.push(checkIndex);
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    if (diagonal1Matches.length >= 3) {
-                        matches.push(...diagonal1Matches);
-                    }
-                    
-                    // Diagonal check (top-right to bottom-left)
-                    let diagonal2Matches = [index];
-                    
-                    // Check top-right
-                    for (let offset = 1; row - offset >= 0 && col + offset < 5; offset++) {
-                        const checkIndex = (row - offset) * 5 + (col + offset);
-                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                            diagonal2Matches.push(checkIndex);
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    // Check bottom-left
-                    for (let offset = 1; row + offset < 5 && col - offset >= 0; offset++) {
-                        const checkIndex = (row + offset) * 5 + (col - offset);
-                        if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                            diagonal2Matches.push(checkIndex);
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    if (diagonal2Matches.length >= 3) {
-                        matches.push(...diagonal2Matches);
-                    }
-                    
-                    // Remove duplicates
-                    const uniqueMatches = [...new Set(matches)];
-                    
-                    if (uniqueMatches.length >= 3) {
-                        // Add popping animation to all matches
-                        uniqueMatches.forEach(matchIndex => {
-                            if (this.gameBoard[matchIndex]) {
-                                this.gameBoard[matchIndex].isPopping = true;
-                            }
-                        });
-                        
-                        // Wait for animation to complete
-                        setTimeout(() => {
-                            // Remove the matches
-                            uniqueMatches.forEach(matchIndex => {
-                                this.gameBoard[matchIndex] = null;
-                            });
-                            
-                            // Calculate score for popping (value * matches * 2)
-                            const popPoints = value * uniqueMatches.length * 2;
-                            this.score += popPoints;
-                            
-                            // Increment combo counter
-                            this.comboCounter++;
-                            
-                            // Add bonus for combos
-                            if (this.comboCounter > 1) {
-                                const bonusMultiplier = Math.min(this.comboCounter, 5); // Cap at 5x
-                                this.bonusPoints = popPoints * (bonusMultiplier - 1);
-                                this.score += this.bonusPoints;
-                                this.showBonusEffect();
-                            }
-                            
-                            // Update high score if needed
-                            if (this.score > this.highScore) {
-                                this.highScore = this.score;
-                                this.saveHighScore();
-                            }
-                            
-                            // Add a new bubble after popping
-                            setTimeout(() => {
-                                this.addRandomBubble();
-                            }, 300);
-                        }, 300);
-                        
-                        return;
-                    }
-                    
-                    // Reset combo counter if no matches
-                    this.comboCounter = 0;
-                    
-                    // Add a new bubble after the move
-                    setTimeout(() => {
-                        this.addRandomBubble();
-                    }, 300);
-                },
-                checkForPossibleMoves() {
-                    // Check if there are any empty cells
-                    const hasEmptyCells = this.gameBoard.some(cell => cell === null);
-                    if (hasEmptyCells) return true;
-                    
-                    // Check if there are any adjacent cells with the same value
-                    for (let i = 0; i < this.gameBoard.length; i++) {
-                        const row = Math.floor(i / 5);
-                        const col = i % 5;
-                        const value = this.gameBoard[i]?.value;
-                        
-                        if (!value) continue;
-                        
-                        // Check adjacent cells
-                        for (let r = Math.max(0, row - 1); r <= Math.min(4, row + 1); r++) {
-                            for (let c = Math.max(0, col - 1); c <= Math.min(4, col + 1); c++) {
-                                if (r === row && c === col) continue; // Skip self
-                                
-                                const checkIndex = r * 5 + c;
-                                if (this.gameBoard[checkIndex] && this.gameBoard[checkIndex].value === value) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    
-                    return false;
-                },
-                gameOver() {
-                    this.isGameOver = true;
-                },
-                resetGame() {
-                    this.initGame();
-                },
-                saveHighScore() {
-                    if (this.hasLocalStorage) {
-                        try {
-                            localStorage.setItem('bubbleMergeHighScore', this.highScore.toString());
-                        } catch (e) {
-                            console.log('Error saving high score:', e);
-                        }
-                    }
-                },
-                saveHighestLevel() {
-                    if (this.hasLocalStorage) {
-                        try {
-                            localStorage.setItem('bubbleMergeHighestLevel', this.highestLevel.toString());
-                        } catch (e) {
-                            console.log('Error saving highest level:', e);
-                        }
-                    }
-                },
-                toggleTheme() {
-                    this.isDarkMode = !this.isDarkMode;
-                    this.applyTheme();
-                    
-                    if (this.hasLocalStorage) {
-                        try {
-                            localStorage.setItem('bubbleMergeTheme', this.isDarkMode ? 'dark' : 'light');
-                        } catch (e) {
-                            console.log('Error saving theme preference:', e);
-                        }
-                    }
-                },
-                applyTheme() {
-                    if (this.isDarkMode) {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
-                },
-                toggleLanguage() {
-                    this.language = this.language === 'de' ? 'en' : 'de';
-                    
-                    if (this.hasLocalStorage) {
-                        try {
-                            localStorage.setItem('bubbleMergeLanguage', this.language);
-                        } catch (e) {
-                            console.log('Error saving language preference:', e);
-                        }
-                    }
-                },
-                shakeBoard() {
-                    this.isShaking = true;
-                    setTimeout(() => {
-                        this.isShaking = false;
-                    }, 500);
-                },
-                showBonusEffect() {
-                    this.showBonus = true;
-                    setTimeout(() => {
-                        this.showBonus = false;
-                    }, 1000);
+                } else {
+                    // Ungleiches Level, zurück zur Ausgangsposition
+                    const pos = getBubblePosition(oldRow, oldCol);
+                    bubble.style.left = `${pos.x}px`;
+                    bubble.style.top = `${pos.y}px`;
+                    gameContainer.classList.add('shake');
+                    setTimeout(() => gameContainer.classList.remove('shake'), 500);
                 }
+            } else {
+                // Außerhalb des Spielfelds, zurück zur Ausgangsposition
+                const pos = getBubblePosition(oldRow, oldCol);
+                bubble.style.left = `${pos.x}px`;
+                bubble.style.top = `${pos.y}px`;
+            }
+            
+            gameState.draggedBubble = null;
+            
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDragging);
+            
+            // Neue Blase nach erfolgreichem Zug hinzufügen
+            if (moveMade) {
+                gameState.moveMade = true;
+                setTimeout(() => {
+                    addNewBubble();
+                }, 300);
+            }
+        }
+
+        function mergeBubbles(bubble1, bubble2, newLevel, row, col) {
+            // Aktualisiere höchstes Level
+            if (newLevel > gameState.maxLevel) {
+                gameState.maxLevel = newLevel;
+            }
+            
+            // Animation für die zweite Blase
+            bubble2.classList.add('merging');
+            
+            // Entferne die erste Blase
+            gameState.bubbles = gameState.bubbles.filter(b => b !== bubble1);
+            bubble1.remove();
+            
+            // Aktualisiere die zweite Blase
+            setTimeout(() => {
+                bubble2.dataset.level = newLevel;
+                bubble2.querySelector('.bubble-inner').textContent = newLevel;
+                
+                const colorIndex = (newLevel - 1) % BUBBLE_COLORS.length;
+                bubble2.style.backgroundColor = BUBBLE_COLORS[colorIndex];
+                
+                bubble2.classList.remove('merging');
+                
+                // Punkte hinzufügen
+                const points = Math.pow(2, newLevel) * 5;
+                updateScore(points);
+                
+                // Punkte-Popup
+                const pos = getBubblePosition(row, col);
+                createScorePopup(points, pos.x, pos.y);
+                
+                // Prüfe mögliche Folgeverschmelzungen
+                const hasChainMerge = checkForChainMerges(row, col, newLevel);
+                
+                // Wenn keine Kettenfusion stattgefunden hat und ein Zug gemacht wurde, 
+                // füge eine neue Blase hinzu (wird bereits in stopDragging gemacht)
+            }, 300);
+        }
+
+        function checkForChainMerges(row, col, level) {
+            // Nachbarzeichen prüfen
+            const neighbors = [
+                { row: row - 1, col: col },  // oben
+                { row: row + 1, col: col },  // unten
+                { row: row, col: col - 1 },  // links
+                { row: row, col: col + 1 }   // rechts
+            ];
+            
+            // Filtere gültige Nachbarn
+            const validNeighbors = neighbors.filter(n => 
+                n.row >= 0 && n.row < gameState.gridSize && 
+                n.col >= 0 && n.col < gameState.gridSize &&
+                gameState.grid[n.row][n.col] === level
+            );
+            
+            if (validNeighbors.length > 0) {
+                // Wähle den ersten passenden Nachbarn
+                const target = validNeighbors[0];
+                
+                // Finde Blasen
+                const sourceBubble = gameState.bubbles.find(
+                    b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
+                );
+                
+                const targetBubble = gameState.bubbles.find(
+                    b => parseInt(b.dataset.row) === target.row && parseInt(b.dataset.col) === target.col
+                );
+                
+                // Kettenreaktion mit Verzögerung
+                setTimeout(() => {
+                    gameState.grid[row][col] = null;
+                    gameState.grid[target.row][target.col] = level + 1;
+                    
+                    mergeBubbles(sourceBubble, targetBubble, level + 1, target.row, target.col);
+                }, 300);
+                
+                return true;
+            }
+            
+            return false;
+        }
+
+        function updateScore(points) {
+            gameState.score += points;
+            scoreElement.textContent = gameState.score;
+            
+            // Levelberechnung mit logarithmischer Progression
+            const newLevel = Math.floor(Math.log2(gameState.score + 1) / 2) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                levelElement.textContent = translate({ de: `Level ${gameState.level}` });
+            }
+        }
+
+        function createScorePopup(points, x, y) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = `+${points}`;
+            popup.style.left = `${x}px`;
+            popup.style.top = `${y}px`;
+            popup.style.color = points >= 100 ? '#fef08a' : 'white'; // Spezielle Farbe für hohe Punkte
+            
+            gameContainer.appendChild(popup);
+            
+            // Entferne nach Animation
+            setTimeout(() => popup.remove(), 1200);
+        }
+
+        function checkForPossibleMoves() {
+            let hasMoves = false;
+            
+            // Prüfe auf leere Zellen
+            for (let row = 0; row < gameState.gridSize; row++) {
+                for (let col = 0; col < gameState.gridSize; col++) {
+                    if (!gameState.grid[row][col]) {
+                        hasMoves = true;
+                        break;
+                    }
+                }
+                if (hasMoves) break;
+            }
+            
+            // Prüfe auf mögliche Verschmelzungen
+            if (!hasMoves) {
+                for (let row = 0; row < gameState.gridSize; row++) {
+                    for (let col = 0; col < gameState.gridSize; col++) {
+                        const level = gameState.grid[row][col];
+                        
+                        // Nachbarn prüfen
+                        const neighbors = [
+                            { row: row - 1, col: col },  // oben
+                            { row: row + 1, col: col },  // unten
+                            { row: row, col: col - 1 },  // links
+                            { row: row, col: col + 1 }   // rechts
+                        ];
+                        
+                        for (const n of neighbors) {
+                            if (n.row >= 0 && n.row < gameState.gridSize && 
+                                n.col >= 0 && n.col < gameState.gridSize &&
+                                gameState.grid[n.row][n.col] === level) {
+                                hasMoves = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hasMoves) break;
+                    }
+                    if (hasMoves) break;
+                }
+            }
+            
+            if (!hasMoves) {
+                gameOver();
+            }
+            
+            return hasMoves;
+        }
+
+        function gameOver() {
+            if (gameState.gameOver) return;
+            
+            gameState.gameOver = true;
+            finalScoreElement.textContent = gameState.score;
+            highestBubbleElement.textContent = gameState.maxLevel;
+            
+            setTimeout(() => {
+                gameOverModal.classList.add('active');
+            }, 500);
+        }
+
+        function createGridOverlay() {
+            gridOverlay.innerHTML = '';
+            gridOverlay.style.gridTemplateColumns = `repeat(${gameState.gridSize}, 1fr)`;
+            gridOverlay.style.gridTemplateRows = `repeat(${gameState.gridSize}, 1fr)`;
+            
+            for (let i = 0; i < gameState.gridSize * gameState.gridSize; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                gridOverlay.appendChild(cell);
+            }
+        }
+
+        function initNewGame() {
+            // Zurücksetzen des Spielstatus
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.maxLevel = 1;
+            gameState.grid = Array(gameState.gridSize).fill().map(() => Array(gameState.gridSize).fill(null));
+            gameState.bubbles = [];
+            gameState.draggedBubble = null;
+            gameState.gameOver = false;
+            gameState.moveMade = false;
+            
+            // UI zurücksetzen
+            gameContainer.innerHTML = '<div class="grid-overlay" id="grid-overlay"></div>';
+            gridOverlay = document.getElementById('grid-overlay');
+            createGridOverlay();
+            
+            scoreElement.textContent = '0';
+            levelElement.textContent = translate({ de: 'Level 1' });
+            
+            // Erste Blasen hinzufügen
+            prepareNextBubble();
+            
+            // Weniger Anfangsblasen für mehr Spielraum
+            const initialBubbles = Math.floor(gameState.gridSize * gameState.gridSize * 0.25);
+            for (let i = 0; i < initialBubbles; i++) {
+                addNewBubble();
+            }
+            
+            // Erster Spielstart
+            if (!gameState.newGameStarted) {
+                gameState.newGameStarted = true;
+                setTimeout(() => showTutorial(1), 500);
+            }
+        }
+
+        function showTutorial(step) {
+            // Tutorials nur beim ersten Spielstart anzeigen
+            if (gameState.tutorialStep > step) return;
+            
+            gameState.tutorialStep = step;
+            tutorialsContainer.innerHTML = '';
+            
+            let tutorial;
+            
+            switch (step) {
+                case 1:
+                    // Erste Anleitung: Bewegen
+                    tutorial = document.createElement('div');
+                    tutorial.className = 'tutorial bottom';
+                    tutorial.style.bottom = '70%';
+                    tutorial.style.left = '50%';
+                    tutorial.style.transform = 'translateX(-50%)';
+                    tutorial.innerHTML = translate({ 
+                        de: 'Ziehe eine Blase, um sie zu bewegen.<br><button>Verstanden</button>' 
+                    });
+                    tutorialsContainer.appendChild(tutorial);
+                    
+                    tutorial.querySelector('button').addEventListener('click', () => {
+                        tutorial.remove();
+                    });
+                    break;
+                
+                case 2:
+                    // Zweite Anleitung: Verschmelzen
+                    tutorial = document.createElement('div');
+                    tutorial.className = 'tutorial top';
+                    tutorial.style.top = '70%';
+                    tutorial.style.left = '50%';
+                    tutorial.style.transform = 'translateX(-50%)';
+                    tutorial.innerHTML = translate({ 
+                        de: 'Verbinde zwei gleiche Blasen, um eine größere zu erzeugen!<br><button>Verstanden</button>' 
+                    });
+                    tutorialsContainer.appendChild(tutorial);
+                    
+                    tutorial.querySelector('button').addEventListener('click', () => {
+                        tutorial.remove();
+                    });
+                    break;
+                
+                case 3:
+                    // Dritte Anleitung: Punkte
+                    tutorial = document.createElement('div');
+                    tutorial.className = 'tutorial bottom';
+                    tutorial.style.top = '20%';
+                    tutorial.style.left = '50%';
+                    tutorial.style.transform = 'translateX(-50%)';
+                    tutorial.innerHTML = translate({ 
+                        de: 'Super! Je größer die Blase, desto mehr Punkte bekommst du.<br>Nach jedem Zug erscheint eine neue Blase.<br><button>Verstanden</button>' 
+                    });
+                    tutorialsContainer.appendChild(tutorial);
+                    
+                    tutorial.querySelector('button').addEventListener('click', () => {
+                        tutorial.remove();
+                    });
+                    break;
+            }
+        }
+
+        // Event-Listener
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            
+            if (isDark) {
+                document.body.removeAttribute('data-theme');
+                moonIcon.style.display = 'block';
+                sunIcon.style.display = 'none';
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                moonIcon.style.display = 'none';
+                sunIcon.style.display = 'block';
             }
         });
 
-        // Make translate function available to the template
-        app.config.globalProperties.translate = translate;
-        
-        // Mount the app
-        app.mount('#app');
+        restartButton.addEventListener('click', () => {
+            initNewGame();
+        });
+
+        playAgainButton.addEventListener('click', () => {
+            gameOverModal.classList.remove('active');
+            initNewGame();
+        });
+
+        startGameButton.addEventListener('click', () => {
+            tutorialModal.classList.remove('active');
+            initNewGame();
+        });
+
+        // Window Resize Handler
+        window.addEventListener('resize', () => {
+            createGridOverlay();
+            
+            if (gameState.bubbles.length > 0) {
+                // Positionen aller Blasen neu berechnen
+                gameState.bubbles.forEach(bubble => {
+                    const row = parseInt(bubble.dataset.row);
+                    const col = parseInt(bubble.dataset.col);
+                    const pos = getBubblePosition(row, col);
+                    
+                    const size = calculateBubbleSize();
+                    bubble.style.width = `${size}px`;
+                    bubble.style.height = `${size}px`;
+                    bubble.style.left = `${pos.x}px`;
+                    bubble.style.top = `${pos.y}px`;
+                });
+            }
+        });
+
+        // Bevorzugtes Farbschema
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.setAttribute('data-theme', 'dark');
+            moonIcon.style.display = 'none';
+            sunIcon.style.display = 'block';
+        }
+
+        // Spiel starten
+        setTimeout(() => {
+            tutorialModal.classList.add('active');
+        }, 500);
     </script>
 </body>
 </html>
