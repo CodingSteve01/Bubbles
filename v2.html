@@ -257,10 +257,12 @@
         .tutorial {
             margin: 15px 0;
             padding: 10px 15px;
-            background-color: rgba(74, 157, 243, 0.1);
+            background-color: rgba(74, 157, 243, 0.2);
             border-radius: 8px;
             text-align: center;
             max-width: 90%;
+            font-weight: bold;
+            border: 1px solid rgba(74, 157, 243, 0.5);
         }
 
         .modal {
@@ -992,6 +994,9 @@
             // Vorherige Auswahl löschen
             deselectBubble();
             
+            const bubble = state.grid[y][x];
+            if (!bubble) return;
+            
             state.selectedBubble = { x, y };
             
             // Bubble-Element holen und markieren
@@ -1004,6 +1009,9 @@
                 
                 // Sound abspielen
                 playSound('select');
+                
+                // Feedback für den Nutzer
+                showNotification(`Blase ausgewählt (Level ${bubble.level})`, 1000);
             }
         }
 
@@ -1031,6 +1039,8 @@
             const bubble = state.grid[y][x];
             if (!bubble) return;
             
+            console.log(`Markiere Ziele für Blase an (${x}, ${y}) mit Level ${bubble.level}`);
+            
             // Alle Nachbarfelder durchgehen
             for (let dy = -1; dy <= 1; dy++) {
                 for (let dx = -1; dx <= 1; dx++) {
@@ -1050,12 +1060,15 @@
                                 cellElement.classList.add('highlight');
                             }
                         } 
-                        // Blase mit gleichem Level = mögliches Fusionsziel
+                        // Prüfen, ob Blasen kombinierbar sind
                         else if (canMerge(x, y, newX, newY)) {
                             const bubbleElement = document.querySelector(`.bubble[data-x="${newX}"][data-y="${newY}"]`);
                             if (bubbleElement) {
                                 bubbleElement.classList.add('merge-target');
+                                console.log(`Blase an (${newX}, ${newY}) mit Level ${targetBubble.level} ist kombinierbar`);
                             }
+                        } else if (targetBubble) {
+                            console.log(`Blase an (${newX}, ${newY}) mit Level ${targetBubble.level} ist NICHT kombinierbar mit Level ${bubble.level}`);
                         }
                     }
                 }
@@ -1068,8 +1081,12 @@
             
             if (!bubble1 || !bubble2) return false;
             
+            // Überprüfe Level als Zahlen, um Typenprobleme zu vermeiden
+            const level1 = parseInt(bubble1.level);
+            const level2 = parseInt(bubble2.level);
+            
             // Gleiche Level oder spezielle Blasen-Kombination
-            return (bubble1.level === bubble2.level) || 
+            return (level1 === level2) || 
                    (bubble1.special && bubble2.special && bubble1.special !== bubble2.special);
         }
 
@@ -1114,9 +1131,13 @@
             
             if (!sourceBubble || !targetBubble) return false;
             
+            // Überprüfe Levels als Zahlen
+            const sourceLevel = parseInt(sourceBubble.level);
+            const targetLevel = parseInt(targetBubble.level);
+            
             // Prüfen, ob Blasen kompatibel sind (gleiche Level oder spezielle Blasen)
             const canMerge = 
-                (sourceBubble.level === targetBubble.level) || 
+                (sourceLevel === targetLevel) || 
                 (sourceBubble.special && targetBubble.special && sourceBubble.special !== targetBubble.special);
             
             if (!canMerge) return false;
@@ -1314,9 +1335,12 @@
                 return;
             }
             
+            // Deselektieren, falls eine Blase ausgewählt ist
+            deselectBubble();
+            
             showNotification('Wähle ein freies Feld für die neue Blase.');
             
-            // Erlaube dem Spieler, ein Feld zu wählen (wird in handleCellClick fortgesetzt)
+            // Erlaube dem Spieler, ein Feld zu wählen
             state.placingMode = true;
             
             // Nach 3 Sekunden Hervorhebung aufheben, falls keine Auswahl erfolgt
