@@ -316,36 +316,36 @@
       <!-- Game Grid -->
       <div class="relative mx-auto mb-4" :class="gridContainerClasses">
         <!-- Spawn Point Indicator -->
-        <div class="spawn-point spawn-point-pulse" :style="spawnPointStyle">
-          <svg xmlns="http://www.w3.org/2000/svg" :width="cellSize * 0.4" :height="cellSize * 0.4" viewBox="0 0 20 20" fill="currentColor" class="text-yellow-400 opacity-70">
+        <div class="spawn-point spawn-point-pulse absolute" :style="spawnPointStyle">
+          <svg xmlns="http://www.w3.org/2000/svg" :width="cellSize.value * 0.4" :height="cellSize.value * 0.4" viewBox="0 0 20 20" fill="currentColor" class="text-yellow-400 opacity-70">
             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
           </svg>
         </div>
         
         <!-- Grid -->
-        <div ref="gridElement" class="grid rounded-lg p-1 sm:p-2 relative overflow-hidden" :class="darkMode ? 'bg-gray-800/50' : 'bg-gray-200/50'" :style="gridStyle">
+        <div ref="gridElement" class="grid rounded-lg p-2 relative overflow-hidden" :class="darkMode ? 'bg-gray-800/50' : 'bg-gray-200/50'" :style="gridStyle">
           <!-- Grid cells -->
-          <div v-for="(row, y) in grid" :key="`row-${y}`" class="flex">
-            <div v-for="(cell, x) in row" :key="`cell-${x}-${y}`" 
+          <div v-for="y in GRID_SIZE" :key="`row-${y-1}`" class="clear-both">
+            <div v-for="x in GRID_SIZE" :key="`cell-${x-1}-${y-1}`" 
                  class="cell relative flex items-center justify-center" 
                  :class="[
-                   isCellHighlighted(x, y) ? 'highlight' : '',
+                   isCellHighlighted(x-1, y-1) ? 'highlight' : '',
                    darkMode ? 'bg-cell-dark' : 'bg-cell-light'
                  ]"
                  :style="cellContainerStyle"
-                 @click="handleCellClick(x, y)">
+                 @click="handleCellClick(x-1, y-1)">
               <!-- Bubble -->
-              <div v-if="cell" 
-                   class="bubble absolute rounded-full flex items-center justify-center font-bold text-white"
+              <div v-if="grid[y-1][x-1]" 
+                   class="bubble absolute inset-0 m-auto rounded-full flex items-center justify-center font-bold text-white"
                    :class="[
-                     getBubbleColorClass(cell.power),
-                     selectedBubble && selectedBubble.x === x && selectedBubble.y === y ? 'selected' : '',
-                     cell.merging ? 'merging' : '',
-                     cell.spawning ? 'spawn-animation' : '',
-                     cell.chainReaction ? 'chain-pulse' : ''
+                     getBubbleColorClass(grid[y-1][x-1].power),
+                     selectedBubble && selectedBubble.x === x-1 && selectedBubble.y === y-1 ? 'selected' : '',
+                     grid[y-1][x-1].merging ? 'merging' : '',
+                     grid[y-1][x-1].spawning ? 'spawn-animation' : '',
+                     grid[y-1][x-1].chainReaction ? 'chain-pulse' : ''
                    ]"
                    :style="bubbleStyle">
-                {{ formatNumber(Math.pow(2, cell.power)) }}
+                {{ formatNumber(Math.pow(2, grid[y-1][x-1].power)) }}
               </div>
             </div>
           </div>
@@ -657,10 +657,9 @@
         
         const gridStyle = computed(() => {
           return {
-            display: 'grid',
-            gridTemplateColumns: `repeat(${GRID_SIZE}, ${cellSize.value}px)`,
-            gridTemplateRows: `repeat(${GRID_SIZE}, ${cellSize.value}px)`,
-            gap: '6px'
+            display: 'block',
+            width: `${GRID_SIZE * cellSize.value + (GRID_SIZE - 1) * 6}px`,
+            height: `${GRID_SIZE * cellSize.value + (GRID_SIZE - 1) * 6}px`
           };
         });
         
@@ -678,14 +677,17 @@
             width: `${size}px`,
             height: `${size}px`,
             fontSize: `${Math.max(cellSize.value * 0.26, 16)}px`,
+            left: `${(cellSize.value - size) / 2}px`,
+            top: `${(cellSize.value - size) / 2}px`
           };
         });
         
         const spawnPointStyle = computed(() => {
           return {
-            left: `${SPAWN_POINT.x * cellSize.value + cellSize.value / 2}px`,
+            left: `${SPAWN_POINT.x * (cellSize.value + 6) + cellSize.value / 2 + 2}px`,
             top: `${-cellSize.value * 0.2}px`,
             transform: 'translateX(-50%)',
+            zIndex: 10
           };
         });
         
@@ -708,13 +710,16 @@
           if (!gridElement.value) return;
           
           // Get the grid container width
-          const containerWidth = gridElement.value.parentElement.clientWidth - 16; // account for padding
+          const containerWidth = gridElement.value.parentElement.clientWidth - 20; // account for padding
           
           // Calculate maximum possible cell size based on container width
-          const maxCellSize = Math.floor((containerWidth - (GRID_SIZE - 1) * 6) / GRID_SIZE); // 6px is gap size
+          const maxCellSize = Math.floor((containerWidth - (GRID_SIZE - 1) * 6 - GRID_SIZE * 6) / GRID_SIZE); // 6px is gap size + 6px for margins
           
           // Update cell size, with a lower bound of 35px and upper bound of 60px
           cellSize.value = Math.min(Math.max(maxCellSize, 35), 60);
+          
+          // Update CSS variable for cell size
+          document.documentElement.style.setProperty('--cell-size', `${cellSize.value}px`);
         };
         
         const startNewGame = () => {
