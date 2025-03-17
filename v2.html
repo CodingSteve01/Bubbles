@@ -16,6 +16,7 @@
             --chain-highlight: #fef08a;
             --modal-bg: rgba(0, 0, 0, 0.5);
             --modal-content-bg: #f0f9ff;
+            --gold-color: #fbbf24;
         }
 
         [data-theme="dark"] {
@@ -27,6 +28,7 @@
             --accent-color: #60a5fa;
             --chain-highlight: #fbbf24;
             --modal-content-bg: #1e293b;
+            --gold-color: #fbbf24;
         }
 
         * {
@@ -66,9 +68,31 @@
             align-items: flex-start;
         }
 
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .score {
             font-size: 24px;
             font-weight: bold;
+        }
+
+        .coins {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--gold-color);
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .coin-icon {
+            margin-right: 4px;
+            font-size: 18px;
         }
 
         .level {
@@ -500,12 +524,28 @@
             display: none;
         }
 
+        /* Dynamische Achievement-Kategorie */
+        .achievement-category {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: var(--grid-color);
+            border-radius: 8px;
+        }
+
+        .achievement-category-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .achievement-badge {
             display: flex;
             align-items: center;
             margin-bottom: 12px;
             padding: 10px;
-            background-color: var(--grid-color);
+            background-color: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             width: 100%;
         }
@@ -534,6 +574,30 @@
         .achievement-desc {
             font-size: 14px;
             opacity: 0.8;
+        }
+
+        .achievement-progress {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .achievement-progress-bar {
+            height: 100%;
+            background-color: var(--accent-color);
+            transition: width 0.5s;
+        }
+
+        .achievement-level {
+            font-size: 12px;
+            margin-left: 8px;
+            padding: 2px 6px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 10px;
         }
 
         .stats-table {
@@ -882,6 +946,11 @@
                 font-size: 18px;
             }
 
+            .coins {
+                font-size: 16px;
+                padding: 3px 6px;
+            }
+
             .level {
                 font-size: 12px;
             }
@@ -1048,6 +1117,11 @@
                 font-size: 16px;
             }
 
+            .coins {
+                font-size: 14px;
+                padding: 2px 5px;
+            }
+
             .level {
                 font-size: 11px;
             }
@@ -1089,7 +1163,10 @@
 <body>
 <header>
     <div class="score-container">
-        <div class="score">0</div>
+        <div class="score-row">
+            <div class="score">0</div>
+            <div class="coins"><span class="coin-icon">💰</span><span id="coins-display">0</span></div>
+        </div>
         <div class="level">Level 1</div>
     </div>
     <div class="controls">
@@ -1163,6 +1240,10 @@
 
         <table class="stats-table">
             <tr>
+                <td>Münzen:</td>
+                <td id="stats-coins">0</td>
+            </tr>
+            <tr>
                 <td>Längste Kette:</td>
                 <td id="longest-chain">0</td>
             </tr>
@@ -1190,6 +1271,7 @@
         <div class="tab-container">
             <div class="tab-buttons">
                 <button class="tab-button active" data-tab="stats">Statistik</button>
+                <button class="tab-button" data-tab="achievements">Erfolge</button>
                 <button class="tab-button" data-tab="challenges">Herausforderungen</button>
                 <button class="tab-button" data-tab="upgrades">Verbesserungen</button>
                 <button class="tab-button" data-tab="modes">Spielmodi</button>
@@ -1217,11 +1299,20 @@
                         <td>Spielfeldgröße:</td>
                         <td id="stats-grid-size">6x6</td>
                     </tr>
+                    <tr>
+                        <td>Münzen:</td>
+                        <td id="stats-coins-value">0</td>
+                    </tr>
+                    <tr>
+                        <td>Aktueller Score:</td>
+                        <td id="stats-current-score">0</td>
+                    </tr>
                 </table>
+            </div>
 
-                <h3 style="margin-top: 20px; margin-bottom: 15px;">Erfolge</h3>
+            <div class="tab-content" id="achievements-tab">
                 <div id="achievements-container">
-                    <!-- Achievements will be inserted here -->
+                    <!-- Achievements werden hier dynamisch eingefügt -->
                 </div>
             </div>
 
@@ -1339,7 +1430,7 @@
 			highestValue: 2,
 			longestChain: 0,
 			gamesPlayed: 0,
-			achievements: [],
+			achievements: {},  // Geändert zu einem Objekt für Tracking des Fortschritts
 			currentChallenge: 0,
 			challengeProgress: 0,
 			gridSize: 6,
@@ -1351,18 +1442,132 @@
 		challenge: null
 	};
 
-	// Achievements und Challenges definieren
-	const ACHIEVEMENTS = [
-		{id: 'first_merge', icon: '🔄', title: 'Erste Verschmelzung', description: 'Verschmelze zwei Blasen'},
-		{id: 'level_16', icon: '🔼', title: 'Erreiche 16', description: 'Erzeuge eine 16er-Blase'},
-		{id: 'level_64', icon: '⭐', title: 'Fortschritt', description: 'Erzeuge eine 64er-Blase'},
-		{id: 'level_256', icon: '🌟', title: 'Meister', description: 'Erzeuge eine 256er-Blase'},
-		{id: 'level_1024', icon: '👑', title: 'Legende', description: 'Erzeuge eine 1024er-Blase'},
-		{id: 'chain_3', icon: '⛓️', title: 'Kettenschmied', description: 'Erzeuge eine Kette mit 3 Verschmelzungen'},
-		{id: 'chain_5', icon: '🔗', title: 'Kettenmeister', description: 'Erzeuge eine Kette mit 5 Verschmelzungen'},
-		{id: 'score_1000', icon: '💯', title: 'Punktejäger', description: 'Erreiche 1.000 Punkte'},
-		{id: 'score_5000', icon: '🏆', title: 'Punktekönig', description: 'Erreiche 5.000 Punkte'},
-		{id: 'games_10', icon: '🎮', title: 'Regelmäßiger Spieler', description: 'Spiele 10 Partien'}
+	// Definiere die Achievement-Kategorien
+	const ACHIEVEMENT_CATEGORIES = [
+		{
+			id: 'bubbles',
+			name: 'Blasen-Meister',
+			icon: '🔢',
+			getLevel: (value) => Math.floor(Math.log2(value) / 2),  // 4, 16, 64, 256, 1024, ...
+			getNextTarget: (level) => Math.pow(2, (level + 1) * 2), // Nächstes Ziel
+			getProgress: (value, nextTarget) => {
+				if (value === 0) return 0;
+				const logValue = Math.log2(value);
+				const logTarget = Math.log2(nextTarget);
+				const prevTarget = nextTarget / 4; // Vorheriges Ziel ist immer 1/4 des aktuellen
+				const logPrevTarget = Math.log2(prevTarget);
+				// Berechne prozentuale Fortschritt auf logarithmischer Skala
+				return Math.min(100, Math.max(0, ((logValue - logPrevTarget) / (logTarget - logPrevTarget)) * 100));
+			}
+		},
+		{
+			id: 'chains',
+			name: 'Ketten-Meister',
+			icon: '⛓️',
+			getLevel: (value) => {
+				if (value < 3) return 0;
+				if (value < 5) return 1;
+				if (value < 7) return 2;
+				if (value < 10) return 3;
+				if (value < 15) return 4;
+				if (value < 20) return 5;
+				return 6 + Math.floor((value - 20) / 5);  // Ab Level 6 alle 5 Werte ein neues Level
+			},
+			getNextTarget: (level) => {
+				if (level === 0) return 3;
+				if (level === 1) return 5;
+				if (level === 2) return 7;
+				if (level === 3) return 10;
+				if (level === 4) return 15;
+				if (level === 5) return 20;
+				return 20 + (level - 5) * 5;  // Ab Level 6: 25, 30, 35, ...
+			},
+			getProgress: (value, nextTarget) => {
+				if (value === 0) return 0;
+				let prevTarget;
+				const level = ACHIEVEMENT_CATEGORIES[1].getLevel(value);
+				if (level === 0) {
+					prevTarget = 0;
+				} else {
+					prevTarget = ACHIEVEMENT_CATEGORIES[1].getNextTarget(level - 1);
+				}
+				return Math.min(100, Math.max(0, ((value - prevTarget) / (nextTarget - prevTarget)) * 100));
+			}
+		},
+		{
+			id: 'score',
+			name: 'Punkte-Jäger',
+			icon: '🏆',
+			getLevel: (value) => {
+				if (value < 1000) return 0;
+				if (value < 5000) return 1;
+				if (value < 10000) return 2;
+				if (value < 50000) return 3;
+				if (value < 100000) return 4;
+				return 5 + Math.floor(Math.log10(value / 100000));  // Ab Level 5 alle 10x ein neues Level
+			},
+			getNextTarget: (level) => {
+				if (level === 0) return 1000;
+				if (level === 1) return 5000;
+				if (level === 2) return 10000;
+				if (level === 3) return 50000;
+				if (level === 4) return 100000;
+				return 100000 * Math.pow(10, level - 4);  // Ab Level 5: 1M, 10M, 100M, ...
+			},
+			getProgress: (value, nextTarget) => {
+				if (value === 0) return 0;
+				let prevTarget;
+				const level = ACHIEVEMENT_CATEGORIES[2].getLevel(value);
+				if (level === 0) {
+					prevTarget = 0;
+				} else {
+					prevTarget = ACHIEVEMENT_CATEGORIES[2].getNextTarget(level - 1);
+				}
+				// Logarithmischer Fortschritt für höhere Levels
+				if (level > 3) {
+					const logValue = Math.log10(value);
+					const logTarget = Math.log10(nextTarget);
+					const logPrevTarget = Math.log10(prevTarget);
+					return Math.min(100, Math.max(0, ((logValue - logPrevTarget) / (logTarget - logPrevTarget)) * 100));
+				}
+				return Math.min(100, Math.max(0, ((value - prevTarget) / (nextTarget - prevTarget)) * 100));
+			}
+		},
+		{
+			id: 'games',
+			name: 'Spieler-Level',
+			icon: '🎮',
+			getLevel: (value) => {
+				if (value < 10) return 0;
+				if (value < 50) return 1;
+				if (value < 100) return 2;
+				return 3 + Math.floor(Math.log10(value / 100));  // Ab Level 3 alle 10x ein neues Level
+			},
+			getNextTarget: (level) => {
+				if (level === 0) return 10;
+				if (level === 1) return 50;
+				if (level === 2) return 100;
+				return 100 * Math.pow(10, level - 2);  // Ab Level 3: 1000, 10000, ...
+			},
+			getProgress: (value, nextTarget) => {
+				if (value === 0) return 0;
+				let prevTarget;
+				const level = ACHIEVEMENT_CATEGORIES[3].getLevel(value);
+				if (level === 0) {
+					prevTarget = 0;
+				} else {
+					prevTarget = ACHIEVEMENT_CATEGORIES[3].getNextTarget(level - 1);
+				}
+				// Logarithmischer Fortschritt für höhere Levels
+				if (level > 2) {
+					const logValue = Math.log10(value);
+					const logTarget = Math.log10(nextTarget);
+					const logPrevTarget = Math.log10(prevTarget);
+					return Math.min(100, Math.max(0, ((logValue - logPrevTarget) / (logTarget - logPrevTarget)) * 100));
+				}
+				return Math.min(100, Math.max(0, ((value - prevTarget) / (nextTarget - prevTarget)) * 100));
+			}
+		}
 	];
 
 	// VERÄNDERT: Überarbeitete CHALLENGES mit progressiveren Zielen
@@ -1449,6 +1654,7 @@
 	const goalProgress = document.getElementById('goal-progress');
 	let chainCounter = document.getElementById('chain-counter');
 	const scoreElement = document.querySelector('.score');
+	const coinsElement = document.getElementById('coins-display');
 	const levelElement = document.querySelector('.level');
 	const themeToggle = document.getElementById('theme-toggle');
 	const moonIcon = document.querySelector('.moon-icon');
@@ -1473,6 +1679,8 @@
 	const statsLongestChainElement = document.getElementById('stats-longest-chain');
 	const statsGamesPlayedElement = document.getElementById('stats-games-played');
 	const statsGridSizeElement = document.getElementById('stats-grid-size');
+	const statsCoinsElement = document.getElementById('stats-coins-value');
+	const statsCurrentScoreElement = document.getElementById('stats-current-score');
 	const achievementsContainer = document.getElementById('achievements-container');
 	const challengeDescription = document.getElementById('challenge-description');
 	const challengeProgressBar = document.getElementById('challenge-progress-bar');
@@ -1501,10 +1709,10 @@
 	];
 
 	// Formatierungsfunktion für große Zahlen
-    function toFixedMax1(num) {
+	function toFixedMax1(num) {
 		// Stelle sicher, dass z.B. 1.0 zu 1 wird.
-        return parseFloat(num.toFixed(1));
-    }
+		return parseFloat(num.toFixed(1));
+	}
 
 	function formatNumber(num) {
 		if (num < 1000) return parseFloat(num);
@@ -1935,8 +2143,9 @@
 					// Starte Kettenreaktion-Zähler
 					startChainReaction();
 
-					// Prüfe Achievement "Erste Verschmelzung"
-					unlockAchievement('first_merge');
+					// Achievement-Fortschritt für Blasenwert aktualisieren
+					const newValue = Math.pow(2, level + 1);
+					updateAchievementProgress('bubbles', newValue);
 
 					// Tutorial-Fortschritt
 					if (gameState.tutorialStep === 2) {
@@ -2052,13 +2261,20 @@
 			// Herausforderungen prüfen
 			checkChallengeProgress('chain', gameState.chainCount);
 
-			// Achievement prüfen
-			if (gameState.chainCount >= 3) unlockAchievement('chain_3');
-			if (gameState.chainCount >= 5) unlockAchievement('chain_5');
-
-			// Update längste Kette
+			// Update längste Kette im Spiel
 			if (gameState.chainCount > gameState.longestChain) {
 				gameState.longestChain = gameState.chainCount;
+
+				// Auch direkt in den Statistiken aktualisieren
+				if (gameState.longestChain > gameState.stats.longestChain) {
+					gameState.stats.longestChain = gameState.longestChain;
+
+					// Achievement-Fortschritt für Ketten aktualisieren
+					updateAchievementProgress('chains', gameState.longestChain);
+
+					// Speichern der aktualisierten Statistik
+					saveStatsToStorage();
+				}
 			}
 		}
 	}
@@ -2111,6 +2327,9 @@
 			const newValue = Math.pow(2, newLevel);
 			gameState.maxValue = newValue;
 
+			// Achievement-Fortschritt für Blasenwert aktualisieren
+			updateAchievementProgress('bubbles', newValue);
+
 			// Prüfe, ob wir das Ziel erreicht haben
 			if (newValue >= gameState.currentGoal) {
 				// Neues Ziel setzen (nächste Potenz von 2)
@@ -2129,15 +2348,8 @@
 
 			updateGoalDisplay();
 
-			// Prüfe Achievements für bestimmte Werte
-			const value = Math.pow(2, newLevel);
-			if (value >= 16) unlockAchievement('level_16');
-			if (value >= 64) unlockAchievement('level_64');
-			if (value >= 256) unlockAchievement('level_256');
-			if (value >= 1024) unlockAchievement('level_1024');
-
 			// Prüfe Challenge-Fortschritt für Werte
-			checkChallengeProgress('value', value);
+			checkChallengeProgress('value', newValue);
 		}
 
 		// Animation für die zweite Blase
@@ -2396,8 +2608,13 @@
 		gameState.score += points;
 		scoreElement.textContent = formatNumber(gameState.score);
 
+		// Aktuelle Punktzahl auch in den Stats anzeigen
+		statsCurrentScoreElement.textContent = formatNumber(gameState.score);
+
 		// Coins für Upgrades sammeln (2% der erzielten Punkte)
 		gameState.stats.coins += Math.floor(points * 0.02);
+		coinsElement.textContent = formatNumber(gameState.stats.coins);
+		statsCoinsElement.textContent = formatNumber(gameState.stats.coins);
 
 		// Levelberechnung mit logarithmischer Progression
 		const newLevel = Math.floor(Math.log2(gameState.score + 1) / 2) + 1;
@@ -2406,12 +2623,16 @@
 			levelElement.textContent = translate({de: `Level ${gameState.level}`});
 		}
 
-		// Prüfe Achievements für Punkte
-		if (gameState.score >= 1000) unlockAchievement('score_1000');
-		if (gameState.score >= 5000) unlockAchievement('score_5000');
+		// Achievement-Fortschritt für Punkte aktualisieren
+		updateAchievementProgress('score', gameState.score);
 
 		// Prüfe Challenge-Fortschritt für Punkte
 		checkChallengeProgress('score', gameState.score);
+
+		// Speichere Statistiken häufiger
+		if (gameState.score % 1000 === 0) {
+			saveStatsToStorage();
+		}
 	}
 
 	function createScorePopup(text, x, y, isBonus = false) {
@@ -2498,6 +2719,7 @@
 		longestChainElement.textContent = gameState.longestChain;
 		playedTimeElement.textContent = formatTime(gameState.playTime);
 		totalMovesElement.textContent = gameState.moves;
+		document.getElementById('stats-coins').textContent = formatNumber(gameState.stats.coins);
 
 		setTimeout(() => {
 			gameOverModal.classList.add('active');
@@ -2516,7 +2738,8 @@
 			gameState.stats.highestValue = gameState.maxValue;
 		}
 
-		// Längste Kette
+		// Längste Kette - wurde bereits in updateChainCounter aktualisiert
+		// aber sicherstellen, dass sie korrekt ist
 		if (gameState.longestChain > gameState.stats.longestChain) {
 			gameState.stats.longestChain = gameState.longestChain;
 		}
@@ -2524,10 +2747,8 @@
 		// Spiele gezählt
 		gameState.stats.gamesPlayed++;
 
-		// Achievement für Anzahl der Spiele
-		if (gameState.stats.gamesPlayed >= 10) {
-			unlockAchievement('games_10');
-		}
+		// Achievement-Fortschritt für Spielezahl aktualisieren
+		updateAchievementProgress('games', gameState.stats.gamesPlayed);
 
 		// In LocalStorage speichern
 		saveStatsToStorage();
@@ -2603,7 +2824,11 @@
 		createGridOverlay();
 
 		scoreElement.textContent = formatNumber(gameState.score);
+		coinsElement.textContent = formatNumber(gameState.stats.coins);
 		levelElement.textContent = translate({de: `Level ${gameState.level}`});
+
+		// Score auch in den Stats anzeigen
+		statsCurrentScoreElement.textContent = formatNumber(gameState.score);
 
 		// Nächste Blase und Ziel vorbereiten
 		if (restoreSavedGame && gameState.nextBubble) {
@@ -2782,29 +3007,92 @@
 		}
 	}
 
-	// Neue Funktionen für Achievements und Challenges
-	function unlockAchievement(id) {
-		// Prüfe, ob Achievement bereits freigeschaltet
-		if (gameState.stats.achievements.includes(id)) return;
+	// NEU: Achievement-Fortschritts-Funktionen
+	function updateAchievementProgress(categoryId, value) {
+		// Finde die Kategorie
+		const category = ACHIEVEMENT_CATEGORIES.find(cat => cat.id === categoryId);
+		if (!category) return;
 
-		// Achievement freischalten
-		gameState.stats.achievements.push(id);
+		// Initialisiere das Kategorie-Objekt, falls es noch nicht existiert
+		if (!gameState.stats.achievements[categoryId]) {
+			gameState.stats.achievements[categoryId] = {
+				value: 0,
+				level: 0
+			};
+		}
 
-		// Badge-Notification aktivieren
-		statsButton.classList.add('active');
+		// Aktualisiere den Höchstwert in dieser Kategorie
+		if (value > gameState.stats.achievements[categoryId].value) {
+			gameState.stats.achievements[categoryId].value = value;
 
-		// In LocalStorage speichern
+			// Berechne neues Level
+			const newLevel = category.getLevel(value);
+
+			// Wenn Level gestiegen ist, zeige Benachrichtigung
+			if (newLevel > gameState.stats.achievements[categoryId].level) {
+				// Belohnung für neues Achievement-Level
+				const bonus = Math.pow(10, newLevel) * 5;
+				createScorePopup(`${category.name} Lvl ${newLevel}! +${formatNumber(bonus)}`,
+					gameContainer.offsetWidth / 2,
+					gameContainer.offsetHeight / 2 - 30,
+					true);
+
+				// Münzen als Belohnung
+				gameState.stats.coins += bonus;
+				coinsElement.textContent = formatNumber(gameState.stats.coins);
+				statsCoinsElement.textContent = formatNumber(gameState.stats.coins);
+
+				// Badge-Notification aktivieren
+				statsButton.classList.add('active');
+			}
+
+			// Neues Level speichern
+			gameState.stats.achievements[categoryId].level = newLevel;
+		}
+
+		// Speichere Änderungen
 		saveStatsToStorage();
 	}
 
-	function setCurrentChallenge() {
-		// Nächste Challenge setzen
-		const challengeIndex = gameState.stats.currentChallenge % CHALLENGES.length;
-		gameState.challenge = CHALLENGES[challengeIndex];
-		gameState.stats.challengeProgress = 0;
+	function updateAchievementsUI() {
+		achievementsContainer.innerHTML = '';
 
-		// UI aktualisieren
-		updateChallengeUI();
+		// Erstelle für jede Kategorie einen Container mit Fortschrittsanzeige
+		ACHIEVEMENT_CATEGORIES.forEach(category => {
+			const categoryData = gameState.stats.achievements[category.id] || { value: 0, level: 0 };
+			const currentValue = categoryData.value;
+			const currentLevel = categoryData.level;
+
+			// Berechne nächstes Ziel
+			const nextTarget = category.getNextTarget(currentLevel);
+
+			// Berechne Fortschritt zum nächsten Ziel
+			const progress = category.getProgress(currentValue, nextTarget);
+
+			// Erstelle Kategorie-Container
+			const categoryContainer = document.createElement('div');
+			categoryContainer.className = 'achievement-category';
+
+			// Kategorie-Titel mit Level
+			categoryContainer.innerHTML = `
+				<div class="achievement-category-title">
+					${category.icon} ${category.name}
+					<span class="achievement-level">Level ${currentLevel}</span>
+				</div>
+				<div class="achievement-badge">
+					<div class="achievement-icon">${category.icon}</div>
+					<div class="achievement-info">
+						<div class="achievement-title">Aktueller Wert: ${formatNumber(currentValue)}</div>
+						<div class="achievement-desc">Nächstes Ziel: ${formatNumber(nextTarget)}</div>
+						<div class="achievement-progress">
+							<div class="achievement-progress-bar" style="width: ${progress}%"></div>
+						</div>
+					</div>
+				</div>
+			`;
+
+			achievementsContainer.appendChild(categoryContainer);
+		});
 	}
 
 	// VERÄNDERT: Verbesserte Version von checkChallengeProgress für erreichbarere Ziele
@@ -2838,13 +3126,14 @@
 		// Prüfe auf Challenge-Abschluss
 		if (currentValue >= gameState.challenge.target) {
 			// Belohnung gewähren
-			gameState.score += gameState.challenge.reward;
-			scoreElement.textContent = formatNumber(gameState.score);
+			updateScore(gameState.challenge.reward, true);
 			createScorePopup(`Herausforderung geschafft! +${formatNumber(gameState.challenge.reward)}`,
 				gameContainer.offsetWidth / 2, gameContainer.offsetHeight / 2, true);
 
 			// Coins als zusätzliche Belohnung
 			gameState.stats.coins += Math.floor(gameState.challenge.reward * 0.05);
+			coinsElement.textContent = formatNumber(gameState.stats.coins);
+			statsCoinsElement.textContent = formatNumber(gameState.stats.coins);
 
 			// Nächste Challenge
 			gameState.stats.currentChallenge++;
@@ -2859,6 +3148,16 @@
 
 		// Speichern
 		saveStatsToStorage();
+	}
+
+	function setCurrentChallenge() {
+		// Nächste Challenge setzen
+		const challengeIndex = gameState.stats.currentChallenge % CHALLENGES.length;
+		gameState.challenge = CHALLENGES[challengeIndex];
+		gameState.stats.challengeProgress = 0;
+
+		// UI aktualisieren
+		updateChallengeUI();
 	}
 
 	function updateChallengeUI() {
@@ -2881,32 +3180,11 @@
 		challengeReward.textContent = `+${formatNumber(gameState.challenge.reward)} Punkte`;
 	}
 
-	function updateAchievementsUI() {
-		achievementsContainer.innerHTML = '';
-
-		// Alle Achievements anzeigen
-		ACHIEVEMENTS.forEach(achievement => {
-			const isUnlocked = gameState.stats.achievements.includes(achievement.id);
-
-			const badge = document.createElement('div');
-			badge.className = 'achievement-badge';
-			badge.style.opacity = isUnlocked ? '1' : '0.5';
-
-			badge.innerHTML = `
-                            <div class="achievement-icon">${achievement.icon}</div>
-                            <div class="achievement-info">
-                                <div class="achievement-title">${achievement.title}</div>
-                                <div class="achievement-desc">${achievement.description}</div>
-                            </div>
-                        `;
-
-			achievementsContainer.appendChild(badge);
-		});
-	}
-
 	// Upgrade-Funktionen
 	function updateUpgradesUI() {
 		upgradesContainer.innerHTML = '';
+
+		console.log("Verfügbare Münzen:", gameState.stats.coins); // Debug-Info
 
 		// Alle verfügbaren Upgrades anzeigen
 		UPGRADES.forEach(upgrade => {
@@ -2925,23 +3203,41 @@
 			const upgradeItem = document.createElement('div');
 			upgradeItem.className = 'upgrade-item';
 
+			// Das Hauptproblem ist hier die Button-Disabled-Logik
+			const isDisabled = isOwned || (!canAfford || !dependenciesMet);
+
 			upgradeItem.innerHTML = `
-                            <div class="upgrade-info">
-                                <div class="upgrade-title">${upgrade.title}</div>
-                                <div class="upgrade-desc">${upgrade.description}</div>
-                            </div>
-                            <button class="upgrade-button" ${isOwned ? 'disabled' : ''} ${(!canAfford || !dependenciesMet) && !isOwned ? 'disabled' : ''} data-upgrade="${upgrade.id}">
-                                ${isOwned ? 'Freigeschaltet' : `Kaufen <span class="upgrade-cost">${formatNumber(upgrade.cost)} Münzen</span>`}
-                            </button>
-                        `;
+            <div class="upgrade-info">
+                <div class="upgrade-title">${upgrade.title}</div>
+                <div class="upgrade-desc">${upgrade.description}</div>
+            </div>
+            <button class="upgrade-button" ${isDisabled ? 'disabled' : ''} data-upgrade="${upgrade.id}">
+                ${isOwned ? 'Freigeschaltet' : `Kaufen <span class="upgrade-cost">${formatNumber(upgrade.cost)} Münzen</span>`}
+            </button>
+        `;
 
 			upgradesContainer.appendChild(upgradeItem);
 
+			// Debug-Info
+			console.log(`Upgrade ${upgrade.id}: besessen=${isOwned}, genug Münzen=${canAfford}, Voraussetzungen erfüllt=${dependenciesMet}, deaktiviert=${isDisabled}`);
+
 			if (!isOwned) {
 				const button = upgradeItem.querySelector('.upgrade-button');
-				button.addEventListener('click', () => {
-					purchaseUpgrade(upgrade.id);
-				});
+
+				// Manuelles Styling und Event-Listener-Hinzufügen
+				if (canAfford && dependenciesMet) {
+					button.style.opacity = '1';
+					button.style.cursor = 'pointer';
+					button.disabled = false;
+
+					button.addEventListener('click', () => {
+						purchaseUpgrade(upgrade.id);
+					});
+				} else {
+					button.style.opacity = '0.5';
+					button.style.cursor = 'not-allowed';
+					button.disabled = true;
+				}
 			}
 		});
 	}
@@ -2964,6 +3260,10 @@
 		// Kaufen
 		gameState.stats.coins -= upgrade.cost;
 		gameState.stats.upgrades.push(upgradeId);
+
+		// Aktualisiere Münzen-Anzeige
+		coinsElement.textContent = formatNumber(gameState.stats.coins);
+		statsCoinsElement.textContent = formatNumber(gameState.stats.coins);
 
 		// Spezielle Upgrades anwenden
 		if (upgradeId.startsWith('grid_')) {
@@ -3032,6 +3332,8 @@
 		statsLongestChainElement.textContent = gameState.stats.longestChain;
 		statsGamesPlayedElement.textContent = gameState.stats.gamesPlayed;
 		statsGridSizeElement.textContent = `${gameState.stats.gridSize}x${gameState.stats.gridSize}`;
+		statsCoinsElement.textContent = formatNumber(gameState.stats.coins);
+		statsCurrentScoreElement.textContent = formatNumber(gameState.score);
 
 		updateAchievementsUI();
 		updateChallengeUI();
@@ -3156,6 +3458,7 @@
 		try {
 			// Statistiken speichern
 			localStorage.setItem('bubbleMergeStats', JSON.stringify(gameState.stats));
+			console.log("Statistiken gespeichert, längste Kette:", gameState.stats.longestChain, "Münzen:", gameState.stats.coins);
 
 			// Spielzustand speichern
 			saveGameToStorage();
@@ -3215,7 +3518,7 @@
 					highestValue: parsedStats.highestValue || 2,
 					longestChain: parsedStats.longestChain || 0,
 					gamesPlayed: parsedStats.gamesPlayed || 0,
-					achievements: parsedStats.achievements || [],
+					achievements: parsedStats.achievements || {},
 					currentChallenge: parsedStats.currentChallenge || 0,
 					challengeProgress: parsedStats.challengeProgress || 0,
 					gridSize: parsedStats.gridSize || 6,
@@ -3227,7 +3530,62 @@
 				// Stellen sicher, dass die Grid-Größe gesetzt ist
 				gameState.gridSize = gameState.stats.gridSize || 6;
 
-				console.log("Spielstatistiken erfolgreich geladen");
+				// Migrieren der alten achievements-Array-Version zur neuen objektbasierten Version
+				if (Array.isArray(gameState.stats.achievements)) {
+					console.log("Migriere alte Achievements zur neuen Format");
+					const oldAchievements = gameState.stats.achievements;
+
+					// Neues achievements-Objekt erstellen
+					gameState.stats.achievements = {};
+
+					// Grundwerte für alle Kategorien setzen
+					if (oldAchievements.includes('level_16')) updateAchievementProgress('bubbles', 16);
+					if (oldAchievements.includes('level_64')) updateAchievementProgress('bubbles', 64);
+					if (oldAchievements.includes('level_256')) updateAchievementProgress('bubbles', 256);
+					if (oldAchievements.includes('level_1024')) updateAchievementProgress('bubbles', 1024);
+
+					if (oldAchievements.includes('chain_3')) updateAchievementProgress('chains', 3);
+					if (oldAchievements.includes('chain_5')) updateAchievementProgress('chains', 5);
+					if (oldAchievements.includes('chain_7')) updateAchievementProgress('chains', 7);
+					if (oldAchievements.includes('chain_10')) updateAchievementProgress('chains', 10);
+					if (oldAchievements.includes('chain_15')) updateAchievementProgress('chains', 15);
+					if (oldAchievements.includes('chain_20')) updateAchievementProgress('chains', 20);
+
+					if (oldAchievements.includes('score_1000')) updateAchievementProgress('score', 1000);
+					if (oldAchievements.includes('score_5000')) updateAchievementProgress('score', 5000);
+					if (oldAchievements.includes('score_10000')) updateAchievementProgress('score', 10000);
+					if (oldAchievements.includes('score_50000')) updateAchievementProgress('score', 50000);
+					if (oldAchievements.includes('score_100000')) updateAchievementProgress('score', 100000);
+
+					if (oldAchievements.includes('games_10')) updateAchievementProgress('games', 10);
+					if (oldAchievements.includes('games_50')) updateAchievementProgress('games', 50);
+					if (oldAchievements.includes('games_100')) updateAchievementProgress('games', 100);
+
+					// Aktualisiere auch die aktuellen Werte direkt
+					updateAchievementProgress('bubbles', gameState.stats.highestValue);
+					updateAchievementProgress('chains', gameState.stats.longestChain);
+					updateAchievementProgress('score', gameState.stats.highscore);
+					updateAchievementProgress('games', gameState.stats.gamesPlayed);
+				}
+
+				console.log("Spielstatistiken erfolgreich geladen, längste Kette:", gameState.stats.longestChain, "Münzen:", gameState.stats.coins);
+			} else {
+				console.log("Keine gespeicherten Statistiken gefunden, verwende Standardwerte");
+				// Stellen sicher, dass gameState.stats initialisiert ist
+				gameState.stats = {
+					highscore: 0,
+					highestLevel: 1,
+					highestValue: 2,
+					longestChain: 0,
+					gamesPlayed: 0,
+					achievements: {},
+					currentChallenge: 0,
+					challengeProgress: 0,
+					gridSize: 6,
+					unlockedGridSize: 6,
+					coins: 0,
+					upgrades: []
+				};
 			}
 
 			// Dann den aktuellen Spielstand laden (separat)
@@ -3291,7 +3649,7 @@
 				highestValue: 2,
 				longestChain: 0,
 				gamesPlayed: 0,
-				achievements: [],
+				achievements: {},
 				currentChallenge: 0,
 				challengeProgress: 0,
 				gridSize: 6,
