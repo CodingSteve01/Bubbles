@@ -2082,12 +2082,89 @@
 				return;
 			}
 
-			// Verbesserte Zielerkennung: Prüfe auch Nähe zu einer belegten Zelle
-			let mergeTarget = null;
+			// Debug ausgeben (zum Testen, kann später entfernt werden)
+			console.log(`Bewegung von [${oldRow},${oldCol}] nach [${row},${col}]`);
+			console.log(`Zielzelle enthält: ${gameState.grid[row][col]}, Blase Level: ${level}`);
 
-			// Zuerst prüfen, ob die Zielzelle leer ist
-			if (gameState.grid[row][col] === null) {
-				// Einfach bewegen
+			// Zuerst prüfen, ob die Zielzelle bereits belegt ist
+			if (gameState.grid[row][col] !== null) {
+				console.log("Zelle ist belegt");
+
+				// Wenn Zielzelle belegt ist, prüfe, ob gleiches Level
+				if (gameState.grid[row][col] === level) {
+					console.log("Gleiches Level, versuche zu verschmelzen");
+					// Gleiche Blasen verschmelzen
+					gameState.grid[oldRow][oldCol] = null;
+
+					// Zielblase finden
+					const targetBubble = gameState.bubbles.find(
+						b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
+					);
+
+					if (targetBubble) {
+						console.log("Zielblase gefunden, verschmelze");
+						// Level erhöhen
+						gameState.grid[row][col] = level + 1;
+
+						// Effekt und Animation
+						queueMerge(bubble, targetBubble, level + 1, row, col);
+
+						moveMade = true;
+
+						// Starte Kettenreaktion-Zähler
+						startChainReaction();
+
+						// Achievement-Fortschritt für Blasenwert aktualisieren
+						const newValue = Math.pow(2, level + 1);
+						updateAchievementProgress('bubbles', newValue);
+
+						// Tutorial-Fortschritt
+						if (gameState.tutorialStep === 2) {
+							showTutorial(3);
+						}
+					} else {
+						console.log("Zielblase nicht gefunden, Fehler!");
+						// Fallback: Zurück zur alten Position
+						const pos = getBubblePosition(oldRow, oldCol);
+						bubble.style.left = `${pos.x}px`;
+						bubble.style.top = `${pos.y}px`;
+					}
+				} else {
+					console.log("Unterschiedliches Level, kann nicht verschmelzen");
+					// Verbesserte Feedback-Animation für ungleiche Levels
+					const pos = getBubblePosition(oldRow, oldCol);
+					bubble.style.left = `${pos.x}px`;
+					bubble.style.top = `${pos.y}px`;
+
+					// Sanfteres Feedback
+					bubble.style.transition = "all 0.3s ease-in-out";
+					bubble.style.transform = "scale(0.9)";
+					setTimeout(() => {
+						bubble.style.transform = "";
+						setTimeout(() => {
+							bubble.style.transition = "";
+						}, 300);
+					}, 300);
+
+					// Visuelles Feedback auch für die Zielblase
+					const targetBubble = gameState.bubbles.find(
+						b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
+					);
+
+					if (targetBubble) {
+						targetBubble.style.transition = "all 0.3s ease-in-out";
+						targetBubble.style.transform = "scale(1.1)";
+						setTimeout(() => {
+							targetBubble.style.transform = "";
+							setTimeout(() => {
+								targetBubble.style.transition = "";
+							}, 300);
+						}, 300);
+					}
+				}
+			} else {
+				console.log("Zelle ist leer, bewege Blase");
+				// Zelle ist leer - einfach bewegen
 				gameState.grid[oldRow][oldCol] = null;
 				gameState.grid[row][col] = level;
 
@@ -2130,67 +2207,6 @@
 				// Tutorial-Fortschritt
 				if (gameState.tutorialStep === 1) {
 					showTutorial(2);
-				}
-			} else if (gameState.grid[row][col] === level) {
-				// Gleiche Blasen verschmelzen
-				gameState.grid[oldRow][oldCol] = null;
-
-				// Zielblase finden
-				const targetBubble = gameState.bubbles.find(
-					b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
-				);
-
-				if (targetBubble) {
-					// Level erhöhen
-					gameState.grid[row][col] = level + 1;
-
-					// Effekt und Animation
-					queueMerge(bubble, targetBubble, level + 1, row, col);
-
-					moveMade = true;
-
-					// Starte Kettenreaktion-Zähler
-					startChainReaction();
-
-					// Achievement-Fortschritt für Blasenwert aktualisieren
-					const newValue = Math.pow(2, level + 1);
-					updateAchievementProgress('bubbles', newValue);
-
-					// Tutorial-Fortschritt
-					if (gameState.tutorialStep === 2) {
-						showTutorial(3);
-					}
-				}
-			} else {
-				// Verbesserte Feedback-Animation für ungleiche Levels
-				const pos = getBubblePosition(oldRow, oldCol);
-				bubble.style.left = `${pos.x}px`;
-				bubble.style.top = `${pos.y}px`;
-
-				// Sanfteres Feedback
-				bubble.style.transition = "all 0.3s ease-in-out";
-				bubble.style.transform = "scale(0.9)";
-				setTimeout(() => {
-					bubble.style.transform = "";
-					setTimeout(() => {
-						bubble.style.transition = "";
-					}, 300);
-				}, 300);
-
-				// Visuelles Feedback auch für die Zielblase
-				const targetBubble = gameState.bubbles.find(
-					b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
-				);
-
-				if (targetBubble) {
-					targetBubble.style.transition = "all 0.3s ease-in-out";
-					targetBubble.style.transform = "scale(1.1)";
-					setTimeout(() => {
-						targetBubble.style.transform = "";
-						setTimeout(() => {
-							targetBubble.style.transition = "";
-						}, 300);
-					}, 300);
 				}
 			}
 		} else {
