@@ -1886,6 +1886,15 @@
 		// Finde eine leere Zelle
 		const emptyCells = [];
 
+		// Prüfe, ob das Grid ordnungsgemäß initialisiert wurde
+		if (!gameState.grid || !Array.isArray(gameState.grid) || gameState.grid.length === 0) {
+			console.error("Grid wurde nicht richtig initialisiert!");
+			gameState.grid = [];
+			for (let i = 0; i < gameState.gridSize; i++) {
+				gameState.grid[i] = new Array(gameState.gridSize).fill(null);
+			}
+		}
+
 		// Bei Schwerkraft-Modus bevorzugt oberste Reihe verwenden
 		if (gameState.gravityEnabled) {
 			for (let col = 0; col < gameState.gridSize; col++) {
@@ -2653,15 +2662,28 @@
 	function checkForPossibleMoves() {
 		let hasMoves = false;
 
-		// Prüfe auf leere Zellen
+		// Sicherheitsüberprüfung für das Grid
+		if (!gameState.grid || !Array.isArray(gameState.grid) || gameState.grid.length === 0) {
+			console.error("Grid-Fehler bei der Zugprüfung");
+			return true; // Nehme an, dass Züge möglich sind, um Game Over zu vermeiden
+		}
+
+		// Setze ein Minimum an leeren Feldern, um Game Over zu verhindern
+		let emptyCount = 0;
+
+		// Rest der Funktion bleibt gleich, aber zähle leere Felder...
 		for (let row = 0; row < gameState.gridSize; row++) {
 			for (let col = 0; col < gameState.gridSize; col++) {
 				if (!gameState.grid[row][col]) {
+					emptyCount++;
 					hasMoves = true;
-					break;
 				}
 			}
-			if (hasMoves) break;
+		}
+
+		// Verhindere Game Over, wenn mehr als 1/3 der Felder leer sind
+		if (emptyCount > (gameState.gridSize * gameState.gridSize / 3)) {
+			return true;
 		}
 
 		// Prüfe auf mögliche Verschmelzungen
@@ -2769,6 +2791,9 @@
 	}
 
 	function initNewGame(forceNew = false) {
+		// Immer ein neues Spiel erzwingen, wenn es Probleme gibt
+		forceNew = forceNew || gameState.gameOver;
+
 		// Überprüfe, ob ein gespeichertes Spiel vorhanden ist
 		const restoreSavedGame = !forceNew && gameState.hasSavedGame;
 
