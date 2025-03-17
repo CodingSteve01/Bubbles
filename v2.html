@@ -2599,7 +2599,7 @@
 		}
 	}
 
-	function updateScore(points, isBonus = false) {
+	function updateScore(points, isBonus = false, skipChallengeCheck = false) {
 		// Bonus für Punkte-Upgrade
 		if (gameState.stats.upgrades.includes('score_bonus')) {
 			points = Math.floor(points * 1.25); // +25% für Punkte-Bonus-Upgrade
@@ -2626,8 +2626,10 @@
 		// Achievement-Fortschritt für Punkte aktualisieren
 		updateAchievementProgress('score', gameState.score);
 
-		// Prüfe Challenge-Fortschritt für Punkte
-		checkChallengeProgress('score', gameState.score);
+		// Prüfe Challenge-Fortschritt für Punkte nur, wenn nicht skipChallengeCheck
+		if (!skipChallengeCheck) {
+			checkChallengeProgress('score', gameState.score);
+		}
 
 		// Speichere Statistiken häufiger
 		if (gameState.score % 1000 === 0) {
@@ -3008,7 +3010,7 @@
 	}
 
 	// NEU: Achievement-Fortschritts-Funktionen
-	function updateAchievementProgress(categoryId, value) {
+	function updateAchievementProgress(categoryId, value, skipSave = false) {
 		// Finde die Kategorie
 		const category = ACHIEVEMENT_CATEGORIES.find(cat => cat.id === categoryId);
 		if (!category) return;
@@ -3050,8 +3052,10 @@
 			gameState.stats.achievements[categoryId].level = newLevel;
 		}
 
-		// Speichere Änderungen
-		saveStatsToStorage();
+		// Speichere Änderungen nur wenn nicht skipSave
+		if (!skipSave) {
+			saveStatsToStorage();
+		}
 	}
 
 	function updateAchievementsUI() {
@@ -3126,7 +3130,9 @@
 		// Prüfe auf Challenge-Abschluss
 		if (currentValue >= gameState.challenge.target) {
 			// Belohnung gewähren
-			updateScore(gameState.challenge.reward, true);
+			// Verwende skipChallengeCheck=true, um die Endlosrekursion zu vermeiden
+			updateScore(gameState.challenge.reward, true, true);
+
 			createScorePopup(`Herausforderung geschafft! +${formatNumber(gameState.challenge.reward)}`,
 				gameContainer.offsetWidth / 2, gameContainer.offsetHeight / 2, true);
 
