@@ -379,17 +379,34 @@
         .modal-content {
             background-color: var(--modal-content-bg);
             border-radius: 16px;
-            padding: 32px;
+            padding: 24px;
             max-width: 90%;
             width: 400px;
-            max-height: 90vh;
-            overflow-y: auto;
+            max-height: 80vh; /* Weniger Höhe um sicherzustellen, dass Scrollen möglich ist */
+            overflow-y: auto; /* Scrollbar aktiviert */
             display: flex;
             flex-direction: column;
             align-items: center;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             transform: scale(0.9);
             transition: transform 0.3s;
+            /* Safari/iOS scrolling */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ÄNDERUNG: Scrollbar-Styling */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: var(--grid-color);
+            border-radius: 10px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: var(--grid-border);
+            border-radius: 10px;
         }
 
         .modal.active .modal-content {
@@ -412,6 +429,7 @@
             gap: 12px;
             flex-wrap: wrap;
             justify-content: center;
+            width: 100%; /* Volle Breite nutzen */
         }
 
         .primary-button {
@@ -605,20 +623,22 @@
             opacity: 0.8;
         }
 
+        /* ÄNDERUNG: Chain-Counter neu positioniert und verkleinert */
         .chain-counter {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            top: 10px; /* Statt unten jetzt oben */
+            left: 10px; /* Statt rechts jetzt links */
             background-color: var(--chain-highlight);
             color: black;
             font-weight: bold;
-            padding: 5px 10px;
+            padding: 3px 8px; /* Kleinere Paddings */
             border-radius: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             animation: pulse 0.6s infinite alternate;
             z-index: 100;
             opacity: 0;
             transition: opacity 0.3s;
+            font-size: 14px; /* Kleinere Schrift */
         }
 
         @keyframes pulse {
@@ -693,15 +713,28 @@
             opacity: 0.8;
         }
 
+        /* ÄNDERUNG: Verbesserte Tab-Navigation */
         .tab-container {
             width: 100%;
             margin-bottom: 20px;
+            overflow: hidden; /* Überlauf verhindern */
         }
 
+        /* ÄNDERUNG: Scrollbare Tab-Buttons */
         .tab-buttons {
             display: flex;
             margin-bottom: 15px;
             border-bottom: 1px solid var(--grid-border);
+            overflow-x: auto; /* Horizontales Scrollen */
+            -webkit-overflow-scrolling: touch; /* Für iOS */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+            padding-bottom: 5px; /* Platz für Scrollbar */
+        }
+
+        /* Verstecke Scrollbar, behalte Funktionalität */
+        .tab-buttons::-webkit-scrollbar {
+            display: none;
         }
 
         .tab-button {
@@ -712,6 +745,8 @@
             font-weight: bold;
             opacity: 0.6;
             border-bottom: 3px solid transparent;
+            white-space: nowrap; /* Verhindert Umbruch */
+            flex-shrink: 0; /* Verhindert Schrumpfen */
         }
 
         .tab-button.active {
@@ -721,6 +756,7 @@
 
         .tab-content {
             display: none;
+            width: 100%;
         }
 
         .tab-content.active {
@@ -801,22 +837,32 @@
             display: block;
         }
 
-        /* Verbesserte Responsivität */
+        /* ÄNDERUNG: Verbesserte Responsivität */
         @media (max-width: 600px) {
+            /* Grundlegende Layout-Anpassungen */
+            body {
+                padding: 10px;
+            }
+
             header {
-                padding: 0 8px;
+                padding: 0 5px;
+                margin-bottom: 10px;
             }
 
             .score {
-                font-size: 20px;
+                font-size: 18px;
             }
 
             .level {
-                font-size: 14px;
+                font-size: 12px;
+            }
+
+            .controls {
+                gap: 8px;
             }
 
             button {
-                padding: 6px 10px;
+                padding: 6px 8px;
                 font-size: 14px;
             }
 
@@ -825,46 +871,212 @@
                 height: 16px;
             }
 
-            #next-bubble, #goal-bubble {
-                width: 50px;
-                height: 50px;
+            /* Kompakteres Spielfeld für kleine Bildschirme */
+            .game-container {
+                margin-bottom: 5px;
             }
 
+            /* Kompaktere Anzeigen */
+            #next-bubble, #goal-bubble {
+                width: 40px;
+                height: 40px;
+            }
+
+            .next-label, .goal-label {
+                font-size: 12px;
+                margin-right: 5px;
+            }
+
+            .next-container, .goal-container {
+                padding: 8px;
+            }
+
+            /* Kompaktere Modals */
             .modal-content {
-                padding: 20px 16px;
-                width: 90%;
+                padding: 16px;
+                width: 95%;
                 max-height: 85vh;
+                border-radius: 12px;
             }
 
             .modal h2 {
-                font-size: 22px;
-                margin-bottom: 12px;
+                font-size: 20px;
+                margin-bottom: 10px;
             }
 
+            .modal p {
+                font-size: 14px;
+                margin-bottom: 16px;
+            }
+
+            /* Game Info anpassen */
             .game-info {
                 flex-direction: column;
                 align-items: center;
-                gap: 8px;
+                gap: 5px;
                 text-align: center;
+                font-size: 12px;
+                margin-top: 10px;
             }
 
+            /* Stats kompakter */
             .game-stats {
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
+                margin-top: 10px;
+                margin-bottom: 10px;
             }
 
             .next-container, .goal-container {
                 margin-right: 0;
-                margin-bottom: 10px;
+                margin-bottom: 0;
             }
 
+            /* Buttons bei kleinen Bildschirmen untereinander */
             .button-group {
                 flex-direction: column;
-                width: 100%;
+                gap: 8px;
             }
 
             .button-group button {
                 width: 100%;
+            }
+
+            /* Achievements kompakter */
+            .achievement-badge {
+                padding: 8px;
+            }
+
+            .achievement-icon {
+                width: 30px;
+                height: 30px;
+                margin-right: 10px;
+            }
+
+            .achievement-title {
+                font-size: 14px;
+            }
+
+            .achievement-desc {
+                font-size: 12px;
+            }
+
+            /* Tab-Buttons kompakter */
+            .tab-button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            /* Upgrade-Items kompakter */
+            .upgrade-item {
+                padding: 8px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .upgrade-info {
+                margin-right: 0;
+                margin-bottom: 8px;
+                width: 100%;
+            }
+
+            .upgrade-button {
+                width: 100%;
+            }
+
+            /* Tutorial kompakter */
+            .tutorial {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            /* Mode-Buttons kompakter */
+            #modes-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .mode-button {
+                margin: 0;
+                padding: 8px;
+                font-size: 12px;
+                width: 100%;
+            }
+
+            /* Kleinere Schrift in Tabellen */
+            .stats-table {
+                font-size: 13px;
+            }
+
+            .stats-table td {
+                padding: 6px;
+            }
+
+            /* Kleinere Schrift in Challenge-Beschreibungen */
+            #challenge-description {
+                font-size: 13px;
+            }
+
+            /* Vermeiden von zu kleinen Bubbles */
+            .bubble-inner {
+                font-size: 1em;
+            }
+
+            /* Spielfeld selbst etwas kompakter */
+            .game-container {
+                aspect-ratio: 1 / 1;
+                max-width: 95vw;
+            }
+        }
+
+        /* ÄNDERUNG: Extra-Anpassungen für sehr schmale Bildschirme */
+        @media (max-width: 360px) {
+            body {
+                padding: 5px;
+            }
+
+            .score {
+                font-size: 16px;
+            }
+
+            .level {
+                font-size: 11px;
+            }
+
+            button {
+                padding: 5px 7px;
+            }
+
+            .icon {
+                width: 14px;
+                height: 14px;
+            }
+
+            .modal-content {
+                padding: 12px;
+            }
+
+            .modal h2 {
+                font-size: 18px;
+            }
+
+            /* Tabs noch kleiner */
+            .tab-button {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+
+            /* Kleine Bildschirme brauchen noch kleinere Bubbles in der Anzeige */
+            #next-bubble, #goal-bubble {
+                width: 35px;
+                height: 35px;
+            }
+
+            /* Reduziere vertikalen Abstand weiter */
+            .game-stats, .game-info {
+                margin-top: 5px;
+                margin-bottom: 5px;
             }
         }
     </style>
@@ -1304,7 +1516,18 @@
 
 	function calculateBubbleSize() {
 		const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
-		return (containerSize / gameState.gridSize) * 0.85;
+
+		// Für kleine Bildschirme: Größere Bubble-zu-Grid-Verhältnis für bessere Bedienbarkeit
+		let sizeRatio;
+		if (window.innerWidth <= 360) {
+			sizeRatio = 0.9;  // 90% der Zellgröße für sehr kleine Bildschirme
+		} else if (window.innerWidth <= 600) {
+			sizeRatio = 0.88; // 88% für kleine Bildschirme
+		} else {
+			sizeRatio = 0.85; // 85% für normale Bildschirme
+		}
+
+		return (containerSize / gameState.gridSize) * sizeRatio;
 	}
 
 	function getBubblePosition(row, col) {
@@ -1339,7 +1562,7 @@
 		const bubble = document.createElement('div');
 		bubble.className = 'bubble new-bubble';
 
-		const size = isNext ? 60 : calculateBubbleSize();
+		const size = isNext ? (window.innerWidth <= 360 ? 40 : window.innerWidth <= 600 ? 50 : 60) : calculateBubbleSize();
 		bubble.style.width = `${size}px`;
 		bubble.style.height = `${size}px`;
 
@@ -1356,6 +1579,13 @@
 		// Wert berechnen (2^level)
 		const value = Math.pow(2, level);
 		inner.textContent = formatNumber(value);
+
+		// Schriftgröße für größere Zahlen anpassen
+		if (value >= 1000000) {
+			inner.style.fontSize = '0.8em';
+		} else if (value >= 10000) {
+			inner.style.fontSize = '0.9em';
+		}
 
 		bubble.appendChild(inner);
 
@@ -2273,6 +2503,9 @@
 
 		// Aktualisiere Spezialmodus-UI
 		updateSpecialModeUI();
+
+		// Stelle sicher, dass die Seite nach oben gescrollt ist, besonders wichtig für mobile Geräte
+		window.scrollTo(0, 0);
 	}
 
 	function restoreBubblesFromSave() {
@@ -2284,7 +2517,7 @@
 				if (parsedGame.bubbles && Array.isArray(parsedGame.bubbles)) {
 					// Erzeuge jede gespeicherte Blase und platziere sie
 					parsedGame.bubbles.forEach(bubbleData => {
-						const { level, row, col } = bubbleData;
+						const {level, row, col} = bubbleData;
 
 						// Sicherheitscheck für gültige Positionen im aktuellen Spielfeld
 						if (row >= 0 && row < gameState.gridSize && col >= 0 && col < gameState.gridSize) {
@@ -2319,14 +2552,18 @@
 
 		let tutorial;
 
+		// Optimierte Positionierung für mobile Geräte
+		const isMobile = window.innerWidth <= 600;
+
 		switch (step) {
 			case 1:
 				// Erste Anleitung: Bewegen
 				tutorial = document.createElement('div');
 				tutorial.className = 'tutorial bottom';
-				tutorial.style.bottom = '70%';
+				tutorial.style.bottom = isMobile ? '60%' : '70%';
 				tutorial.style.left = '50%';
 				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.style.maxWidth = isMobile ? '80%' : '60%';
 				tutorial.innerHTML = translate({
 					de: 'Ziehe eine Blase, um sie zu bewegen.<br><button>Verstanden</button>'
 				});
@@ -2341,9 +2578,10 @@
 				// Zweite Anleitung: Verschmelzen
 				tutorial = document.createElement('div');
 				tutorial.className = 'tutorial top';
-				tutorial.style.top = '70%';
+				tutorial.style.top = isMobile ? '60%' : '70%';
 				tutorial.style.left = '50%';
 				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.style.maxWidth = isMobile ? '80%' : '60%';
 				tutorial.innerHTML = translate({
 					de: 'Ziehe eine Blase direkt auf eine gleiche Blase, um sie zu verschmelzen!<br><button>Verstanden</button>'
 				});
@@ -2358,9 +2596,10 @@
 				// Dritte Anleitung: Ketten
 				tutorial = document.createElement('div');
 				tutorial.className = 'tutorial bottom';
-				tutorial.style.top = '20%';
+				tutorial.style.top = isMobile ? '15%' : '20%';
 				tutorial.style.left = '50%';
 				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.style.maxWidth = isMobile ? '85%' : '60%';
 				tutorial.innerHTML = translate({
 					de: 'Super! Versuche Kettenreaktionen zu erzeugen für extra Bonuspunkte.<br>Jede Verschmelzung in einer Kette gibt mehr Punkte!<br><button>Verstanden</button>'
 				});
@@ -2974,8 +3213,114 @@
 		}
 	}, 30000);
 
-	window.addEventListener('DOMContentLoaded', function() {
+	// Füge diese Funktion am Ende des Skripts hinzu
+	function setupModalScrolling() {
+		// Liste aller Modal-Contents
+		const modalContents = document.querySelectorAll('.modal-content');
+
+		// Für jedes Modal-Content ermöglichen wir das Scrollen und verhindern das Propagieren von Touch-Events
+		modalContents.forEach(modalContent => {
+			modalContent.addEventListener('touchstart', (e) => {
+				// Nur wenn der Inhalt scrollbar ist
+				if (modalContent.scrollHeight > modalContent.clientHeight) {
+					// Erlaubt Touch-Bewegungen
+					e.stopPropagation();
+				}
+			}, {passive: true});
+
+			modalContent.addEventListener('touchmove', (e) => {
+				// Nur wenn der Inhalt scrollbar ist
+				if (modalContent.scrollHeight > modalContent.clientHeight) {
+					// Verhindert, dass das Touch-Event weitergegeben wird
+					e.stopPropagation();
+				}
+			}, {passive: true});
+		});
+	}
+
+	function setupScrollableTabs() {
+		// Scrollbare Tab-Navigation für alle Tab-Container
+		const tabContainers = document.querySelectorAll('.tab-container');
+
+		tabContainers.forEach(container => {
+			const tabButtons = container.querySelector('.tab-buttons');
+
+			if (tabButtons) {
+				// Wenn der Tab-Container breit genug ist, automatisch den aktiven Tab in den Fokus bringen
+				function scrollToActiveTab() {
+					const activeTab = tabButtons.querySelector('.tab-button.active');
+					if (activeTab) {
+						// Finde die Position, um den Tab zu zentrieren
+						const containerWidth = tabButtons.offsetWidth;
+						const tabWidth = activeTab.offsetWidth;
+						const tabLeft = activeTab.offsetLeft;
+
+						// Berechne die Scroll-Position, die den Tab zentrieren würde
+						const scrollPosition = tabLeft - (containerWidth / 2) + (tabWidth / 2);
+
+						// Scrolle sanft zu dieser Position
+						tabButtons.scrollTo({
+							left: Math.max(0, scrollPosition),
+							behavior: 'smooth'
+						});
+					}
+				}
+
+				// Scroll zum aktiven Tab bei Initialisierung
+				setTimeout(scrollToActiveTab, 100);
+
+				// Scroll zum aktiven Tab beim Klicken
+				tabButtons.querySelectorAll('.tab-button').forEach(button => {
+					button.addEventListener('click', () => {
+						setTimeout(scrollToActiveTab, 10);
+					});
+				});
+			}
+		});
+	}
+
+	// Rufe diese Funktion auf, nachdem die Modals erstellt wurden
+	window.addEventListener('DOMContentLoaded', function () {
+		// Vorhandene Initialisierungen
 		loadStatsFromStorage();
+
+		// Modal-Scrolling einrichten
+		setupModalScrolling();
+
+		// Scrollbare Tabs einrichten
+		setupScrollableTabs();
+	});
+
+	window.addEventListener('orientationchange', function() {
+		// Warte, bis die Drehung abgeschlossen ist
+		setTimeout(function() {
+			// Neu berechnen und positionieren aller Blasen
+			createGridOverlay();
+
+			if (gameState.bubbles.length > 0) {
+				gameState.bubbles.forEach(bubble => {
+					const row = parseInt(bubble.dataset.row);
+					const col = parseInt(bubble.dataset.col);
+					const pos = getBubblePosition(row, col);
+
+					const size = calculateBubbleSize();
+					bubble.style.width = `${size}px`;
+					bubble.style.height = `${size}px`;
+					bubble.style.left = `${pos.x}px`;
+					bubble.style.top = `${pos.y}px`;
+				});
+			}
+
+			// Modals neu positionieren (sofern geöffnet)
+			const activeModal = document.querySelector('.modal.active');
+			if (activeModal) {
+				const modalContent = activeModal.querySelector('.modal-content');
+				if (modalContent) {
+					// Sicherstellen, dass der Inhalt des Modals im sichtbaren Bereich ist
+					modalContent.scrollTop = 0;
+				}
+			}
+		}, 300);
 	});
 </script>
 </body>
