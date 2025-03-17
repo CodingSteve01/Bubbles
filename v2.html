@@ -382,19 +382,65 @@
             padding: 24px;
             max-width: 90%;
             width: 400px;
-            max-height: 80vh; /* Weniger Höhe um sicherzustellen, dass Scrollen möglich ist */
-            overflow-y: auto; /* Scrollbar aktiviert */
+            max-height: 80vh;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             transform: scale(0.9);
             transition: transform 0.3s;
-            /* Safari/iOS scrolling */
             -webkit-overflow-scrolling: touch;
+            position: relative; /* Für festes Footer-Positioning */
         }
 
-        /* ÄNDERUNG: Scrollbar-Styling */
+        /* VERÄNDERT: Sticky Footer für Modals */
+        .button-group {
+            position: sticky;
+            bottom: 0;
+            padding-top: 15px;
+            background-color: var(--modal-content-bg);
+            margin-top: auto;
+            z-index: 10;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* VERÄNDERT: Verbesserte Tab-Buttons */
+        .tab-container {
+            width: 100%;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .tab-buttons {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background-color: var(--modal-content-bg);
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--grid-border);
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 5px;
+        }
+
+        /* VERÄNDERT: Verbessertes Tab-Content Scrolling */
+        .tab-content {
+            display: none;
+            width: 100%;
+            padding-bottom: 15px; /* Platz für den Button-Footer */
+        }
+
+        /* Verstecke Scrollbar, behalte Funktionalität */
+        .tab-buttons::-webkit-scrollbar {
+            display: none;
+        }
+
         .modal-content::-webkit-scrollbar {
             width: 6px;
         }
@@ -424,14 +470,6 @@
             line-height: 1.6;
         }
 
-        .button-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%; /* Volle Breite nutzen */
-        }
-
         .primary-button {
             background-color: var(--accent-color);
             color: white;
@@ -445,6 +483,21 @@
             background-color: var(--grid-color);
             padding: 10px 20px;
             border-radius: 8px;
+        }
+
+        /* NEU: Scroll-to-Top Button */
+        .scroll-top-button {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            padding: 8px 12px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            display: none;
         }
 
         .achievement-badge {
@@ -623,22 +676,21 @@
             opacity: 0.8;
         }
 
-        /* ÄNDERUNG: Chain-Counter neu positioniert und verkleinert */
         .chain-counter {
             position: absolute;
-            top: 10px; /* Statt unten jetzt oben */
-            left: 10px; /* Statt rechts jetzt links */
+            top: 10px;
+            left: 10px;
             background-color: var(--chain-highlight);
             color: black;
             font-weight: bold;
-            padding: 3px 8px; /* Kleinere Paddings */
+            padding: 3px 8px;
             border-radius: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             animation: pulse 0.6s infinite alternate;
             z-index: 100;
             opacity: 0;
             transition: opacity 0.3s;
-            font-size: 14px; /* Kleinere Schrift */
+            font-size: 14px;
         }
 
         @keyframes pulse {
@@ -713,30 +765,6 @@
             opacity: 0.8;
         }
 
-        /* ÄNDERUNG: Verbesserte Tab-Navigation */
-        .tab-container {
-            width: 100%;
-            margin-bottom: 20px;
-            overflow: hidden; /* Überlauf verhindern */
-        }
-
-        /* ÄNDERUNG: Scrollbare Tab-Buttons */
-        .tab-buttons {
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--grid-border);
-            overflow-x: auto; /* Horizontales Scrollen */
-            -webkit-overflow-scrolling: touch; /* Für iOS */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-            padding-bottom: 5px; /* Platz für Scrollbar */
-        }
-
-        /* Verstecke Scrollbar, behalte Funktionalität */
-        .tab-buttons::-webkit-scrollbar {
-            display: none;
-        }
-
         .tab-button {
             padding: 10px 15px;
             background: none;
@@ -745,8 +773,8 @@
             font-weight: bold;
             opacity: 0.6;
             border-bottom: 3px solid transparent;
-            white-space: nowrap; /* Verhindert Umbruch */
-            flex-shrink: 0; /* Verhindert Schrumpfen */
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .tab-button.active {
@@ -757,6 +785,8 @@
         .tab-content {
             display: none;
             width: 100%;
+            max-height: 50vh;
+            overflow-y: auto;
         }
 
         .tab-content.active {
@@ -811,12 +841,12 @@
         }
 
         .upgrade-cost {
+            margin-left: .5rem;
             font-size: 12px;
             display: block;
             text-align: center;
         }
 
-        /* Badge für Benachrichtigungen */
         .notification-badge {
             position: relative;
         }
@@ -837,9 +867,8 @@
             display: block;
         }
 
-        /* ÄNDERUNG: Verbesserte Responsivität */
+        /* Verbesserte Responsivität */
         @media (max-width: 600px) {
-            /* Grundlegende Layout-Anpassungen */
             body {
                 padding: 10px;
             }
@@ -871,12 +900,10 @@
                 height: 16px;
             }
 
-            /* Kompakteres Spielfeld für kleine Bildschirme */
             .game-container {
                 margin-bottom: 5px;
             }
 
-            /* Kompaktere Anzeigen */
             #next-bubble, #goal-bubble {
                 width: 40px;
                 height: 40px;
@@ -891,7 +918,6 @@
                 padding: 8px;
             }
 
-            /* Kompaktere Modals */
             .modal-content {
                 padding: 16px;
                 width: 95%;
@@ -909,7 +935,6 @@
                 margin-bottom: 16px;
             }
 
-            /* Game Info anpassen */
             .game-info {
                 flex-direction: column;
                 align-items: center;
@@ -919,7 +944,6 @@
                 margin-top: 10px;
             }
 
-            /* Stats kompakter */
             .game-stats {
                 flex-direction: column;
                 gap: 8px;
@@ -932,17 +956,10 @@
                 margin-bottom: 0;
             }
 
-            /* Buttons bei kleinen Bildschirmen untereinander */
             .button-group {
-                flex-direction: column;
-                gap: 8px;
+                padding-top: 10px;
             }
 
-            .button-group button {
-                width: 100%;
-            }
-
-            /* Achievements kompakter */
             .achievement-badge {
                 padding: 8px;
             }
@@ -961,13 +978,11 @@
                 font-size: 12px;
             }
 
-            /* Tab-Buttons kompakter */
             .tab-button {
                 padding: 8px 12px;
                 font-size: 14px;
             }
 
-            /* Upgrade-Items kompakter */
             .upgrade-item {
                 padding: 8px;
                 flex-direction: column;
@@ -984,13 +999,11 @@
                 width: 100%;
             }
 
-            /* Tutorial kompakter */
             .tutorial {
                 padding: 12px;
                 font-size: 14px;
             }
 
-            /* Mode-Buttons kompakter */
             #modes-container {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -1004,7 +1017,6 @@
                 width: 100%;
             }
 
-            /* Kleinere Schrift in Tabellen */
             .stats-table {
                 font-size: 13px;
             }
@@ -1013,24 +1025,20 @@
                 padding: 6px;
             }
 
-            /* Kleinere Schrift in Challenge-Beschreibungen */
             #challenge-description {
                 font-size: 13px;
             }
 
-            /* Vermeiden von zu kleinen Bubbles */
             .bubble-inner {
                 font-size: 1em;
             }
 
-            /* Spielfeld selbst etwas kompakter */
             .game-container {
                 aspect-ratio: 1 / 1;
                 max-width: 95vw;
             }
         }
 
-        /* ÄNDERUNG: Extra-Anpassungen für sehr schmale Bildschirme */
         @media (max-width: 360px) {
             body {
                 padding: 5px;
@@ -1061,19 +1069,16 @@
                 font-size: 18px;
             }
 
-            /* Tabs noch kleiner */
             .tab-button {
                 padding: 6px 8px;
                 font-size: 12px;
             }
 
-            /* Kleine Bildschirme brauchen noch kleinere Bubbles in der Anzeige */
             #next-bubble, #goal-bubble {
                 width: 35px;
                 height: 35px;
             }
 
-            /* Reduziere vertikalen Abstand weiter */
             .game-stats, .game-info {
                 margin-top: 5px;
                 margin-bottom: 5px;
@@ -1360,15 +1365,16 @@
 		{id: 'games_10', icon: '🎮', title: 'Regelmäßiger Spieler', description: 'Spiele 10 Partien'}
 	];
 
+	// VERÄNDERT: Überarbeitete CHALLENGES mit progressiveren Zielen
 	const CHALLENGES = [
 		{description: 'Erzeuge eine Kette mit mindestens 3 Verschmelzungen', target: 3, type: 'chain', reward: 500},
-		{description: 'Erreiche eine 32er-Blase', target: 32, type: 'value', reward: 750},
-		{description: 'Sammle 1.500 Punkte in einem Spiel', target: 1500, type: 'score', reward: 1000},
+		{description: 'Erreiche eine 16er-Blase', target: 16, type: 'value', reward: 750},
+		{description: 'Sammle 1.000 Punkte in einem Spiel', target: 1000, type: 'score', reward: 1000},
 		{description: 'Erzeuge eine Kette mit mindestens 4 Verschmelzungen', target: 4, type: 'chain', reward: 1500},
-		{description: 'Erreiche eine 64er-Blase', target: 64, type: 'value', reward: 2000},
-		{description: 'Sammle 3.000 Punkte in einem Spiel', target: 3000, type: 'score', reward: 2500},
+		{description: 'Erreiche eine 32er-Blase', target: 32, type: 'value', reward: 2000},
+		{description: 'Sammle 2.000 Punkte in einem Spiel', target: 2000, type: 'score', reward: 2500},
 		{description: 'Erzeuge eine Kette mit mindestens 5 Verschmelzungen', target: 5, type: 'chain', reward: 3500},
-		{description: 'Erreiche eine 128er-Blase', target: 128, type: 'value', reward: 5000}
+		{description: 'Erreiche eine 64er-Blase', target: 64, type: 'value', reward: 5000}
 	];
 
 	// Verfügbare Upgrades
@@ -1495,11 +1501,16 @@
 	];
 
 	// Formatierungsfunktion für große Zahlen
+    function toFixedMax1(num) {
+		// Stelle sicher, dass z.B. 1.0 zu 1 wird.
+        return parseFloat(num.toFixed(1));
+    }
+
 	function formatNumber(num) {
-		if (num < 1000) return num;
-		if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
-		if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
-		return (num / 1000000000).toFixed(1) + 'G';
+		if (num < 1000) return parseFloat(num);
+		if (num < 1000000) return parseFloat((num / 1000).toFixed(1)) + 'K';
+		if (num < 1000000000) return parseFloat((num / 1000000).toFixed(1)) + 'M';
+		return parseFloat((num / 1000000000).toFixed(1)) + 'G';
 	}
 
 	// Zeit-Formatierung
@@ -1614,16 +1625,39 @@
 		return bubble;
 	}
 
+	// VERÄNDERT: Verbesserte Bubble-Erzeugung für strategischeres Gameplay
 	function createRandomBubble() {
 		// Wahrscheinlichkeiten basierend auf dem aktuellen Spielfortschritt
-		// Mit fortschreitendem Spiel leicht höhere Chancen auf wertvollere Blasen
 		const maxPossibleLevel = Math.min(gameState.maxLevel, 4);
 		const progressFactor = Math.min(gameState.score / 3000, 1); // Progression bis 3000 Punkte
+
+		// Analyse des aktuellen Spielfelds
+		const bubbleCounts = {};
+		for (let row = 0; row < gameState.gridSize; row++) {
+			for (let col = 0; col < gameState.gridSize; col++) {
+				const level = gameState.grid[row][col];
+				if (level) {
+					bubbleCounts[level] = (bubbleCounts[level] || 0) + 1;
+				}
+			}
+		}
+
+		// Falls es weniger als 2 Blasen eines bestimmten Levels gibt, diese bevorzugt erzeugen
+		const underrepresentedLevels = [];
+		for (let i = 1; i <= Math.min(maxPossibleLevel, 3); i++) {
+			if ((bubbleCounts[i] || 0) < 2) {
+				underrepresentedLevels.push(i);
+			}
+		}
 
 		let level;
 		const rand = Math.random();
 
-		if (rand < 0.7 - (0.2 * progressFactor)) {
+		// 30% Chance, ein unterrepräsentiertes Level zu wählen
+		if (underrepresentedLevels.length > 0 && rand < 0.3) {
+			const index = Math.floor(Math.random() * underrepresentedLevels.length);
+			level = underrepresentedLevels[index];
+		} else if (rand < 0.7 - (0.2 * progressFactor)) {
 			// Basis-Chance für Level 1 (sinkt von 70% auf 50% bei hoher Punktzahl)
 			level = 1;
 		} else if (rand < 0.9 - (0.1 * progressFactor)) {
@@ -1796,6 +1830,7 @@
 		e.preventDefault();
 	}
 
+	// VERÄNDERT: Verbesserte Bewegungsmechanik für intuitiveres Spielgefühl
 	function stopDragging() {
 		if (!gameState.draggedBubble) return;
 
@@ -1810,7 +1845,7 @@
 		const bubbleCenterX = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
 		const bubbleCenterY = bubbleRect.top + bubbleRect.height / 2 - containerRect.top;
 
-		// Zielzelle finden
+		// Zielzelle finden mit verbesserter Toleranz
 		const targetCell = getGridCellFromPosition(bubbleCenterX, bubbleCenterY);
 
 		// Blase zurück zur Ausgangsposition animieren
@@ -1830,7 +1865,10 @@
 				return;
 			}
 
-			// WICHTIG: Strikte Prüfung, ob die Zielzelle leer ist
+			// Verbesserte Zielerkennung: Prüfe auch Nähe zu einer belegten Zelle
+			let mergeTarget = null;
+
+			// Zuerst prüfen, ob die Zielzelle leer ist
 			if (gameState.grid[row][col] === null) {
 				// Einfach bewegen
 				gameState.grid[oldRow][oldCol] = null;
@@ -1844,6 +1882,33 @@
 				bubble.style.top = `${pos.y}px`;
 
 				moveMade = true;
+
+				// Prüfe nach der Bewegung, ob dies Kettenreaktionen auslösen kann
+				const neighbors = [
+					{row: row - 1, col: col},  // oben
+					{row: row + 1, col: col},  // unten
+					{row: row, col: col - 1},  // links
+					{row: row, col: col + 1}   // rechts
+				];
+
+				for (const n of neighbors) {
+					if (n.row >= 0 && n.row < gameState.gridSize &&
+						n.col >= 0 && n.col < gameState.gridSize &&
+						gameState.grid[n.row][n.col] === level) {
+
+						// Highlight der möglichen Verschmelzung
+						const neighborBubble = gameState.bubbles.find(
+							b => parseInt(b.dataset.row) === n.row && parseInt(b.dataset.col) === n.col
+						);
+
+						if (neighborBubble) {
+							neighborBubble.style.boxShadow = "0 0 8px var(--chain-highlight)";
+							setTimeout(() => {
+								neighborBubble.style.boxShadow = "";
+							}, 500);
+						}
+					}
+				}
 
 				// Tutorial-Fortschritt
 				if (gameState.tutorialStep === 1) {
@@ -1877,25 +1942,49 @@
 					if (gameState.tutorialStep === 2) {
 						showTutorial(3);
 					}
-				} else {
-					// Fallback, falls Bubble nicht gefunden
-					const pos = getBubblePosition(oldRow, oldCol);
-					bubble.style.left = `${pos.x}px`;
-					bubble.style.top = `${pos.y}px`;
 				}
 			} else {
-				// Ungleiches Level, zurück zur Ausgangsposition
+				// Verbesserte Feedback-Animation für ungleiche Levels
 				const pos = getBubblePosition(oldRow, oldCol);
 				bubble.style.left = `${pos.x}px`;
 				bubble.style.top = `${pos.y}px`;
-				gameContainer.classList.add('shake');
-				setTimeout(() => gameContainer.classList.remove('shake'), 500);
+
+				// Sanfteres Feedback
+				bubble.style.transition = "all 0.3s ease-in-out";
+				bubble.style.transform = "scale(0.9)";
+				setTimeout(() => {
+					bubble.style.transform = "";
+					setTimeout(() => {
+						bubble.style.transition = "";
+					}, 300);
+				}, 300);
+
+				// Visuelles Feedback auch für die Zielblase
+				const targetBubble = gameState.bubbles.find(
+					b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
+				);
+
+				if (targetBubble) {
+					targetBubble.style.transition = "all 0.3s ease-in-out";
+					targetBubble.style.transform = "scale(1.1)";
+					setTimeout(() => {
+						targetBubble.style.transform = "";
+						setTimeout(() => {
+							targetBubble.style.transition = "";
+						}, 300);
+					}, 300);
+				}
 			}
 		} else {
-			// Außerhalb des Spielfelds, zurück zur Ausgangsposition
+			// Außerhalb des Spielfelds, zurück zur Ausgangsposition mit Animation
 			const pos = getBubblePosition(oldRow, oldCol);
+			bubble.style.transition = "all 0.3s ease-in-out";
 			bubble.style.left = `${pos.x}px`;
 			bubble.style.top = `${pos.y}px`;
+
+			setTimeout(() => {
+				bubble.style.transition = "";
+			}, 300);
 		}
 
 		gameState.draggedBubble = null;
@@ -1908,11 +1997,13 @@
 			gameState.moveMade = true;
 			gameState.moves++;
 
+			// Nach dem 5. Zug Tipps anzeigen, wenn nötig
+			setupChainReactionTips();
+
 			// Auto-Save nach erfolgreicher Bewegung
 			saveStatsToStorage();
 
 			// Verzögerung, um Kettenreaktionen abzuwarten
-			// Überprüfe, ob die Warteschlange leer ist, bevor neue Blasen hinzugefügt werden
 			checkQueue(function () {
 				if (!gameState.gameOver) {
 					// Bei Schwerkraft-Modus: Schwerkraft anwenden
@@ -1928,10 +2019,28 @@
 		}
 	}
 
+	// VERÄNDERT: Verbesserte Version von startChainReaction für besseres Feedback
 	function startChainReaction() {
 		// Erhöhe Zähler und zeige ihn
 		gameState.chainCount++;
 		updateChainCounter();
+
+		// Ab 3er-Kette: Visuelles Feedback verstärken
+		if (gameState.chainCount >= 3) {
+			// Kurzes Aufleuchten des Spielfelds
+			gameContainer.style.boxShadow = "0 0 15px var(--chain-highlight)";
+			setTimeout(() => {
+				gameContainer.style.boxShadow = "";
+			}, 300);
+
+			// Kleines Tutorial-Popup für die erste lange Kette
+			if (gameState.chainCount === 3 && gameState.stats.longestChain < 3) {
+				createScorePopup("Kettenbonus! +50%",
+					gameContainer.offsetWidth / 2,
+					gameContainer.offsetHeight / 2 - 40,
+					true);
+			}
+		}
 	}
 
 	function updateChainCounter() {
@@ -2110,15 +2219,16 @@
 		}
 	}
 
-	// Sucht nach direkten Nachbarn zum Verschmelzen
+	// VERÄNDERT: Verbesserte Funktion zum Prüfen benachbarter Verschmelzungen
 	function checkAdjacentMerges(row, col, level) {
-		// Nur direkte Nachbarn (keine Diagonalen)
-		const neighbors = [
-			{row: row - 1, col: col},  // oben
-			{row: row + 1, col: col},  // unten
-			{row: row, col: col - 1},  // links
-			{row: row, col: col + 1}   // rechts
-		];
+		// Erweiterte Suche nach Nachbarn (auch Diagonalen und weiter entfernte für Schwerkraftmodus)
+		const neighbors = [];
+
+		// Direkte Nachbarn (keine Diagonalen)
+		neighbors.push({row: row - 1, col: col});  // oben
+		neighbors.push({row: row + 1, col: col});  // unten
+		neighbors.push({row: row, col: col - 1});  // links
+		neighbors.push({row: row, col: col + 1});  // rechts
 
 		// Filtere gültige Nachbarn
 		const validNeighbors = neighbors.filter(n =>
@@ -2128,8 +2238,9 @@
 		);
 
 		if (validNeighbors.length > 0) {
-			// Wähle den ersten passenden Nachbarn
-			const target = validNeighbors[0];
+			// Wähle einen zufälligen passenden Nachbarn - das erhöht die Chancen auf verschiedene Kettenreaktionen
+			const randomIndex = Math.floor(Math.random() * validNeighbors.length);
+			const target = validNeighbors[randomIndex];
 
 			// Finde Quell- und Ziel-Blasen
 			const sourceBubble = gameState.bubbles.find(
@@ -2161,7 +2272,7 @@
 		return false;
 	}
 
-	// Schwerkraft-Funktion
+	// VERÄNDERT: Verbesserte applyGravity Funktion für bessere Kettenreaktionen
 	function applyGravity(callback) {
 		if (!gameState.gravityEnabled) {
 			if (callback) callback();
@@ -2184,7 +2295,8 @@
 								fromRow: above,
 								fromCol: col,
 								toRow: row,
-								toCol: col
+								toCol: col,
+								level: gameState.grid[above][col]
 							});
 
 							// Aktualisiere das Grid sofort
@@ -2223,29 +2335,51 @@
 
 			// Warte auf die Animation und prüfe dann auf Kettenreaktionen
 			setTimeout(() => {
+				// Entferne Fallanimationen
 				movesNeeded.forEach(move => {
-					const level = gameState.grid[move.toRow][move.toCol];
-					// Entferne Fallanimation
 					const bubble = gameState.bubbles.find(
 						b => parseInt(b.dataset.row) === move.toRow && parseInt(b.dataset.col) === move.toCol
 					);
 					if (bubble) {
 						bubble.classList.remove('falling');
 					}
+				});
+
+				// Prüfe auf Verschmelzungen nacheinander, um Kaskaden zu ermöglichen
+				const checkNextMove = (index) => {
+					if (index >= movesNeeded.length) {
+						// Alle Bewegungen geprüft, prüfe ob weitere Schwerkraft-Anwendung nötig ist
+						if (movesMade > 0) {
+							setTimeout(() => {
+								applyGravity(callback);
+							}, 50);
+						} else if (callback) {
+							callback();
+						}
+						return;
+					}
+
+					const move = movesNeeded[index];
+					const level = move.level;
 
 					// Prüfe auf Verschmelzungen nach dem Fallen
-					checkAdjacentMerges(move.toRow, move.toCol, level);
-				});
+					const merged = checkAdjacentMerges(move.toRow, move.toCol, level);
 
-				// Warte auf Abschluss aller Verschmelzungen
-				checkQueue(() => {
-					// Überprüfe, ob weitere Schwerkraft-Bewegungen nötig sind
-					if (movesMade > 0) {
-						applyGravity(callback);
-					} else if (callback) {
-						callback();
+					// Wenn eine Verschmelzung stattgefunden hat, warten wir auf deren Abschluss
+					if (merged) {
+						checkQueue(() => {
+							// Zur nächsten Bewegung
+							checkNextMove(index + 1);
+						});
+					} else {
+						// Keine Verschmelzung, direkt zur nächsten Bewegung
+						checkNextMove(index + 1);
 					}
-				});
+				};
+
+				// Starte mit der ersten Bewegung
+				checkNextMove(0);
+
 			}, 300);
 		} else {
 			// Keine Verschiebungen mehr nötig
@@ -2515,25 +2649,61 @@
 				const parsedGame = JSON.parse(savedGame);
 
 				if (parsedGame.bubbles && Array.isArray(parsedGame.bubbles)) {
+					console.log(`Versuche ${parsedGame.bubbles.length} Blasen wiederherzustellen`);
+
 					// Erzeuge jede gespeicherte Blase und platziere sie
 					parsedGame.bubbles.forEach(bubbleData => {
 						const {level, row, col} = bubbleData;
 
+						// Debug-Log
+						console.log(`Wiederherstellung: Blase Level ${level} an Position [${row}, ${col}]`);
+
 						// Sicherheitscheck für gültige Positionen im aktuellen Spielfeld
 						if (row >= 0 && row < gameState.gridSize && col >= 0 && col < gameState.gridSize) {
 							// Stelle sicher, dass an dieser Position keine Blase existiert
-							if (!gameState.grid[row][col]) {
+							if (gameState.grid[row][col] === null || gameState.grid[row][col] === undefined) {
+								// Erstelle die Blasenelemente
 								const bubble = createBubbleElement(level, row, col);
 								gameContainer.appendChild(bubble);
 								gameState.bubbles.push(bubble);
+
+								// Aktualisiere das Grid
+								if (!gameState.grid[row]) {
+									gameState.grid[row] = [];
+								}
 								gameState.grid[row][col] = level;
+							} else {
+								console.log(`Zelle [${row}, ${col}] ist bereits besetzt mit Level ${gameState.grid[row][col]}`);
 							}
+						} else {
+							console.log(`Position [${row}, ${col}] außerhalb des gültigen Bereichs`);
 						}
 					});
+
+					// Überprüfung nach Wiederherstellung
+					console.log(`Wiederhergestellte Blasen: ${gameState.bubbles.length}`);
+
+					// Wenn keine Blasen wiederhergestellt wurden, erstelle neue
+					if (gameState.bubbles.length === 0) {
+						console.log("Keine Blasen wiederhergestellt, erstelle neue Blasen");
+						const initialBubbles = Math.floor(gameState.gridSize * gameState.gridSize * 0.25);
+						for (let i = 0; i < initialBubbles; i++) {
+							addNewBubble();
+						}
+					}
+
+					return;
 				}
 			}
+
+			// Fallback: Füge neue Blasen hinzu, wenn keine Speicherdaten gefunden wurden
+			console.log("Keine Speicherdaten gefunden, erstelle neue Blasen");
+			const initialBubbles = Math.floor(gameState.gridSize * gameState.gridSize * 0.25);
+			for (let i = 0; i < initialBubbles; i++) {
+				addNewBubble();
+			}
 		} catch (e) {
-			console.error('Failed to restore bubbles from save', e);
+			console.error('Fehler bei der Wiederherstellung der Blasen:', e);
 
 			// Fallback: Füge neue Blasen hinzu, wenn Wiederherstellung fehlgeschlagen ist
 			const initialBubbles = Math.floor(gameState.gridSize * gameState.gridSize * 0.25);
@@ -2637,11 +2807,32 @@
 		updateChallengeUI();
 	}
 
+	// VERÄNDERT: Verbesserte Version von checkChallengeProgress für erreichbarere Ziele
 	function checkChallengeProgress(type, value) {
 		if (!gameState.challenge || gameState.challenge.type !== type) return;
 
-		// Fortschritt aktualisieren
-		const currentValue = Math.max(value, gameState.stats.challengeProgress);
+		// Spezialfall für Kettenreaktionen: auch kleinere Werte akzeptieren für Fortschritt
+		let effectiveValue = value;
+		if (type === 'chain' && CHALLENGES[gameState.stats.currentChallenge % CHALLENGES.length].target > 3) {
+			// Für 4er und 5er Ketten: jede 3er Kette gibt auch Fortschritt (langsamer)
+			if (value >= 3 && value < CHALLENGES[gameState.stats.currentChallenge % CHALLENGES.length].target) {
+				const oldProgress = gameState.stats.challengeProgress;
+				// Fortschritt um 1 erhöhen, aber nicht höher als Ziel-1
+				effectiveValue = Math.min(oldProgress + 1, CHALLENGES[gameState.stats.currentChallenge % CHALLENGES.length].target - 1);
+
+				// Feedback, dass die Challenge voranschreitet
+				if (effectiveValue > oldProgress) {
+					const progressPercent = Math.floor((effectiveValue / CHALLENGES[gameState.stats.currentChallenge % CHALLENGES.length].target) * 100);
+					createScorePopup(`Challenge: ${progressPercent}%`,
+						gameContainer.offsetWidth / 2,
+						gameContainer.offsetHeight / 2 - 60,
+						true);
+				}
+			}
+		}
+
+		// Fortschritt aktualisieren (höherer Wert gewinnt)
+		const currentValue = Math.max(effectiveValue, gameState.stats.challengeProgress);
 		gameState.stats.challengeProgress = currentValue;
 
 		// Prüfe auf Challenge-Abschluss
@@ -2740,7 +2931,7 @@
                                 <div class="upgrade-desc">${upgrade.description}</div>
                             </div>
                             <button class="upgrade-button" ${isOwned ? 'disabled' : ''} ${(!canAfford || !dependenciesMet) && !isOwned ? 'disabled' : ''} data-upgrade="${upgrade.id}">
-                                ${isOwned ? 'Freigeschaltet' : `Kaufen<span class="upgrade-cost">${formatNumber(upgrade.cost)} Münzen</span>`}
+                                ${isOwned ? 'Freigeschaltet' : `Kaufen <span class="upgrade-cost">${formatNumber(upgrade.cost)} Münzen</span>`}
                             </button>
                         `;
 
@@ -2849,14 +3040,19 @@
 
 	// Spielmodus-Funktionen
 	function setGameMode(mode) {
+		// Alten Modus speichern
+		const oldMode = gameState.specialMode;
+
+		// Aktuelles Spiel speichern, bevor Modus gewechselt wird
+		if (!gameState.gameOver && gameState.moveMade) {
+			saveGameToStorage();
+		}
+
 		// Modus setzen
 		gameState.specialMode = mode;
 
 		// Schwerkraft-Flag setzen
 		gameState.gravityEnabled = (mode === 'gravity');
-
-		// Aktuellen Spielstand speichern, bevor wir den Modus wechseln
-		saveStatsToStorage();
 
 		// UI-Elemente aktualisieren
 		activeModeDescription.innerHTML = MODE_DESCRIPTIONS[mode];
@@ -2880,7 +3076,7 @@
 			}
 		});
 
-		// Aktualisiere auch das gespeicherte Spiel, um den neuen Modus zu reflektieren
+		// Aktualisiere den gespeicherten Spielstand für den neuen Modus
 		try {
 			const savedGame = localStorage.getItem('bubbleMergeSavedGame');
 			if (savedGame) {
@@ -2888,16 +3084,30 @@
 				parsedGame.specialMode = mode;
 				parsedGame.gravityEnabled = (mode === 'gravity');
 				localStorage.setItem('bubbleMergeSavedGame', JSON.stringify(parsedGame));
+				console.log(`Spielmodus auf ${mode} aktualisiert`);
 			}
 		} catch (e) {
-			console.error('Failed to update saved game mode', e);
+			console.error('Fehler beim Aktualisieren des Spielmodus:', e);
 		}
 
-		// Spiel neu starten
-		setTimeout(() => {
-			statsModal.classList.remove('active');
+		// Dialog schließen
+		statsModal.classList.remove('active');
+
+		// Wenn der Modus geändert wurde und ein Spiel läuft, wende die neuen Regeln an
+		if (oldMode !== mode && !gameState.gameOver && gameState.moveMade) {
+			// Spezial-Mode-Indikator aktualisieren
+			updateSpecialModeUI();
+
+			// Wenn Schwerkraft aktiviert wurde, wende sie einmal an
+			if (mode === 'gravity' && oldMode !== 'gravity') {
+				setTimeout(() => {
+					applyGravity();
+				}, 500);
+			}
+		} else {
+			// Nur wenn kein Spiel läuft oder der Spieler explizit neu starten möchte, neues Spiel starten
 			initNewGame();
-		}, 300);
+		}
 	}
 
 	function updateSpecialModeUI() {
@@ -2944,12 +3154,20 @@
 	// Local Storage Funktionen
 	function saveStatsToStorage() {
 		try {
-			// Nur die Statistiken speichern (ohne laufendes Spiel)
+			// Statistiken speichern
 			localStorage.setItem('bubbleMergeStats', JSON.stringify(gameState.stats));
 
-			// Nur aktuelles Spiel speichern, wenn tatsächlich ein Spiel läuft
+			// Spielzustand speichern
+			saveGameToStorage();
+		} catch (e) {
+			console.error('Fehler beim Speichern der Statistiken:', e);
+		}
+	}
+
+	function saveGameToStorage() {
+		try {
 			if (!gameState.gameOver && gameState.moveMade) {
-				// Aktuelles Spielfeld in separatem Speicherplatz speichern
+				// Aktuelles Spielfeld speichern
 				const gameStateToSave = {
 					grid: gameState.grid,
 					bubbles: gameState.bubbles.map(bubble => ({
@@ -2974,10 +3192,13 @@
 				};
 
 				localStorage.setItem('bubbleMergeSavedGame', JSON.stringify(gameStateToSave));
+				console.log("Spielzustand gespeichert");
+				return true;
 			}
 		} catch (e) {
-			console.error('Failed to save stats to localStorage', e);
+			console.error('Fehler beim Speichern des Spielzustands:', e);
 		}
+		return false;
 	}
 
 	function loadStatsFromStorage() {
@@ -2987,7 +3208,7 @@
 			if (storedStats) {
 				const parsedStats = JSON.parse(storedStats);
 
-				// Basis-Statistiken
+				// Basis-Statistiken mit sicheren Standardwerten
 				gameState.stats = {
 					highscore: parsedStats.highscore || 0,
 					highestLevel: parsedStats.highestLevel || 1,
@@ -3005,16 +3226,29 @@
 
 				// Stellen sicher, dass die Grid-Größe gesetzt ist
 				gameState.gridSize = gameState.stats.gridSize || 6;
+
+				console.log("Spielstatistiken erfolgreich geladen");
 			}
 
 			// Dann den aktuellen Spielstand laden (separat)
 			const savedGame = localStorage.getItem('bubbleMergeSavedGame');
 			if (savedGame) {
 				const parsedGame = JSON.parse(savedGame);
+				console.log("Geladene Spieldaten:", parsedGame);
 
 				// Prüfen, ob ein gültiger Spielstand vorliegt
 				if (parsedGame.grid && parsedGame.bubbles && parsedGame.bubbles.length > 0) {
-					gameState.grid = parsedGame.grid;
+					// Grid-Daten validieren und initialisieren
+					gameState.grid = Array.isArray(parsedGame.grid) ? parsedGame.grid : [];
+
+					// Stellen sicher, dass jede Zeile definiert ist
+					for (let i = 0; i < gameState.gridSize; i++) {
+						if (!gameState.grid[i] || !Array.isArray(gameState.grid[i])) {
+							gameState.grid[i] = new Array(gameState.gridSize).fill(null);
+						}
+					}
+
+					// Andere Spielzustandswerte wiederherstellen
 					gameState.score = parsedGame.score || 0;
 					gameState.level = parsedGame.level || 1;
 					gameState.maxLevel = parsedGame.maxLevel || 1;
@@ -3028,14 +3262,21 @@
 					gameState.chainCount = parsedGame.chainCount || 0;
 					gameState.longestChain = parsedGame.longestChain || 0;
 					gameState.moves = parsedGame.moves || 0;
+
+					// Stellen sicher, dass die Spielfeldgröße mit den Speicherdaten übereinstimmt
 					gameState.gridSize = parsedGame.gridSize || gameState.stats.gridSize;
 
-					// Banner und Indikator für Spezialmodus anzeigen
-					updateSpecialModeUI();
+					console.log("Spielzustand erfolgreich geladen");
+				} else {
+					console.log("Ungültiger gespeicherter Spielzustand");
+					gameState.hasSavedGame = false;
 				}
+			} else {
+				console.log("Kein gespeicherter Spielzustand gefunden");
+				gameState.hasSavedGame = false;
 			}
 		} catch (e) {
-			console.error('Failed to load stats from localStorage', e);
+			console.error('Fehler beim Laden der Statistiken:', e);
 			// Bei Fehler: Standardwerte
 			gameState.hasSavedGame = false;
 		}
@@ -3213,28 +3454,51 @@
 		}
 	}, 30000);
 
-	// Füge diese Funktion am Ende des Skripts hinzu
 	function setupModalScrolling() {
 		// Liste aller Modal-Contents
 		const modalContents = document.querySelectorAll('.modal-content');
 
-		// Für jedes Modal-Content ermöglichen wir das Scrollen und verhindern das Propagieren von Touch-Events
+		// Für jedes Modal-Content optimieren wir das Scrolling
 		modalContents.forEach(modalContent => {
+			// Verbesserte Touch-Event-Behandlung
 			modalContent.addEventListener('touchstart', (e) => {
-				// Nur wenn der Inhalt scrollbar ist
+				// Erlaube das Scrollen im Modal-Content
 				if (modalContent.scrollHeight > modalContent.clientHeight) {
-					// Erlaubt Touch-Bewegungen
-					e.stopPropagation();
+					// Keine Notwendigkeit, das Event zu stoppen - wir wollen das natürliche Scrolling
 				}
 			}, {passive: true});
 
 			modalContent.addEventListener('touchmove', (e) => {
-				// Nur wenn der Inhalt scrollbar ist
-				if (modalContent.scrollHeight > modalContent.clientHeight) {
-					// Verhindert, dass das Touch-Event weitergegeben wird
-					e.stopPropagation();
+				// Verhindere nur dann Propagation, wenn wir am Anfang oder Ende der Scrollposition sind
+				const isAtTop = modalContent.scrollTop <= 0;
+				const isAtBottom = modalContent.scrollHeight - modalContent.scrollTop <= modalContent.clientHeight + 1;
+
+				// Wenn wir am oberen Rand sind und nach unten scrollen oder
+				// am unteren Rand und nach oben scrollen, stoppe nicht
+				if ((isAtTop && e.touches[0].clientY < e.touches[0].clientY) ||
+					(isAtBottom && e.touches[0].clientY > e.touches[0].clientY)) {
+					return;
 				}
-			}, {passive: true});
+
+				// Andernfalls verhindern wir die Propagation, damit das Modal-Fenster nicht verschoben wird
+				e.stopPropagation();
+			}, {passive: false});
+		});
+
+		// Sicherstellen, dass Modals bei Öffnung an den Anfang scrollen
+		const modals = document.querySelectorAll('.modal');
+		modals.forEach(modal => {
+			const observer = new MutationObserver((mutations) => {
+				mutations.forEach((mutation) => {
+					if (mutation.attributeName === 'class' &&
+						modal.classList.contains('active')) {
+						const content = modal.querySelector('.modal-content');
+						if (content) content.scrollTop = 0;
+					}
+				});
+			});
+
+			observer.observe(modal, {attributes: true});
 		});
 	}
 
@@ -3279,48 +3543,230 @@
 		});
 	}
 
-	// Rufe diese Funktion auf, nachdem die Modals erstellt wurden
-	window.addEventListener('DOMContentLoaded', function () {
-		// Vorhandene Initialisierungen
-		loadStatsFromStorage();
+	// VERÄNDERT: Funktion für Scroll-to-Top Button in Modals
+	function addScrollToTopButtons() {
+		const modalContents = document.querySelectorAll('.modal-content');
 
-		// Modal-Scrolling einrichten
-		setupModalScrolling();
+		modalContents.forEach(content => {
+			// Prüfe, ob der Inhalt scrollbar ist
+			if (content.scrollHeight > content.clientHeight + 100) { // 100px Puffer
+				const topButton = document.createElement('button');
+				topButton.className = 'scroll-top-button';
+				topButton.innerHTML = '↑ Nach oben';
+				topButton.style.position = 'fixed';
+				topButton.style.bottom = '80px';
+				topButton.style.right = '20px';
+				topButton.style.zIndex = '1000';
+				topButton.style.display = 'none';
+				topButton.style.padding = '8px 12px';
+				topButton.style.backgroundColor = 'var(--accent-color)';
+				topButton.style.color = 'white';
+				topButton.style.border = 'none';
+				topButton.style.borderRadius = '20px';
+				topButton.style.cursor = 'pointer';
 
-		// Scrollbare Tabs einrichten
-		setupScrollableTabs();
-	});
+				content.appendChild(topButton);
 
-	window.addEventListener('orientationchange', function() {
-		// Warte, bis die Drehung abgeschlossen ist
-		setTimeout(function() {
-			// Neu berechnen und positionieren aller Blasen
-			createGridOverlay();
+				content.addEventListener('scroll', () => {
+					if (content.scrollTop > 300) {
+						topButton.style.display = 'block';
+					} else {
+						topButton.style.display = 'none';
+					}
+				});
 
-			if (gameState.bubbles.length > 0) {
-				gameState.bubbles.forEach(bubble => {
-					const row = parseInt(bubble.dataset.row);
-					const col = parseInt(bubble.dataset.col);
-					const pos = getBubblePosition(row, col);
-
-					const size = calculateBubbleSize();
-					bubble.style.width = `${size}px`;
-					bubble.style.height = `${size}px`;
-					bubble.style.left = `${pos.x}px`;
-					bubble.style.top = `${pos.y}px`;
+				topButton.addEventListener('click', () => {
+					content.scrollTo({top: 0, behavior: 'smooth'});
 				});
 			}
+		});
+	}
 
-			// Modals neu positionieren (sofern geöffnet)
-			const activeModal = document.querySelector('.modal.active');
-			if (activeModal) {
-				const modalContent = activeModal.querySelector('.modal-content');
-				if (modalContent) {
-					// Sicherstellen, dass der Inhalt des Modals im sichtbaren Bereich ist
-					modalContent.scrollTop = 0;
+	// VERÄNDERT: Hilfsfunktion für Tipps zu Kettenreaktionen
+	function showChainReactionTip() {
+		// Nur zeigen, wenn der Spieler noch keine lange Kette hatte
+		if (gameState.stats.longestChain < 3 && gameState.moves > 5 && Math.random() < 0.3) {
+			const tip = document.createElement('div');
+			tip.className = 'tutorial bottom';
+			tip.style.bottom = '20%';
+			tip.style.left = '50%';
+			tip.style.transform = 'translateX(-50%)';
+			tip.innerHTML = translate({
+				de: 'Tipp: Versuche Blasen so zu platzieren, dass gleichartige Blasen nebeneinander liegen. So entstehen Kettenreaktionen!<br><button>Verstanden</button>'
+			});
+			tutorialsContainer.appendChild(tip);
+
+			tip.querySelector('button').addEventListener('click', () => {
+				tip.remove();
+			});
+
+			// Automatisch nach einiger Zeit ausblenden
+			setTimeout(() => {
+				if (tip.parentNode) {
+					tip.remove();
 				}
+			}, 8000);
+		}
+	}
+
+	// VERÄNDERT: Funktion aufrufen, nachdem der Spieler ein paar Züge gemacht hat
+	function setupChainReactionTips() {
+		// Nach dem 5. Zug Tipps anzeigen, wenn nötig
+		if (gameState.moves === 5) {
+			setTimeout(showChainReactionTip, 1000);
+		}
+	}
+
+	// VERÄNDERT: Verbesserte Bubble-Resize-Handler für bessere Responsivität
+	function updateAllBubbleSizes() {
+		const newBubbleSize = calculateBubbleSize();
+
+		gameState.bubbles.forEach(bubble => {
+			bubble.style.width = `${newBubbleSize}px`;
+			bubble.style.height = `${newBubbleSize}px`;
+
+			// Auch die Position aktualisieren
+			const row = parseInt(bubble.dataset.row);
+			const col = parseInt(bubble.dataset.col);
+			const pos = getBubblePosition(row, col);
+
+			bubble.style.left = `${pos.x}px`;
+			bubble.style.top = `${pos.y}px`;
+		});
+
+		// Auch die Nächste und Ziel-Bubbles aktualisieren
+		updateNextAndGoalDisplays();
+	}
+
+	function updateNextAndGoalDisplays() {
+		// Größe basierend auf Bildschirmgröße
+		const size = window.innerWidth <= 360 ? 35 :
+			window.innerWidth <= 600 ? 45 : 60;
+
+		// Nächste Blase
+		const nextBubbles = nextBubbleContainer.querySelectorAll('.bubble');
+		nextBubbles.forEach(bubble => {
+			bubble.style.width = `${size}px`;
+			bubble.style.height = `${size}px`;
+		});
+
+		// Ziel-Blase
+		const goalBubbles = goalBubbleContainer.querySelectorAll('.bubble');
+		goalBubbles.forEach(bubble => {
+			bubble.style.width = `${size}px`;
+			bubble.style.height = `${size}px`;
+		});
+	}
+
+	// VERÄNDERT: Verbesserte Hinweisfunktion für neue Spieler
+	function showTutorial(step) {
+		// Tutorials nur beim ersten Spielstart anzeigen
+		if (gameState.tutorialStep > step) return;
+
+		gameState.tutorialStep = step;
+		tutorialsContainer.innerHTML = '';
+
+		let tutorial;
+
+		// Optimierte Positionierung für mobile Geräte
+		const isMobile = window.innerWidth <= 600;
+
+		switch (step) {
+			case 1:
+				// Erste Anleitung: Bewegen
+				tutorial = document.createElement('div');
+				tutorial.className = 'tutorial bottom';
+				tutorial.style.bottom = isMobile ? '60%' : '70%';
+				tutorial.style.left = '50%';
+				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.style.maxWidth = isMobile ? '80%' : '60%';
+				tutorial.innerHTML = translate({
+					de: 'Ziehe eine Blase, um sie zu bewegen.<br><button>Verstanden</button>'
+				});
+				tutorialsContainer.appendChild(tutorial);
+
+				tutorial.querySelector('button').addEventListener('click', () => {
+					tutorial.remove();
+				});
+				break;
+
+			case 2:
+				// Zweite Anleitung: Verschmelzen
+				tutorial = document.createElement('div');
+				tutorial.className = 'tutorial top';
+				tutorial.style.top = isMobile ? '60%' : '70%';
+				tutorial.style.left = '50%';
+				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.style.maxWidth = isMobile ? '80%' : '60%';
+				tutorial.innerHTML = translate({
+					de: 'Ziehe eine Blase direkt auf eine gleiche Blase, um sie zu verschmelzen!<br><button>Verstanden</button>'
+				});
+				tutorialsContainer.appendChild(tutorial);
+
+				tutorial.querySelector('button').addEventListener('click', () => {
+					tutorial.remove();
+				});
+				break;
+
+			case 3:
+				// Dritte Anleitung: Ketten
+				tutorial = document.createElement('div');
+				tutorial.className = 'tutorial bottom';
+				tutorial.style.top = isMobile ? '15%' : '20%';
+				tutorial.style.left = '50%';
+				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.style.maxWidth = isMobile ? '85%' : '60%';
+				tutorial.innerHTML = translate({
+					de: 'Super! Versuche Kettenreaktionen zu erzeugen für extra Bonuspunkte.<br>Jede Verschmelzung in einer Kette gibt mehr Punkte!<br><button>Verstanden</button>'
+				});
+				tutorialsContainer.appendChild(tutorial);
+
+				tutorial.querySelector('button').addEventListener('click', () => {
+					tutorial.remove();
+
+					// Zeige zusätzliche Erklärung zur Schwerkraft im Gravity-Modus
+					if (gameState.gravityEnabled) {
+						setTimeout(() => {
+							const gravityTip = document.createElement('div');
+							gravityTip.className = 'tutorial top';
+							gravityTip.style.top = '40%';
+							gravityTip.style.left = '50%';
+							gravityTip.style.transform = 'translateX(-50%)';
+							gravityTip.style.maxWidth = isMobile ? '85%' : '60%';
+							gravityTip.innerHTML = translate({
+								de: 'Im Schwerkraft-Modus fallen Blasen nach unten, wenn darunter freie Plätze sind. Das kann zusätzliche Kettenreaktionen auslösen!<br><button>Verstanden</button>'
+							});
+							tutorialsContainer.appendChild(gravityTip);
+
+							gravityTip.querySelector('button').addEventListener('click', () => {
+								gravityTip.remove();
+							});
+						}, 500);
+					}
+				});
+				break;
+		}
+
+		// Entferne Tutorial automatisch nach 15 Sekunden, falls der Benutzer es ignoriert
+		setTimeout(() => {
+			if (tutorial && tutorial.parentNode) {
+				tutorial.remove();
 			}
-		}, 300);
+		}, 15000);
+	}
+
+	// Alle Funktionen nach dem DOM-Laden ausführen
+	window.addEventListener('DOMContentLoaded', function () {
+		loadStatsFromStorage();
+		setupModalScrolling();
+		setupScrollableTabs();
+		addScrollToTopButtons();
+	});
+
+	// Event-Listener für die Resize-Funktion
+	window.addEventListener('resize', () => {
+		createGridOverlay();
+		updateAllBubbleSizes();
 	});
 </script>
 </body>
