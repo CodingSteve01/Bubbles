@@ -14,6 +14,8 @@
             --bubble-colors: #f87171, #facc15, #4ade80, #60a5fa, #a78bfa, #f472b6, #fb923c, #22d3ee;
             --accent-color: #3b82f6;
             --chain-highlight: #fef08a;
+            --modal-bg: rgba(0, 0, 0, 0.5);
+            --modal-content-bg: #f0f9ff;
         }
 
         [data-theme="dark"] {
@@ -24,6 +26,7 @@
             --shadow-color: rgba(0, 0, 0, 0.3);
             --accent-color: #60a5fa;
             --chain-highlight: #fbbf24;
+            --modal-content-bg: #1e293b;
         }
 
         * {
@@ -223,6 +226,10 @@
             animation: chain-merge 0.6s forwards;
         }
 
+        .bubble.falling {
+            transition: top 0.3s ease-in-out;
+        }
+
         @keyframes merge {
             0% {
                 transform: scale(1);
@@ -254,6 +261,14 @@
                 transform: scale(1);
                 box-shadow: 0 0 0px var(--chain-highlight);
             }
+        }
+        
+        .bubble.merging {
+            animation-duration: 0.4s;
+        }
+        
+        .bubble.chain-merge {
+            animation-duration: 0.5s;
         }
 
         .new-bubble {
@@ -346,7 +361,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: var(--modal-bg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -362,11 +377,13 @@
         }
 
         .modal-content {
-            background-color: var(--bg-color);
+            background-color: var(--modal-content-bg);
             border-radius: 16px;
             padding: 32px;
             max-width: 90%;
             width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -393,6 +410,8 @@
         .button-group {
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .primary-button {
@@ -597,6 +616,178 @@
             100% { transform: scale(1.1); }
         }
 
+        .special-mode-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        .special-mode-banner {
+            background-color: var(--accent-color);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .challenge-modes {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .challenge-modes h3 {
+            margin-bottom: 15px;
+        }
+
+        .mode-button {
+            background-color: var(--grid-color);
+            color: var(--text-color);
+            border: 1px solid var(--grid-border);
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            margin-right: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .mode-button.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .mode-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        .mode-description {
+            margin-top: 5px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .tab-container {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--grid-border);
+        }
+
+        .tab-button {
+            padding: 10px 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.6;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            opacity: 1;
+            border-bottom-color: var(--accent-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .progress-label {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .upgrade-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--grid-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .upgrade-info {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .upgrade-title {
+            font-weight: bold;
+        }
+
+        .upgrade-desc {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .upgrade-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .upgrade-button:disabled {
+            background-color: var(--grid-border);
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upgrade-cost {
+            font-size: 12px;
+            display: block;
+            text-align: center;
+        }
+
+        /* Badge für Benachrichtigungen */
+        .notification-badge {
+            position: relative;
+        }
+
+        .notification-badge::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .notification-badge.active::after {
+            display: block;
+        }
+        
+        /* Verbesserte Responsivität */
         @media (max-width: 600px) {
             header {
                 padding: 0 8px;
@@ -626,17 +817,21 @@
             }
             
             .modal-content {
-                padding: 24px;
+                padding: 20px 16px;
+                width: 90%;
+                max-height: 85vh;
             }
             
             .modal h2 {
-                font-size: 24px;
+                font-size: 22px;
+                margin-bottom: 12px;
             }
             
             .game-info {
                 flex-direction: column;
                 align-items: center;
                 gap: 8px;
+                text-align: center;
             }
 
             .game-stats {
@@ -648,6 +843,15 @@
                 margin-right: 0;
                 margin-bottom: 10px;
             }
+            
+            .button-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .button-group button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -658,7 +862,7 @@
             <div class="level">Level 1</div>
         </div>
         <div class="controls">
-            <button id="stats-button" aria-label="Statistiken">
+            <button id="stats-button" aria-label="Statistiken" class="notification-badge">
                 <svg class="icon" viewBox="0 0 24 24">
                     <path d="M3 3v18h18"></path>
                     <path d="M8 13v4"></path>
@@ -691,9 +895,16 @@
         </div>
     </header>
     
+    <div id="special-mode-banner" class="special-mode-banner" style="display: none;">
+        Schwerkraft-Modus: Blasen fallen nach unten
+    </div>
+    
     <div class="game-container" id="game-container">
         <div class="grid-overlay" id="grid-overlay"></div>
         <div class="chain-counter" id="chain-counter">x1</div>
+        <div class="special-mode-indicator" id="special-mode-indicator" style="display: none;">
+            🔄 Schwerkraft
+        </div>
     </div>
     
     <div class="game-stats">
@@ -743,39 +954,95 @@
     
     <div class="modal" id="stats-modal">
         <div class="modal-content">
-            <h2>Statistiken & Erfolge</h2>
+            <h2>Spielmenü</h2>
             
-            <table class="stats-table">
-                <tr>
-                    <td>Highscore:</td>
-                    <td id="stats-highscore">0</td>
-                </tr>
-                <tr>
-                    <td>Höchste Blase:</td>
-                    <td id="stats-highest-bubble">2 (4)</td>
-                </tr>
-                <tr>
-                    <td>Längste Kette:</td>
-                    <td id="stats-longest-chain">0</td>
-                </tr>
-                <tr>
-                    <td>Gespielte Spiele:</td>
-                    <td id="stats-games-played">0</td>
-                </tr>
-            </table>
-            
-            <h3 style="margin-top: 20px; margin-bottom: 15px;">Erfolge</h3>
-            <div id="achievements-container">
-                <!-- Achievements will be inserted here -->
-            </div>
-            
-            <div class="challenge-container">
-                <h3>Aktuelle Herausforderung</h3>
-                <p id="challenge-description">Erzeuge eine Kette mit mindestens 3 Verschmelzungen</p>
-                <div class="challenge-progress">
-                    <div class="challenge-progress-bar" id="challenge-progress-bar" style="width: 0%;"></div>
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="stats">Statistik</button>
+                    <button class="tab-button" data-tab="challenges">Herausforderungen</button>
+                    <button class="tab-button" data-tab="upgrades">Verbesserungen</button>
+                    <button class="tab-button" data-tab="modes">Spielmodi</button>
                 </div>
-                <p>Belohnung: <span class="challenge-reward" id="challenge-reward">+500 Punkte</span></p>
+                
+                <div class="tab-content active" id="stats-tab">
+                    <table class="stats-table">
+                        <tr>
+                            <td>Highscore:</td>
+                            <td id="stats-highscore">0</td>
+                        </tr>
+                        <tr>
+                            <td>Höchste Blase:</td>
+                            <td id="stats-highest-bubble">2 (4)</td>
+                        </tr>
+                        <tr>
+                            <td>Längste Kette:</td>
+                            <td id="stats-longest-chain">0</td>
+                        </tr>
+                        <tr>
+                            <td>Gespielte Spiele:</td>
+                            <td id="stats-games-played">0</td>
+                        </tr>
+                        <tr>
+                            <td>Spielfeldgröße:</td>
+                            <td id="stats-grid-size">6x6</td>
+                        </tr>
+                    </table>
+                    
+                    <h3 style="margin-top: 20px; margin-bottom: 15px;">Erfolge</h3>
+                    <div id="achievements-container">
+                        <!-- Achievements will be inserted here -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="challenges-tab">
+                    <div class="challenge-container">
+                        <h3>Aktuelle Herausforderung</h3>
+                        <p id="challenge-description">Erzeuge eine Kette mit mindestens 3 Verschmelzungen</p>
+                        <div class="challenge-progress">
+                            <div class="challenge-progress-bar" id="challenge-progress-bar" style="width: 0%;"></div>
+                        </div>
+                        <div class="progress-label">
+                            <span id="challenge-progress-text">0/3</span>
+                            <span>Belohnung: <span class="challenge-reward" id="challenge-reward">+500 Punkte</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="upgrades-tab">
+                    <div id="upgrades-container">
+                        <!-- Upgrades werden hier eingefügt -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="modes-tab">
+                    <h3>Spezial-Spielmodi</h3>
+                    <p class="mode-description">Diese Modi bieten neue Herausforderungen und Spielmechaniken.</p>
+                    
+                    <div id="modes-container">
+                        <button class="mode-button" data-mode="normal">
+                            <span class="mode-icon">🎮</span>
+                            Standard
+                        </button>
+                        <button class="mode-button" data-mode="gravity">
+                            <span class="mode-icon">⬇️</span>
+                            Schwerkraft
+                        </button>
+                        <button class="mode-button" data-mode="timeAttack" disabled>
+                            <span class="mode-icon">⏱️</span>
+                            Zeit-Modus
+                            <span class="challenge-reward" style="margin-left: 5px">Bald!</span>
+                        </button>
+                        <button class="mode-button" data-mode="colorBlind" disabled>
+                            <span class="mode-icon">🎨</span>
+                            Farbmuster
+                            <span class="challenge-reward" style="margin-left: 5px">Bald!</span>
+                        </button>
+                    </div>
+                    
+                    <div id="active-mode-description" style="margin-top: 15px;">
+                        <strong>Standard-Modus:</strong> Das klassische Bubble Merge Spielerlebnis.
+                    </div>
+                </div>
             </div>
             
             <div class="button-group" style="margin-top: 20px;">
@@ -788,11 +1055,12 @@
     <div class="modal" id="tutorial-modal">
         <div class="modal-content">
             <h2>Bubble Merge</h2>
-            <p>1. Ziehe Blasen, um sie zu bewegen<br>
-               2. Verbinde gleiche Blasen, um sie zu verschmelzen<br>
+            <p>1. Ziehe Blasen auf andere gleiche Blasen, um sie zu verschmelzen<br>
+               2. Blasen verschmelzen nur durch aktives Ziehen<br>
                3. Erzeuge Kettenreaktionen für Bonuspunkte<br>
                4. Erreiche das Ziel für die nächste Stufe<br>
-               5. Das Spiel endet, wenn das Feld voll ist</p>
+               5. Schalte Spielfeld-Erweiterungen frei<br>
+               6. Das Spiel endet, wenn das Feld voll ist</p>
             <div class="button-group">
                 <button class="primary-button" id="start-game-button">Spielen</button>
             </div>
@@ -807,7 +1075,8 @@
             score: 0,
             level: 1,
             grid: [],
-            gridSize: 6,         // Größeres Spielfeld wie gewünscht
+            gridSize: 6,         // Initiale Spielfeldgröße
+            maxGridSize: 10,     // Maximale Spielfeldgröße
             bubbles: [],
             nextBubble: null,
             maxLevel: 1,
@@ -826,6 +1095,11 @@
             longestChain: 0,     // Längste Kette im Spiel
             currentGoal: 4,      // Aktuelles Ziel (2^3 = 8)
             goalProgress: 0,     // Fortschritt zum aktuellen Ziel (0-100%)
+            processingChain: false, // Flag für laufende Kettenreaktionen
+            mergeQueue: [],      // Queue für Kettenreaktionen
+            specialMode: 'normal', // Aktueller Spielmodus
+            gravityEnabled: false, // Schwerkraft Modus
+            
             // Stats für persistente Speicherung
             stats: {
                 highscore: 0,
@@ -835,7 +1109,11 @@
                 gamesPlayed: 0,
                 achievements: [],
                 currentChallenge: 0,
-                challengeProgress: 0
+                challengeProgress: 0,
+                gridSize: 6,
+                unlockedGridSize: 6,
+                coins: 0,
+                upgrades: []
             },
             // Aktuelle Challenge
             challenge: null
@@ -865,6 +1143,64 @@
             { description: 'Erzeuge eine Kette mit mindestens 5 Verschmelzungen', target: 5, type: 'chain', reward: 3500 },
             { description: 'Erreiche eine 128er-Blase', target: 128, type: 'value', reward: 5000 }
         ];
+
+        // Verfügbare Upgrades
+        const UPGRADES = [
+            { 
+                id: 'grid_7', 
+                title: 'Spielfeld 7x7', 
+                description: 'Erweitere dein Spielfeld auf 7x7 Zellen',
+                cost: 1000,
+                gridSize: 7,
+                requires: []
+            },
+            { 
+                id: 'grid_8', 
+                title: 'Spielfeld 8x8', 
+                description: 'Erweitere dein Spielfeld auf 8x8 Zellen',
+                cost: 3000,
+                gridSize: 8,
+                requires: ['grid_7']
+            },
+            { 
+                id: 'grid_9', 
+                title: 'Spielfeld 9x9', 
+                description: 'Erweitere dein Spielfeld auf 9x9 Zellen',
+                cost: 7500,
+                gridSize: 9,
+                requires: ['grid_8']
+            },
+            { 
+                id: 'grid_10', 
+                title: 'Spielfeld 10x10', 
+                description: 'Erweitere dein Spielfeld auf 10x10 Zellen (Maximum)',
+                cost: 15000,
+                gridSize: 10,
+                requires: ['grid_9']
+            },
+            { 
+                id: 'chain_bonus', 
+                title: 'Kettenbonus +50%', 
+                description: 'Erhöhe deine Punkteausbeute bei Kettenreaktionen um 50%',
+                cost: 2500,
+                requires: ['grid_7']
+            },
+            { 
+                id: 'score_bonus', 
+                title: 'Punkte +25%', 
+                description: 'Erhöhe deine Grundpunktezahl um 25%',
+                cost: 5000,
+                requires: ['grid_8']
+            }
+        ];
+
+        // Spezial-Modi Beschreibungen
+        const MODE_DESCRIPTIONS = {
+            normal: '<strong>Standard-Modus:</strong> Das klassische Bubble Merge Spielerlebnis.',
+            gravity: '<strong>Schwerkraft-Modus:</strong> Blasen fallen nach jeder Bewegung nach unten. Erzeuge Kaskadeneffekte!',
+            timeAttack: '<strong>Zeit-Modus:</strong> Du hast nur begrenzte Zeit. Jede Verschmelzung gibt dir zusätzliche Sekunden.',
+            colorBlind: '<strong>Farbmuster-Modus:</strong> Blasen haben spezielle Muster statt Farben.'
+        };
 
         // Übersetzungs-Funktion
         function translate(text) {
@@ -903,12 +1239,21 @@
         const statsHighestBubbleElement = document.getElementById('stats-highest-bubble');
         const statsLongestChainElement = document.getElementById('stats-longest-chain');
         const statsGamesPlayedElement = document.getElementById('stats-games-played');
+        const statsGridSizeElement = document.getElementById('stats-grid-size');
         const achievementsContainer = document.getElementById('achievements-container');
         const challengeDescription = document.getElementById('challenge-description');
         const challengeProgressBar = document.getElementById('challenge-progress-bar');
+        const challengeProgressText = document.getElementById('challenge-progress-text');
         const challengeReward = document.getElementById('challenge-reward');
         const closeStatsButton = document.getElementById('close-stats-button');
         const resetStatsButton = document.getElementById('reset-stats-button');
+        const upgradesContainer = document.getElementById('upgrades-container');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const modeButtons = document.querySelectorAll('.mode-button');
+        const activeModeDescription = document.getElementById('active-mode-description');
+        const specialModeBanner = document.getElementById('special-mode-banner');
+        const specialModeIndicator = document.getElementById('special-mode-indicator');
 
         // Konstanten
         const BUBBLE_COLORS = [
@@ -1053,10 +1398,32 @@
         function addNewBubble() {
             // Finde eine leere Zelle
             const emptyCells = [];
-            for (let row = 0; row < gameState.gridSize; row++) {
+            
+            // Bei Schwerkraft-Modus bevorzugt oberste Reihe verwenden
+            if (gameState.gravityEnabled) {
                 for (let col = 0; col < gameState.gridSize; col++) {
-                    if (!gameState.grid[row][col]) {
-                        emptyCells.push({ row, col });
+                    if (!gameState.grid[0][col]) {
+                        emptyCells.push({ row: 0, col: col });
+                    }
+                }
+                
+                // Falls oberste Reihe voll ist, andere Zellen suchen
+                if (emptyCells.length === 0) {
+                    for (let row = 1; row < gameState.gridSize; row++) {
+                        for (let col = 0; col < gameState.gridSize; col++) {
+                            if (!gameState.grid[row][col]) {
+                                emptyCells.push({ row, col });
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Normal-Modus: Alle leeren Zellen berücksichtigen
+                for (let row = 0; row < gameState.gridSize; row++) {
+                    for (let col = 0; col < gameState.gridSize; col++) {
+                        if (!gameState.grid[row][col]) {
+                            emptyCells.push({ row, col });
+                        }
                     }
                 }
             }
@@ -1080,6 +1447,13 @@
             
             // Neue nächste Blase vorbereiten
             prepareNextBubble();
+            
+            // Bei Schwerkraft-Modus: Nach dem Hinzufügen Schwerkraft anwenden
+            if (gameState.gravityEnabled) {
+                setTimeout(() => {
+                    applyGravity();
+                }, 100);
+            }
             
             // Prüfe, ob es mögliche Züge gibt
             if (emptyCells.length === 1) {
@@ -1111,7 +1485,7 @@
         }
 
         function startDragging(e) {
-            if (gameState.gameOver) return;
+            if (gameState.gameOver || gameState.processingChain) return;
             
             const bubble = e.currentTarget;
             const rect = bubble.getBoundingClientRect();
@@ -1129,7 +1503,7 @@
         }
 
         function handleTouchStart(e) {
-            if (gameState.gameOver) return;
+            if (gameState.gameOver || gameState.processingChain) return;
             
             const bubble = e.currentTarget;
             const touch = e.touches[0];
@@ -1211,7 +1585,10 @@
                     return;
                 }
                 
-                // Prüfen, ob Zielzelle leer ist
+                // Hauptveränderung: Blasen können nur direkt aufeinander gezogen werden
+                // Nicht mehr durch bloße Nachbarschaft verschmelzen
+                
+                // Wenn Zielzelle leer ist: normaler Zug
                 if (!gameState.grid[row][col]) {
                     // Einfach bewegen
                     gameState.grid[oldRow][oldCol] = null;
@@ -1225,6 +1602,9 @@
                     bubble.style.top = `${pos.y}px`;
                     
                     moveMade = true;
+                    
+                    // Hier keine automatische Suche nach Verschmelzungen mehr!
+                    // Nur durch direktes Ziehen auf gleiche Blasen
                     
                     // Tutorial-Fortschritt
                     if (gameState.tutorialStep === 1) {
@@ -1240,20 +1620,27 @@
                         b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
                     );
                     
-                    // Effekt und Animation
-                    mergeBubbles(bubble, targetBubble, level + 1, row, col);
-                    
-                    moveMade = true;
-                    
-                    // Starte Kettenreaktion-Zähler
-                    startChainReaction();
-                    
-                    // Prüfe Achievement "Erste Verschmelzung"
-                    unlockAchievement('first_merge');
-                    
-                    // Tutorial-Fortschritt
-                    if (gameState.tutorialStep === 2) {
-                        showTutorial(3);
+                    if (targetBubble) {
+                        // Effekt und Animation
+                        queueMerge(bubble, targetBubble, level + 1, row, col);
+                        
+                        moveMade = true;
+                        
+                        // Starte Kettenreaktion-Zähler
+                        startChainReaction();
+                        
+                        // Prüfe Achievement "Erste Verschmelzung"
+                        unlockAchievement('first_merge');
+                        
+                        // Tutorial-Fortschritt
+                        if (gameState.tutorialStep === 2) {
+                            showTutorial(3);
+                        }
+                    } else {
+                        // Fallback, falls Bubble nicht gefunden
+                        const pos = getBubblePosition(oldRow, oldCol);
+                        bubble.style.left = `${pos.x}px`;
+                        bubble.style.top = `${pos.y}px`;
                     }
                 } else {
                     // Ungleiches Level, zurück zur Ausgangsposition
@@ -1281,11 +1668,19 @@
                 gameState.moves++;
                 
                 // Verzögerung, um Kettenreaktionen abzuwarten
-                setTimeout(() => {
+                // Überprüfe, ob die Warteschlange leer ist, bevor neue Blasen hinzugefügt werden
+                checkQueue(function() {
                     if (!gameState.gameOver) {
-                        addNewBubble();
+                        // Bei Schwerkraft-Modus: Schwerkraft anwenden
+                        if (gameState.gravityEnabled) {
+                            applyGravity(function() {
+                                addNewBubble();
+                            });
+                        } else {
+                            addNewBubble();
+                        }
                     }
-                }, 400);
+                });
             }
         }
 
@@ -1320,7 +1715,43 @@
             chainCounter.style.opacity = '0';
         }
 
-        function mergeBubbles(bubble1, bubble2, newLevel, row, col, isChain = false) {
+        // NEU: Queue für Blasenverschmelzungen statt rekursiver Funktionen
+        function queueMerge(bubble1, bubble2, newLevel, row, col, isChain = false) {
+            gameState.processingChain = true;
+            
+            // Füge Verschmelzung zur Queue hinzu
+            gameState.mergeQueue.push({
+                bubble1: bubble1,
+                bubble2: bubble2,
+                newLevel: newLevel,
+                row: row,
+                col: col,
+                isChain: isChain
+            });
+            
+            // Starte die Verarbeitung, wenn sie nicht bereits läuft
+            if (gameState.mergeQueue.length === 1) {
+                processNextMerge();
+            }
+        }
+
+        // Verarbeite die nächste Verschmelzung in der Queue
+        function processNextMerge() {
+            if (gameState.mergeQueue.length === 0) {
+                gameState.processingChain = false;
+                return;
+            }
+            
+            const merge = gameState.mergeQueue[0];
+            const { bubble1, bubble2, newLevel, row, col, isChain } = merge;
+            
+            // Sicherheitscheck
+            if (!bubble1 || !bubble2 || !bubble1.parentNode || !bubble2.parentNode) {
+                gameState.mergeQueue.shift();
+                processNextMerge();
+                return;
+            }
+            
             // Aktualisiere höchstes Level
             if (newLevel > gameState.maxLevel) {
                 gameState.maxLevel = newLevel;
@@ -1359,50 +1790,85 @@
             // Animation für die zweite Blase
             bubble2.classList.add(isChain ? 'chain-merge' : 'merging');
             
-            // Entferne die erste Blase
-            gameState.bubbles = gameState.bubbles.filter(b => b !== bubble1);
-            bubble1.remove();
+            // Entferne die erste Blase sofort
+            if (bubble1 && bubble1.parentNode) {
+                bubble1.remove();
+            }
             
-            // Aktualisiere die zweite Blase
+            // Aktualisiere die Blasen-Liste
+            gameState.bubbles = gameState.bubbles.filter(b => b !== bubble1);
+            
+            // Punkte hinzufügen mit Chain-Bonus
+            const chainMultiplier = Math.max(1, isChain ? Math.min(gameState.chainCount, 10) : 1);
+            
+            // Verbesserter Chain-Bonus mit Upgrades
+            let bonusMultiplier = 1;
+            if (gameState.stats.upgrades.includes('chain_bonus')) {
+                bonusMultiplier = 1.5; // +50% für Chain-Bonus-Upgrade
+            }
+            
+            // Anwendung des verbesserten Multiplikators
+            const effectiveMultiplier = chainMultiplier * bonusMultiplier;
+            const points = Math.pow(2, newLevel) * 5 * effectiveMultiplier;
+            
+            updateScore(points);
+            
+            // Punkte-Popup
+            const pos = getBubblePosition(row, col);
+            if (effectiveMultiplier > 1) {
+                createScorePopup(`+${formatNumber(points)} (x${effectiveMultiplier.toFixed(1)})`, pos.x, pos.y, true);
+            } else {
+                createScorePopup(`+${formatNumber(points)}`, pos.x, pos.y);
+            }
+            
+            // Nach Animationszeit die aktualisierte Blase zeigen
             setTimeout(() => {
-                bubble2.dataset.level = newLevel;
-                const value = Math.pow(2, newLevel);
-                bubble2.dataset.value = value;
-                bubble2.querySelector('.bubble-inner').textContent = formatNumber(value);
-                
-                const colorIndex = (newLevel - 1) % BUBBLE_COLORS.length;
-                bubble2.style.backgroundColor = BUBBLE_COLORS[colorIndex];
-                
-                bubble2.classList.remove(isChain ? 'chain-merge' : 'merging');
-                
-                // Punkte hinzufügen mit Chain-Bonus
-                const chainMultiplier = Math.max(1, isChain ? Math.min(gameState.chainCount, 10) : 1);
-                const points = Math.pow(2, newLevel) * 5 * chainMultiplier;
-                updateScore(points);
-                
-                // Punkte-Popup
-                const pos = getBubblePosition(row, col);
-                if (chainMultiplier > 1) {
-                    createScorePopup(`+${formatNumber(points)} (x${chainMultiplier})`, pos.x, pos.y, true);
-                } else {
-                    createScorePopup(`+${formatNumber(points)}`, pos.x, pos.y);
-                }
-                
-                // Prüfe mögliche Folgeverschmelzungen
-                setTimeout(() => {
-                    const hasChainMerge = checkForChainMerges(row, col, newLevel);
+                // Nochmals prüfen, ob die Blase noch existiert
+                if (bubble2 && bubble2.parentNode) {
+                    bubble2.dataset.level = newLevel;
+                    const value = Math.pow(2, newLevel);
+                    bubble2.dataset.value = value;
                     
-                    // Wenn keine Kettenfusion stattgefunden hat, setze Chain-Counter zurück
-                    if (!hasChainMerge && !isChain) {
-                        // Reset wird verzögert, um zu sehen, ob noch Kettenreaktionen folgen
-                        // Der tatsächliche Reset erfolgt in addNewBubble()
+                    const bubbleInner = bubble2.querySelector('.bubble-inner');
+                    if (bubbleInner) {
+                        bubbleInner.textContent = formatNumber(value);
                     }
-                }, 250);
-            }, 400);
+                    
+                    const colorIndex = (newLevel - 1) % BUBBLE_COLORS.length;
+                    bubble2.style.backgroundColor = BUBBLE_COLORS[colorIndex];
+                    
+                    bubble2.classList.remove(isChain ? 'chain-merge' : 'merging');
+                    
+                    // Entferne diese Verschmelzung aus der Queue
+                    gameState.mergeQueue.shift();
+                    
+                    // Prüfe mögliche Nachbar-Verschmelzungen (nur direkte Nachbarn)
+                    checkAdjacentMerges(row, col, newLevel);
+                    
+                    // Verarbeite die nächste Verschmelzung in der Queue
+                    setTimeout(processNextMerge, 50);
+                } else {
+                    // Fallback, wenn die Blase nicht mehr existiert
+                    gameState.mergeQueue.shift();
+                    processNextMerge();
+                }
+            }, 300);
         }
 
-        function checkForChainMerges(row, col, level) {
-            // Nachbarzeichen prüfen
+        // Prüft, ob die Queue leer ist und ruft den Callback auf
+        function checkQueue(callback) {
+            if (gameState.mergeQueue.length === 0) {
+                gameState.processingChain = false;
+                if (callback) callback();
+            } else {
+                // Warte, bis die Queue leer ist
+                setTimeout(() => checkQueue(callback), 100);
+            }
+        }
+
+        // Sucht nach direkten Nachbarn zum Verschmelzen
+        function checkAdjacentMerges(row, col, level) {
+            // Nur direkte Nachbarn (keine Diagonalen)
             const neighbors = [
                 { row: row - 1, col: col },  // oben
                 { row: row + 1, col: col },  // unten
@@ -1421,7 +1887,7 @@
                 // Wähle den ersten passenden Nachbarn
                 const target = validNeighbors[0];
                 
-                // Finde Blasen
+                // Finde Quell- und Ziel-Blasen
                 const sourceBubble = gameState.bubbles.find(
                     b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
                 );
@@ -1430,18 +1896,20 @@
                     b => parseInt(b.dataset.row) === target.row && parseInt(b.dataset.col) === target.col
                 );
                 
-                // Kettenreaktion mit Verzögerung
-                setTimeout(() => {
-                    if (sourceBubble && targetBubble) {
-                        gameState.grid[row][col] = null;
-                        gameState.grid[target.row][target.col] = level + 1;
-                        
-                        // Erhöhe Kettenreaktion-Zähler
-                        startChainReaction();
-                        
-                        mergeBubbles(sourceBubble, targetBubble, level + 1, target.row, target.col, true);
-                    }
-                }, 350);
+                // Sicherheitscheck
+                if (!sourceBubble || !targetBubble) {
+                    return false;
+                }
+                
+                // Aktualisiere das Spielfeld
+                gameState.grid[row][col] = null;
+                gameState.grid[target.row][target.col] = level + 1;
+                
+                // Erhöhe Kettenreaktion-Zähler
+                startChainReaction();
+                
+                // Füge neue Verschmelzung zur Queue hinzu
+                queueMerge(sourceBubble, targetBubble, level + 1, target.row, target.col, true);
                 
                 return true;
             }
@@ -1449,9 +1917,109 @@
             return false;
         }
 
+        // Schwerkraft-Funktion
+        function applyGravity(callback) {
+            if (!gameState.gravityEnabled) {
+                if (callback) callback();
+                return;
+            }
+            
+            let movesMade = 0;
+            const movesNeeded = [];
+            
+            // Gehe von unten nach oben durch das Spielfeld
+            for (let col = 0; col < gameState.gridSize; col++) {
+                for (let row = gameState.gridSize - 1; row > 0; row--) {
+                    // Wenn aktuelle Zelle leer ist
+                    if (!gameState.grid[row][col]) {
+                        // Suche nach der nächsten nicht-leeren Zelle darüber
+                        for (let above = row - 1; above >= 0; above--) {
+                            if (gameState.grid[above][col]) {
+                                // Verschiebe diese Blase nach unten
+                                movesNeeded.push({
+                                    fromRow: above,
+                                    fromCol: col,
+                                    toRow: row,
+                                    toCol: col
+                                });
+                                
+                                // Aktualisiere das Grid sofort
+                                gameState.grid[row][col] = gameState.grid[above][col];
+                                gameState.grid[above][col] = null;
+                                
+                                movesMade++;
+                                break; // Zur nächsten leeren Zelle
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Wende die Verschiebungen an
+            if (movesMade > 0) {
+                movesNeeded.forEach(move => {
+                    const bubble = gameState.bubbles.find(
+                        b => parseInt(b.dataset.row) === move.fromRow && parseInt(b.dataset.col) === move.fromCol
+                    );
+                    
+                    if (bubble) {
+                        // Aktualisiere die Blasendaten
+                        bubble.dataset.row = move.toRow;
+                        bubble.dataset.col = move.toCol;
+                        
+                        // Füge Fallanimation hinzu
+                        bubble.classList.add('falling');
+                        
+                        // Setze neue Position
+                        const pos = getBubblePosition(move.toRow, move.toCol);
+                        bubble.style.left = `${pos.x}px`;
+                        bubble.style.top = `${pos.y}px`;
+                    }
+                });
+                
+                // Warte auf die Animation und prüfe dann auf Kettenreaktionen
+                setTimeout(() => {
+                    movesNeeded.forEach(move => {
+                        const level = gameState.grid[move.toRow][move.toCol];
+                        // Entferne Fallanimation
+                        const bubble = gameState.bubbles.find(
+                            b => parseInt(b.dataset.row) === move.toRow && parseInt(b.dataset.col) === move.toCol
+                        );
+                        if (bubble) {
+                            bubble.classList.remove('falling');
+                        }
+                        
+                        // Prüfe auf Verschmelzungen nach dem Fallen
+                        checkAdjacentMerges(move.toRow, move.toCol, level);
+                    });
+                    
+                    // Warte auf Abschluss aller Verschmelzungen
+                    checkQueue(() => {
+                        // Überprüfe, ob weitere Schwerkraft-Bewegungen nötig sind
+                        if (movesMade > 0) {
+                            applyGravity(callback);
+                        } else if (callback) {
+                            callback();
+                        }
+                    });
+                }, 300);
+            } else {
+                // Keine Verschiebungen mehr nötig
+                if (callback) callback();
+            }
+        }
+
         function updateScore(points, isBonus = false) {
+            // Bonus für Punkte-Upgrade
+            if (gameState.stats.upgrades.includes('score_bonus')) {
+                points = Math.floor(points * 1.25); // +25% für Punkte-Bonus-Upgrade
+            }
+            
             gameState.score += points;
             scoreElement.textContent = formatNumber(gameState.score);
+            
+            // Coins für Upgrades sammeln (10% der erzielten Punkte)
+            gameState.stats.coins += Math.floor(points * 0.1);
             
             // Levelberechnung mit logarithmischer Progression
             const newLevel = Math.floor(Math.log2(gameState.score + 1) / 2) + 1;
@@ -1605,6 +2173,7 @@
             gameState.level = 1;
             gameState.maxLevel = 1;
             gameState.maxValue = 2;
+            gameState.gridSize = gameState.stats.gridSize; // Verwende gespeicherte Größe
             gameState.grid = Array(gameState.gridSize).fill().map(() => Array(gameState.gridSize).fill(null));
             gameState.bubbles = [];
             gameState.draggedBubble = null;
@@ -1617,9 +2186,25 @@
             gameState.longestChain = 0;
             gameState.currentGoal = 8; // Start mit 8 (2^3)
             gameState.goalProgress = 0;
+            gameState.processingChain = false;
+            gameState.mergeQueue = [];
             
             // UI zurücksetzen
             gameContainer.innerHTML = '<div class="grid-overlay" id="grid-overlay"></div><div class="chain-counter" id="chain-counter">x1</div>';
+            
+            // Spezial-Modus-Indikator hinzufügen, wenn aktiviert
+            if (gameState.specialMode !== 'normal') {
+                const indicator = document.createElement('div');
+                indicator.id = 'special-mode-indicator';
+                indicator.className = 'special-mode-indicator';
+                
+                if (gameState.specialMode === 'gravity') {
+                    indicator.innerHTML = '🔄 Schwerkraft';
+                }
+                
+                gameContainer.appendChild(indicator);
+            }
+            
             gridOverlay = document.getElementById('grid-overlay');
             createGridOverlay();
             
@@ -1680,7 +2265,7 @@
                     tutorial.style.left = '50%';
                     tutorial.style.transform = 'translateX(-50%)';
                     tutorial.innerHTML = translate({ 
-                        de: 'Verbinde zwei gleiche Blasen, um eine größere zu erzeugen!<br><button>Verstanden</button>' 
+                        de: 'Ziehe eine Blase direkt auf eine gleiche Blase, um sie zu verschmelzen!<br><button>Verstanden</button>' 
                     });
                     tutorialsContainer.appendChild(tutorial);
                     
@@ -1705,252 +2290,419 @@
                         tutorial.remove();
                     });
                     break;
-            }
-        }
-        
-        // Neue Funktionen für Achievements und Challenges
-        function unlockAchievement(id) {
-            // Prüfe, ob Achievement bereits freigeschaltet
-            if (gameState.stats.achievements.includes(id)) return;
-            
-            // Achievement freischalten
-            gameState.stats.achievements.push(id);
-            
-            // In LocalStorage speichern
-            saveStatsToStorage();
-        }
-        
-        function setCurrentChallenge() {
-            // Nächste Challenge setzen
-            const challengeIndex = gameState.stats.currentChallenge % CHALLENGES.length;
-            gameState.challenge = CHALLENGES[challengeIndex];
-            gameState.stats.challengeProgress = 0;
-            
-            // UI aktualisieren
-            updateChallengeUI();
-        }
-        
-        function checkChallengeProgress(type, value) {
-            if (!gameState.challenge || gameState.challenge.type !== type) return;
-            
-            // Fortschritt aktualisieren
-            const currentValue = Math.max(value, gameState.stats.challengeProgress);
-            const progress = (currentValue / gameState.challenge.target) * 100;
-            gameState.stats.challengeProgress = currentValue;
-            
-            // Prüfe auf Challenge-Abschluss
-            if (currentValue >= gameState.challenge.target) {
-                // Belohnung gewähren
-                updateScore(gameState.challenge.reward, true);
-                createScorePopup(`Herausforderung geschafft! +${formatNumber(gameState.challenge.reward)}`, 
-                    gameContainer.offsetWidth / 2, gameContainer.offsetHeight / 2, true);
-                
-                // Nächste Challenge
-                gameState.stats.currentChallenge++;
-                setCurrentChallenge();
-            } else {
-                // Fortschritt aktualisieren
-                updateChallengeUI();
-            }
-            
-            // Speichern
-            saveStatsToStorage();
-        }
-        
-        function updateChallengeUI() {
-            if (!gameState.challenge) return;
-            
-            // Beschreibung
-            challengeDescription.textContent = gameState.challenge.description;
-            
-            // Fortschrittsbalken
-            const progress = Math.min(
-                (gameState.stats.challengeProgress / gameState.challenge.target) * 100, 
-                100
-            );
-            challengeProgressBar.style.width = `${progress}%`;
-            
-            // Belohnung
-            challengeReward.textContent = `+${formatNumber(gameState.challenge.reward)} Punkte`;
-        }
-        
-        function updateAchievementsUI() {
-            achievementsContainer.innerHTML = '';
-            
-            // Alle Achievements anzeigen
-            ACHIEVEMENTS.forEach(achievement => {
-                const isUnlocked = gameState.stats.achievements.includes(achievement.id);
-                
-                const badge = document.createElement('div');
-                badge.className = 'achievement-badge';
-                badge.style.opacity = isUnlocked ? '1' : '0.5';
-                
-                badge.innerHTML = `
-                    <div class="achievement-icon">${achievement.icon}</div>
-                    <div class="achievement-info">
-                        <div class="achievement-title">${achievement.title}</div>
-                        <div class="achievement-desc">${achievement.description}</div>
-                    </div>
-                `;
-                
-                achievementsContainer.appendChild(badge);
-            });
-        }
-        
-        function updateStatsUI() {
-            statsHighscoreElement.textContent = formatNumber(gameState.stats.highscore);
-            statsHighestBubbleElement.textContent = `${gameState.stats.highestLevel} (${formatNumber(gameState.stats.highestValue)})`;
-            statsLongestChainElement.textContent = gameState.stats.longestChain;
-            statsGamesPlayedElement.textContent = gameState.stats.gamesPlayed;
-            
-            updateAchievementsUI();
-            updateChallengeUI();
-        }
-        
-        // Local Storage Funktionen
-        function saveStatsToStorage() {
-            try {
-                localStorage.setItem('bubbleMergeStats', JSON.stringify(gameState.stats));
-            } catch (e) {
-                console.error('Failed to save stats to localStorage', e);
-            }
-        }
-        
-        function loadStatsFromStorage() {
-            try {
-                const storedStats = localStorage.getItem('bubbleMergeStats');
-                if (storedStats) {
-                    gameState.stats = JSON.parse(storedStats);
                 }
-            } catch (e) {
-                console.error('Failed to load stats from localStorage', e);
-            }
-        }
-        
-        function resetStats() {
-            gameState.stats = {
-                highscore: 0,
-                highestLevel: 1,
-                highestValue: 2,
-                longestChain: 0,
-                gamesPlayed: 0,
-                achievements: [],
-                currentChallenge: 0,
-                challengeProgress: 0
-            };
-            
-            saveStatsToStorage();
-            updateStatsUI();
-            setCurrentChallenge();
-        }
-
-        // Event-Listener
-        themeToggle.addEventListener('click', () => {
-            const isDark = document.body.getAttribute('data-theme') === 'dark';
-            
-            if (isDark) {
-                document.body.removeAttribute('data-theme');
-                moonIcon.style.display = 'block';
-                sunIcon.style.display = 'none';
-            } else {
-                document.body.setAttribute('data-theme', 'dark');
-                moonIcon.style.display = 'none';
-                sunIcon.style.display = 'block';
-            }
-        });
-
-        restartButton.addEventListener('click', () => {
-            initNewGame();
-        });
-        
-        statsButton.addEventListener('click', () => {
-            updateStatsUI();
-            statsModal.classList.add('active');
-        });
-        
-        closeStatsButton.addEventListener('click', () => {
-            statsModal.classList.remove('active');
-        });
-        
-        resetStatsButton.addEventListener('click', () => {
-            if (confirm(translate({ de: 'Möchtest du wirklich alle Statistiken zurücksetzen? Dies kann nicht rückgängig gemacht werden.' }))) {
-                resetStats();
-            }
-        });
-
-        playAgainButton.addEventListener('click', () => {
-            gameOverModal.classList.remove('active');
-            initNewGame();
-        });
-        
-        shareButton.addEventListener('click', () => {
-            const text = translate({ 
-                de: `Ich habe ${formatNumber(gameState.score)} Punkte in Bubble Merge erreicht, mit einer Blase vom Level ${gameState.maxLevel} (${formatNumber(gameState.maxValue)}) und einer Kette von ${gameState.longestChain} Verschmelzungen!` 
-            });
-            
-            // Versuche Web Share API wenn verfügbar
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Bubble Merge',
-                    text: text
-                }).catch(err => {
-                    // Fallback: In Zwischenablage kopieren
-                    navigator.clipboard.writeText(text)
-                        .then(() => alert(translate({ de: 'Ergebnis in die Zwischenablage kopiert!' })))
-                        .catch(() => alert(translate({ de: 'Konnte nicht geteilt werden. Bitte manuell kopieren.' })));
-                });
-            } else {
-                // Fallback: In Zwischenablage kopieren
-                navigator.clipboard.writeText(text)
-                    .then(() => alert(translate({ de: 'Ergebnis in die Zwischenablage kopiert!' })))
-                    .catch(() => alert(translate({ de: 'Konnte nicht geteilt werden. Bitte manuell kopieren.' })));
-            }
-        });
-
-        startGameButton.addEventListener('click', () => {
-            tutorialModal.classList.remove('active');
-            initNewGame();
-        });
-
-        // Window Resize Handler
-        window.addEventListener('resize', () => {
-            createGridOverlay();
-            
-            if (gameState.bubbles.length > 0) {
-                // Positionen aller Blasen neu berechnen
-                gameState.bubbles.forEach(bubble => {
-                    const row = parseInt(bubble.dataset.row);
-                    const col = parseInt(bubble.dataset.col);
-                    const pos = getBubblePosition(row, col);
+                }
+                
+                // Neue Funktionen für Achievements und Challenges
+                function unlockAchievement(id) {
+                    // Prüfe, ob Achievement bereits freigeschaltet
+                    if (gameState.stats.achievements.includes(id)) return;
                     
-                    const size = calculateBubbleSize();
-                    bubble.style.width = `${size}px`;
-                    bubble.style.height = `${size}px`;
-                    bubble.style.left = `${pos.x}px`;
-                    bubble.style.top = `${pos.y}px`;
+                    // Achievement freischalten
+                    gameState.stats.achievements.push(id);
+                    
+                    // Badge-Notification aktivieren
+                    statsButton.classList.add('active');
+                    
+                    // In LocalStorage speichern
+                    saveStatsToStorage();
+                }
+                
+                function setCurrentChallenge() {
+                    // Nächste Challenge setzen
+                    const challengeIndex = gameState.stats.currentChallenge % CHALLENGES.length;
+                    gameState.challenge = CHALLENGES[challengeIndex];
+                    gameState.stats.challengeProgress = 0;
+                    
+                    // UI aktualisieren
+                    updateChallengeUI();
+                }
+                
+                function checkChallengeProgress(type, value) {
+                    if (!gameState.challenge || gameState.challenge.type !== type) return;
+                    
+                    // Fortschritt aktualisieren
+                    const currentValue = Math.max(value, gameState.stats.challengeProgress);
+                    gameState.stats.challengeProgress = currentValue;
+                    
+                    // Prüfe auf Challenge-Abschluss
+                    if (currentValue >= gameState.challenge.target) {
+                        // Belohnung gewähren
+                        updateScore(gameState.challenge.reward, true);
+                        createScorePopup(`Herausforderung geschafft! +${formatNumber(gameState.challenge.reward)}`, 
+                            gameContainer.offsetWidth / 2, gameContainer.offsetHeight / 2, true);
+                        
+                        // Coins als zusätzliche Belohnung
+                        gameState.stats.coins += Math.floor(gameState.challenge.reward * 0.2);
+                        
+                        // Nächste Challenge
+                        gameState.stats.currentChallenge++;
+                        setCurrentChallenge();
+                        
+                        // Badge-Notification aktivieren
+                        statsButton.classList.add('active');
+                    } else {
+                        // Fortschritt aktualisieren
+                        updateChallengeUI();
+                    }
+                    
+                    // Speichern
+                    saveStatsToStorage();
+                }
+                
+                function updateChallengeUI() {
+                    if (!gameState.challenge) return;
+                    
+                    // Beschreibung
+                    challengeDescription.textContent = gameState.challenge.description;
+                    
+                    // Fortschrittstext
+                    challengeProgressText.textContent = `${gameState.stats.challengeProgress}/${gameState.challenge.target}`;
+                    
+                    // Fortschrittsbalken
+                    const progress = Math.min(
+                        (gameState.stats.challengeProgress / gameState.challenge.target) * 100, 
+                        100
+                    );
+                    challengeProgressBar.style.width = `${progress}%`;
+                    
+                    // Belohnung
+                    challengeReward.textContent = `+${formatNumber(gameState.challenge.reward)} Punkte`;
+                }
+                
+                function updateAchievementsUI() {
+                    achievementsContainer.innerHTML = '';
+                    
+                    // Alle Achievements anzeigen
+                    ACHIEVEMENTS.forEach(achievement => {
+                        const isUnlocked = gameState.stats.achievements.includes(achievement.id);
+                        
+                        const badge = document.createElement('div');
+                        badge.className = 'achievement-badge';
+                        badge.style.opacity = isUnlocked ? '1' : '0.5';
+                        
+                        badge.innerHTML = `
+                            <div class="achievement-icon">${achievement.icon}</div>
+                            <div class="achievement-info">
+                                <div class="achievement-title">${achievement.title}</div>
+                                <div class="achievement-desc">${achievement.description}</div>
+                            </div>
+                        `;
+                        
+                        achievementsContainer.appendChild(badge);
+                    });
+                }
+                
+                // Upgrade-Funktionen
+                function updateUpgradesUI() {
+                    upgradesContainer.innerHTML = '';
+                    
+                    // Alle verfügbaren Upgrades anzeigen
+                    UPGRADES.forEach(upgrade => {
+                        const isOwned = gameState.stats.upgrades.includes(upgrade.id);
+                        const canAfford = gameState.stats.coins >= upgrade.cost;
+                        
+                        // Prüfe Abhängigkeiten
+                        let dependenciesMet = true;
+                        for (const req of upgrade.requires) {
+                            if (!gameState.stats.upgrades.includes(req)) {
+                                dependenciesMet = false;
+                                break;
+                            }
+                        }
+                        
+                        const upgradeItem = document.createElement('div');
+                        upgradeItem.className = 'upgrade-item';
+                        
+                        upgradeItem.innerHTML = `
+                            <div class="upgrade-info">
+                                <div class="upgrade-title">${upgrade.title}</div>
+                                <div class="upgrade-desc">${upgrade.description}</div>
+                            </div>
+                            <button class="upgrade-button" ${isOwned ? 'disabled' : ''} ${(!canAfford || !dependenciesMet) && !isOwned ? 'disabled' : ''} data-upgrade="${upgrade.id}">
+                                ${isOwned ? 'Freigeschaltet' : `Kaufen<span class="upgrade-cost">${formatNumber(upgrade.cost)} Münzen</span>`}
+                            </button>
+                        `;
+                        
+                        upgradesContainer.appendChild(upgradeItem);
+                        
+                        if (!isOwned) {
+                            const button = upgradeItem.querySelector('.upgrade-button');
+                            button.addEventListener('click', () => {
+                                purchaseUpgrade(upgrade.id);
+                            });
+                        }
+                    });
+                }
+                
+                function purchaseUpgrade(upgradeId) {
+                    // Finde das Upgrade
+                    const upgrade = UPGRADES.find(u => u.id === upgradeId);
+                    if (!upgrade) return;
+                    
+                    // Prüfe, ob wir genug Münzen haben
+                    if (gameState.stats.coins < upgrade.cost) return;
+                    
+                    // Prüfe, ob alle abhängigen Upgrades freigeschaltet sind
+                    for (const req of upgrade.requires) {
+                        if (!gameState.stats.upgrades.includes(req)) {
+                            return;
+                        }
+                    }
+                    
+                    // Kaufen
+                    gameState.stats.coins -= upgrade.cost;
+                    gameState.stats.upgrades.push(upgradeId);
+                    
+                    // Spezielle Upgrades anwenden
+                    if (upgradeId.startsWith('grid_')) {
+                        gameState.stats.unlockedGridSize = upgrade.gridSize;
+                        gameState.stats.gridSize = upgrade.gridSize;
+                        statsGridSizeElement.textContent = `${gameState.stats.gridSize}x${gameState.stats.gridSize}`;
+                    }
+                    
+                    // UI aktualisieren
+                    updateUpgradesUI();
+                    
+                    // In LocalStorage speichern
+                    saveStatsToStorage();
+                }
+                
+                function updateStatsUI() {
+                    statsHighscoreElement.textContent = formatNumber(gameState.stats.highscore);
+                    statsHighestBubbleElement.textContent = `${gameState.stats.highestLevel} (${formatNumber(gameState.stats.highestValue)})`;
+                    statsLongestChainElement.textContent = gameState.stats.longestChain;
+                    statsGamesPlayedElement.textContent = gameState.stats.gamesPlayed;
+                    statsGridSizeElement.textContent = `${gameState.stats.gridSize}x${gameState.stats.gridSize}`;
+                    
+                    updateAchievementsUI();
+                    updateChallengeUI();
+                    updateUpgradesUI();
+                }
+                
+                // Spielmodus-Funktionen
+                function setGameMode(mode) {
+                    // Modus setzen
+                    gameState.specialMode = mode;
+                    
+                    // Schwerkraft-Flag setzen
+                    gameState.gravityEnabled = (mode === 'gravity');
+                    
+                    // UI-Elemente aktualisieren
+                    activeModeDescription.innerHTML = MODE_DESCRIPTIONS[mode];
+                    
+                    // Modus-Banner anzeigen/verstecken
+                    if (mode !== 'normal') {
+                        specialModeBanner.textContent = mode === 'gravity' ? 'Schwerkraft-Modus: Blasen fallen nach unten' : 
+                                                       mode === 'timeAttack' ? 'Zeit-Modus: Reagiere schnell!' : 
+                                                       'Farbmuster-Modus: Achte auf die Muster';
+                        specialModeBanner.style.display = 'block';
+                    } else {
+                        specialModeBanner.style.display = 'none';
+                    }
+                    
+                    // Modus-Buttons aktualisieren
+                    document.querySelectorAll('.mode-button').forEach(btn => {
+                        if (btn.dataset.mode === mode) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    });
+                    
+                    // Spiel neu starten
+                    setTimeout(() => {
+                        statsModal.classList.remove('active');
+                        initNewGame();
+                    }, 300);
+                }
+                
+                // Local Storage Funktionen
+                function saveStatsToStorage() {
+                    try {
+                        localStorage.setItem('bubbleMergeStats', JSON.stringify(gameState.stats));
+                    } catch (e) {
+                        console.error('Failed to save stats to localStorage', e);
+                    }
+                }
+                
+                function loadStatsFromStorage() {
+                    try {
+                        const storedStats = localStorage.getItem('bubbleMergeStats');
+                        if (storedStats) {
+                            gameState.stats = JSON.parse(storedStats);
+                            
+                            // Stellen sicher, dass die Grid-Größe gesetzt ist
+                            gameState.gridSize = gameState.stats.gridSize || 6;
+                            
+                            // Stellen sicher, dass alle erforderlichen Werte existieren
+                            if (!gameState.stats.upgrades) gameState.stats.upgrades = [];
+                            if (!gameState.stats.coins) gameState.stats.coins = 0;
+                            if (!gameState.stats.unlockedGridSize) gameState.stats.unlockedGridSize = 6;
+                        }
+                    } catch (e) {
+                        console.error('Failed to load stats from localStorage', e);
+                    }
+                }
+                
+                function resetStats() {
+                    if (confirm(translate({ de: 'Möchtest du wirklich alle Statistiken zurücksetzen? Dies kann nicht rückgängig gemacht werden.' }))) {
+                        gameState.stats = {
+                            highscore: 0,
+                            highestLevel: 1,
+                            highestValue: 2,
+                            longestChain: 0,
+                            gamesPlayed: 0,
+                            achievements: [],
+                            currentChallenge: 0,
+                            challengeProgress: 0,
+                            gridSize: 6,
+                            unlockedGridSize: 6,
+                            coins: 0,
+                            upgrades: []
+                        };
+                        
+                        saveStatsToStorage();
+                        updateStatsUI();
+                        setCurrentChallenge();
+                        
+                        // Setze Spielfeldgröße zurück
+                        gameState.gridSize = 6;
+                        
+                        // Spiel neu starten
+                        initNewGame();
+                    }
+                }
+                
+                // Event-Listener
+                themeToggle.addEventListener('click', () => {
+                    const isDark = document.body.getAttribute('data-theme') === 'dark';
+                    
+                    if (isDark) {
+                        document.body.removeAttribute('data-theme');
+                        moonIcon.style.display = 'block';
+                        sunIcon.style.display = 'none';
+                    } else {
+                        document.body.setAttribute('data-theme', 'dark');
+                        moonIcon.style.display = 'none';
+                        sunIcon.style.display = 'block';
+                    }
                 });
-            }
-        });
-
-        // Spielzeit-Tracking
-        setInterval(() => {
-            if (gameState.startTime && !gameState.gameOver) {
-                const now = new Date();
-                gameState.playTime = Math.floor((now - gameState.startTime) / 1000);
-            }
-        }, 1000);
-
-        // Bevorzugtes Farbschema
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.setAttribute('data-theme', 'dark');
-            moonIcon.style.display = 'none';
-            sunIcon.style.display = 'block';
-        }
-
-        // Spiel starten
-        setTimeout(() => {
-            tutorialModal.classList.add('active');
-        }, 500);
+                
+                restartButton.addEventListener('click', () => {
+                    initNewGame();
+                });
+                
+                statsButton.addEventListener('click', () => {
+                    updateStatsUI();
+                    statsModal.classList.add('active');
+                    statsButton.classList.remove('active'); // Notification zurücksetzen
+                });
+                
+                closeStatsButton.addEventListener('click', () => {
+                    statsModal.classList.remove('active');
+                });
+                
+                resetStatsButton.addEventListener('click', resetStats);
+                
+                playAgainButton.addEventListener('click', () => {
+                    gameOverModal.classList.remove('active');
+                    initNewGame();
+                });
+                
+                shareButton.addEventListener('click', () => {
+                    const text = translate({ 
+                        de: `Ich habe ${formatNumber(gameState.score)} Punkte in Bubble Merge erreicht, mit einer Blase vom Level ${gameState.maxLevel} (${formatNumber(gameState.maxValue)}) und einer Kette von ${gameState.longestChain} Verschmelzungen!` 
+                    });
+                    
+                    // Versuche Web Share API wenn verfügbar
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Bubble Merge',
+                            text: text
+                        }).catch(err => {
+                            // Fallback: In Zwischenablage kopieren
+                            navigator.clipboard.writeText(text)
+                                .then(() => alert(translate({ de: 'Ergebnis in die Zwischenablage kopiert!' })))
+                                .catch(() => alert(translate({ de: 'Konnte nicht geteilt werden. Bitte manuell kopieren.' })));
+                        });
+                    } else {
+                        // Fallback: In Zwischenablage kopieren
+                        navigator.clipboard.writeText(text)
+                            .then(() => alert(translate({ de: 'Ergebnis in die Zwischenablage kopiert!' })))
+                            .catch(() => alert(translate({ de: 'Konnte nicht geteilt werden. Bitte manuell kopieren.' })));
+                    }
+                });
+                
+                startGameButton.addEventListener('click', () => {
+                    tutorialModal.classList.remove('active');
+                    initNewGame();
+                });
+                
+                // Tab-Wechsel-Logik
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        // Aktiven Tab in Button-Gruppe markieren
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                        
+                        // Entsprechenden Tab-Inhalt anzeigen
+                        const tabId = button.dataset.tab;
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                        });
+                        document.getElementById(`${tabId}-tab`).classList.add('active');
+                    });
+                });
+                
+                // Spielmodus-Buttons
+                modeButtons.forEach(button => {
+                    if (!button.disabled) {
+                        button.addEventListener('click', () => {
+                            setGameMode(button.dataset.mode);
+                        });
+                    }
+                });
+                
+                // Window Resize Handler
+                window.addEventListener('resize', () => {
+                    createGridOverlay();
+                    
+                    if (gameState.bubbles.length > 0) {
+                        // Positionen aller Blasen neu berechnen
+                        gameState.bubbles.forEach(bubble => {
+                            const row = parseInt(bubble.dataset.row);
+                            const col = parseInt(bubble.dataset.col);
+                            const pos = getBubblePosition(row, col);
+                            
+                            const size = calculateBubbleSize();
+                            bubble.style.width = `${size}px`;
+                            bubble.style.height = `${size}px`;
+                            bubble.style.left = `${pos.x}px`;
+                            bubble.style.top = `${pos.y}px`;
+                        });
+                    }
+                });
+                
+                // Spielzeit-Tracking
+                setInterval(() => {
+                    if (gameState.startTime && !gameState.gameOver) {
+                        const now = new Date();
+                        gameState.playTime = Math.floor((now - gameState.startTime) / 1000);
+                    }
+                }, 1000);
+                
+                // Bevorzugtes Farbschema
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.body.setAttribute('data-theme', 'dark');
+                    moonIcon.style.display = 'none';
+                    sunIcon.style.display = 'block';
+                }
+                
+                // Spiel starten
+                setTimeout(() => {
+                    tutorialModal.classList.add('active');
+                }, 500);
     </script>
 </body>
 </html>
