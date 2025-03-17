@@ -262,11 +262,11 @@
                 box-shadow: 0 0 0px var(--chain-highlight);
             }
         }
-        
+
         .bubble.merging {
             animation-duration: 0.4s;
         }
-        
+
         .bubble.chain-merge {
             animation-duration: 0.5s;
         }
@@ -521,9 +521,15 @@
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+            0%, 100% {
+                transform: translateX(0);
+            }
+            10%, 30%, 50%, 70%, 90% {
+                transform: translateX(-5px);
+            }
+            20%, 40%, 60%, 80% {
+                transform: translateX(5px);
+            }
         }
 
         #tutorials-container {
@@ -550,8 +556,12 @@
         }
 
         @keyframes bounce {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-5px); }
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-5px);
+            }
         }
 
         .tutorial:after {
@@ -612,8 +622,12 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.1);
+            }
         }
 
         .special-mode-indicator {
@@ -786,47 +800,47 @@
         .notification-badge.active::after {
             display: block;
         }
-        
+
         /* Verbesserte Responsivität */
         @media (max-width: 600px) {
             header {
                 padding: 0 8px;
             }
-            
+
             .score {
                 font-size: 20px;
             }
-            
+
             .level {
                 font-size: 14px;
             }
-            
+
             button {
                 padding: 6px 10px;
                 font-size: 14px;
             }
-            
+
             .icon {
                 width: 16px;
                 height: 16px;
             }
-            
+
             #next-bubble, #goal-bubble {
                 width: 50px;
                 height: 50px;
             }
-            
+
             .modal-content {
                 padding: 20px 16px;
                 width: 90%;
                 max-height: 85vh;
             }
-            
+
             .modal h2 {
                 font-size: 22px;
                 margin-bottom: 12px;
             }
-            
+
             .game-info {
                 flex-direction: column;
                 align-items: center;
@@ -843,12 +857,12 @@
                 margin-right: 0;
                 margin-bottom: 10px;
             }
-            
+
             .button-group {
                 flex-direction: column;
                 width: 100%;
             }
-            
+
             .button-group button {
                 width: 100%;
             }
@@ -856,1565 +870,1632 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="score-container">
-            <div class="score">0</div>
-            <div class="level">Level 1</div>
-        </div>
-        <div class="controls">
-            <button id="stats-button" aria-label="Statistiken" class="notification-badge">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M3 3v18h18"></path>
-                    <path d="M8 13v4"></path>
-                    <path d="M12 9v8"></path>
-                    <path d="M16 6v11"></path>
-                </svg>
-            </button>
-            <button id="theme-toggle" aria-label="Farbmodus umschalten">
-                <svg class="icon moon-icon" viewBox="0 0 24 24">
-                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-                </svg>
-                <svg class="icon sun-icon" style="display: none;" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="4"></circle>
-                    <path d="M12 2v2"></path>
-                    <path d="M12 20v2"></path>
-                    <path d="m4.93 4.93 1.41 1.41"></path>
-                    <path d="m17.66 17.66 1.41 1.41"></path>
-                    <path d="M2 12h2"></path>
-                    <path d="M20 12h2"></path>
-                    <path d="m6.34 17.66-1.41 1.41"></path>
-                    <path d="m19.07 4.93-1.41 1.41"></path>
-                </svg>
-            </button>
-            <button id="restart-button" aria-label="Neustarten">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                    <path d="M3 3v5h5"></path>
-                </svg>
-            </button>
-        </div>
-    </header>
-    
-    <div id="special-mode-banner" class="special-mode-banner" style="display: none;">
-        Schwerkraft-Modus: Blasen fallen nach unten
+<header>
+    <div class="score-container">
+        <div class="score">0</div>
+        <div class="level">Level 1</div>
     </div>
-    
-    <div class="game-container" id="game-container">
-        <div class="grid-overlay" id="grid-overlay"></div>
-        <div class="chain-counter" id="chain-counter">x1</div>
-        <div class="special-mode-indicator" id="special-mode-indicator" style="display: none;">
-            🔄 Schwerkraft
+    <div class="controls">
+        <button id="stats-button" aria-label="Statistiken" class="notification-badge">
+            <svg class="icon" viewBox="0 0 24 24">
+                <path d="M3 3v18h18"></path>
+                <path d="M8 13v4"></path>
+                <path d="M12 9v8"></path>
+                <path d="M16 6v11"></path>
+            </svg>
+        </button>
+        <button id="theme-toggle" aria-label="Farbmodus umschalten">
+            <svg class="icon moon-icon" viewBox="0 0 24 24">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+            </svg>
+            <svg class="icon sun-icon" style="display: none;" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2"></path>
+                <path d="M12 20v2"></path>
+                <path d="m4.93 4.93 1.41 1.41"></path>
+                <path d="m17.66 17.66 1.41 1.41"></path>
+                <path d="M2 12h2"></path>
+                <path d="M20 12h2"></path>
+                <path d="m6.34 17.66-1.41 1.41"></path>
+                <path d="m19.07 4.93-1.41 1.41"></path>
+            </svg>
+        </button>
+        <button id="restart-button" aria-label="Neustarten">
+            <svg class="icon" viewBox="0 0 24 24">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+            </svg>
+        </button>
+    </div>
+</header>
+
+<div id="special-mode-banner" class="special-mode-banner" style="display: none;">
+    Schwerkraft-Modus: Blasen fallen nach unten
+</div>
+
+<div class="game-container" id="game-container">
+    <div class="grid-overlay" id="grid-overlay"></div>
+    <div class="chain-counter" id="chain-counter">x1</div>
+    <div class="special-mode-indicator" id="special-mode-indicator" style="display: none;">
+        🔄 Schwerkraft
+    </div>
+</div>
+
+<div class="game-stats">
+    <div class="next-container">
+        <div class="next-label">Nächste:</div>
+        <div id="next-bubble"></div>
+    </div>
+    <div class="goal-container">
+        <div class="goal-label">Ziel:</div>
+        <div id="goal-bubble"></div>
+        <div class="goal-progress" id="goal-progress"></div>
+    </div>
+</div>
+
+<div class="game-info">
+    <div>Kombiniere gleiche Blasen für Punkte und Kettenreaktionen</div>
+    <div>Speichere und teile deinen Highscore</div>
+</div>
+
+<div class="modal" id="game-over-modal">
+    <div class="modal-content">
+        <h2>Spiel vorbei!</h2>
+        <p>Dein Punktestand: <span id="final-score">0</span></p>
+        <p>Höchste Blase: <span id="highest-bubble">2</span> (<span id="highest-value">4</span>)</p>
+
+        <table class="stats-table">
+            <tr>
+                <td>Längste Kette:</td>
+                <td id="longest-chain">0</td>
+            </tr>
+            <tr>
+                <td>Gespielte Zeit:</td>
+                <td id="played-time">0:00</td>
+            </tr>
+            <tr>
+                <td>Gesamte Züge:</td>
+                <td id="total-moves">0</td>
+            </tr>
+        </table>
+
+        <div class="button-group">
+            <button class="primary-button" id="play-again-button">Noch einmal spielen</button>
+            <button class="secondary-button" id="share-button">Teilen</button>
         </div>
     </div>
-    
-    <div class="game-stats">
-        <div class="next-container">
-            <div class="next-label">Nächste:</div>
-            <div id="next-bubble"></div>
-        </div>
-        <div class="goal-container">
-            <div class="goal-label">Ziel:</div>
-            <div id="goal-bubble"></div>
-            <div class="goal-progress" id="goal-progress"></div>
-        </div>
-    </div>
-    
-    <div class="game-info">
-        <div>Kombiniere gleiche Blasen für Punkte und Kettenreaktionen</div>
-        <div>Speichere und teile deinen Highscore</div>
-    </div>
-    
-    <div class="modal" id="game-over-modal">
-        <div class="modal-content">
-            <h2>Spiel vorbei!</h2>
-            <p>Dein Punktestand: <span id="final-score">0</span></p>
-            <p>Höchste Blase: <span id="highest-bubble">2</span> (<span id="highest-value">4</span>)</p>
-            
-            <table class="stats-table">
-                <tr>
-                    <td>Längste Kette:</td>
-                    <td id="longest-chain">0</td>
-                </tr>
-                <tr>
-                    <td>Gespielte Zeit:</td>
-                    <td id="played-time">0:00</td>
-                </tr>
-                <tr>
-                    <td>Gesamte Züge:</td>
-                    <td id="total-moves">0</td>
-                </tr>
-            </table>
-            
-            <div class="button-group">
-                <button class="primary-button" id="play-again-button">Noch einmal spielen</button>
-                <button class="secondary-button" id="share-button">Teilen</button>
+</div>
+
+<div class="modal" id="stats-modal">
+    <div class="modal-content">
+        <h2>Spielmenü</h2>
+
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="stats">Statistik</button>
+                <button class="tab-button" data-tab="challenges">Herausforderungen</button>
+                <button class="tab-button" data-tab="upgrades">Verbesserungen</button>
+                <button class="tab-button" data-tab="modes">Spielmodi</button>
             </div>
-        </div>
-    </div>
-    
-    <div class="modal" id="stats-modal">
-        <div class="modal-content">
-            <h2>Spielmenü</h2>
-            
-            <div class="tab-container">
-                <div class="tab-buttons">
-                    <button class="tab-button active" data-tab="stats">Statistik</button>
-                    <button class="tab-button" data-tab="challenges">Herausforderungen</button>
-                    <button class="tab-button" data-tab="upgrades">Verbesserungen</button>
-                    <button class="tab-button" data-tab="modes">Spielmodi</button>
+
+            <div class="tab-content active" id="stats-tab">
+                <table class="stats-table">
+                    <tr>
+                        <td>Highscore:</td>
+                        <td id="stats-highscore">0</td>
+                    </tr>
+                    <tr>
+                        <td>Höchste Blase:</td>
+                        <td id="stats-highest-bubble">2 (4)</td>
+                    </tr>
+                    <tr>
+                        <td>Längste Kette:</td>
+                        <td id="stats-longest-chain">0</td>
+                    </tr>
+                    <tr>
+                        <td>Gespielte Spiele:</td>
+                        <td id="stats-games-played">0</td>
+                    </tr>
+                    <tr>
+                        <td>Spielfeldgröße:</td>
+                        <td id="stats-grid-size">6x6</td>
+                    </tr>
+                </table>
+
+                <h3 style="margin-top: 20px; margin-bottom: 15px;">Erfolge</h3>
+                <div id="achievements-container">
+                    <!-- Achievements will be inserted here -->
                 </div>
-                
-                <div class="tab-content active" id="stats-tab">
-                    <table class="stats-table">
-                        <tr>
-                            <td>Highscore:</td>
-                            <td id="stats-highscore">0</td>
-                        </tr>
-                        <tr>
-                            <td>Höchste Blase:</td>
-                            <td id="stats-highest-bubble">2 (4)</td>
-                        </tr>
-                        <tr>
-                            <td>Längste Kette:</td>
-                            <td id="stats-longest-chain">0</td>
-                        </tr>
-                        <tr>
-                            <td>Gespielte Spiele:</td>
-                            <td id="stats-games-played">0</td>
-                        </tr>
-                        <tr>
-                            <td>Spielfeldgröße:</td>
-                            <td id="stats-grid-size">6x6</td>
-                        </tr>
-                    </table>
-                    
-                    <h3 style="margin-top: 20px; margin-bottom: 15px;">Erfolge</h3>
-                    <div id="achievements-container">
-                        <!-- Achievements will be inserted here -->
+            </div>
+
+            <div class="tab-content" id="challenges-tab">
+                <div class="challenge-container">
+                    <h3>Aktuelle Herausforderung</h3>
+                    <p id="challenge-description">Erzeuge eine Kette mit mindestens 3 Verschmelzungen</p>
+                    <div class="challenge-progress">
+                        <div class="challenge-progress-bar" id="challenge-progress-bar" style="width: 0%;"></div>
                     </div>
-                </div>
-                
-                <div class="tab-content" id="challenges-tab">
-                    <div class="challenge-container">
-                        <h3>Aktuelle Herausforderung</h3>
-                        <p id="challenge-description">Erzeuge eine Kette mit mindestens 3 Verschmelzungen</p>
-                        <div class="challenge-progress">
-                            <div class="challenge-progress-bar" id="challenge-progress-bar" style="width: 0%;"></div>
-                        </div>
-                        <div class="progress-label">
-                            <span id="challenge-progress-text">0/3</span>
-                            <span>Belohnung: <span class="challenge-reward" id="challenge-reward">+500 Punkte</span></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="upgrades-tab">
-                    <div id="upgrades-container">
-                        <!-- Upgrades werden hier eingefügt -->
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="modes-tab">
-                    <h3>Spezial-Spielmodi</h3>
-                    <p class="mode-description">Diese Modi bieten neue Herausforderungen und Spielmechaniken.</p>
-                    
-                    <div id="modes-container">
-                        <button class="mode-button" data-mode="normal">
-                            <span class="mode-icon">🎮</span>
-                            Standard
-                        </button>
-                        <button class="mode-button" data-mode="gravity">
-                            <span class="mode-icon">⬇️</span>
-                            Schwerkraft
-                        </button>
-                        <button class="mode-button" data-mode="timeAttack" disabled>
-                            <span class="mode-icon">⏱️</span>
-                            Zeit-Modus
-                            <span class="challenge-reward" style="margin-left: 5px">Bald!</span>
-                        </button>
-                        <button class="mode-button" data-mode="colorBlind" disabled>
-                            <span class="mode-icon">🎨</span>
-                            Farbmuster
-                            <span class="challenge-reward" style="margin-left: 5px">Bald!</span>
-                        </button>
-                    </div>
-                    
-                    <div id="active-mode-description" style="margin-top: 15px;">
-                        <strong>Standard-Modus:</strong> Das klassische Bubble Merge Spielerlebnis.
+                    <div class="progress-label">
+                        <span id="challenge-progress-text">0/3</span>
+                        <span>Belohnung: <span class="challenge-reward" id="challenge-reward">+500 Punkte</span></span>
                     </div>
                 </div>
             </div>
-            
-            <div class="button-group" style="margin-top: 20px;">
-                <button class="primary-button" id="close-stats-button">Schließen</button>
-                <button class="secondary-button" id="reset-stats-button">Zurücksetzen</button>
+
+            <div class="tab-content" id="upgrades-tab">
+                <div id="upgrades-container">
+                    <!-- Upgrades werden hier eingefügt -->
+                </div>
+            </div>
+
+            <div class="tab-content" id="modes-tab">
+                <h3>Spezial-Spielmodi</h3>
+                <p class="mode-description">Diese Modi bieten neue Herausforderungen und Spielmechaniken.</p>
+
+                <div id="modes-container">
+                    <button class="mode-button" data-mode="normal">
+                        <span class="mode-icon">🎮</span>
+                        Standard
+                    </button>
+                    <button class="mode-button" data-mode="gravity">
+                        <span class="mode-icon">⬇️</span>
+                        Schwerkraft
+                    </button>
+                    <button class="mode-button" data-mode="timeAttack" disabled>
+                        <span class="mode-icon">⏱️</span>
+                        Zeit-Modus
+                        <span class="challenge-reward" style="margin-left: 5px">Bald!</span>
+                    </button>
+                    <button class="mode-button" data-mode="colorBlind" disabled>
+                        <span class="mode-icon">🎨</span>
+                        Farbmuster
+                        <span class="challenge-reward" style="margin-left: 5px">Bald!</span>
+                    </button>
+                </div>
+
+                <div id="active-mode-description" style="margin-top: 15px;">
+                    <strong>Standard-Modus:</strong> Das klassische Bubble Merge Spielerlebnis.
+                </div>
             </div>
         </div>
-    </div>
-    
-    <div class="modal" id="tutorial-modal">
-        <div class="modal-content">
-            <h2>Bubble Merge</h2>
-            <p>1. Ziehe Blasen auf andere gleiche Blasen, um sie zu verschmelzen<br>
-               2. Blasen verschmelzen nur durch aktives Ziehen<br>
-               3. Erzeuge Kettenreaktionen für Bonuspunkte<br>
-               4. Erreiche das Ziel für die nächste Stufe<br>
-               5. Schalte Spielfeld-Erweiterungen frei<br>
-               6. Das Spiel endet, wenn das Feld voll ist</p>
-            <div class="button-group">
-                <button class="primary-button" id="start-game-button">Spielen</button>
-            </div>
+
+        <div class="button-group" style="margin-top: 20px;">
+            <button class="primary-button" id="close-stats-button">Schließen</button>
+            <button class="secondary-button" id="reset-stats-button">Zurücksetzen</button>
         </div>
     </div>
-    
-    <div id="tutorials-container"></div>
+</div>
 
-    <script>
-        // Haupt-Game-State
-        const gameState = {
-            score: 0,
-            level: 1,
-            grid: [],
-            gridSize: 6,         // Initiale Spielfeldgröße
-            maxGridSize: 10,     // Maximale Spielfeldgröße
-            bubbles: [],
-            nextBubble: null,
-            maxLevel: 1,
-            maxValue: 2,         // Actual value (2^level)
-            draggedBubble: null,
-            dragOffsetX: 0,
-            dragOffsetY: 0,
-            gameOver: false,
-            newGameStarted: false,
-            tutorialStep: 0,
-            moveMade: false,     // Flag für den ersten Zug
-            startTime: null,     // Startzeit des Spiels
-            playTime: 0,         // Spielzeit in Sekunden
-            moves: 0,            // Anzahl der Züge
-            chainCount: 0,       // Anzahl der Verschmelzungen in aktueller Kette
-            longestChain: 0,     // Längste Kette im Spiel
-            currentGoal: 4,      // Aktuelles Ziel (2^3 = 8)
-            goalProgress: 0,     // Fortschritt zum aktuellen Ziel (0-100%)
-            processingChain: false, // Flag für laufende Kettenreaktionen
-            mergeQueue: [],      // Queue für Kettenreaktionen
-            specialMode: 'normal', // Aktueller Spielmodus
-            gravityEnabled: false, // Schwerkraft Modus
-            
-            // Stats für persistente Speicherung
-            stats: {
-                highscore: 0,
-                highestLevel: 1,
-                highestValue: 2,
-                longestChain: 0,
-                gamesPlayed: 0,
-                achievements: [],
-                currentChallenge: 0,
-                challengeProgress: 0,
-                gridSize: 6,
-                unlockedGridSize: 6,
-                coins: 0,
-                upgrades: []
-            },
-            // Aktuelle Challenge
-            challenge: null
-        };
+<div class="modal" id="tutorial-modal">
+    <div class="modal-content">
+        <h2>Bubble Merge</h2>
+        <p>1. Ziehe Blasen auf andere gleiche Blasen, um sie zu verschmelzen<br>
+            2. Blasen verschmelzen nur durch aktives Ziehen<br>
+            3. Erzeuge Kettenreaktionen für Bonuspunkte<br>
+            4. Erreiche das Ziel für die nächste Stufe<br>
+            5. Schalte Spielfeld-Erweiterungen frei<br>
+            6. Das Spiel endet, wenn das Feld voll ist</p>
+        <div class="button-group">
+            <button class="primary-button" id="start-game-button">Spielen</button>
+        </div>
+    </div>
+</div>
 
-        // Achievements und Challenges definieren
-        const ACHIEVEMENTS = [
-            { id: 'first_merge', icon: '🔄', title: 'Erste Verschmelzung', description: 'Verschmelze zwei Blasen' },
-            { id: 'level_16', icon: '🔼', title: 'Erreiche 16', description: 'Erzeuge eine 16er-Blase' },
-            { id: 'level_64', icon: '⭐', title: 'Fortschritt', description: 'Erzeuge eine 64er-Blase' },
-            { id: 'level_256', icon: '🌟', title: 'Meister', description: 'Erzeuge eine 256er-Blase' },
-            { id: 'level_1024', icon: '👑', title: 'Legende', description: 'Erzeuge eine 1024er-Blase' },
-            { id: 'chain_3', icon: '⛓️', title: 'Kettenschmied', description: 'Erzeuge eine Kette mit 3 Verschmelzungen' },
-            { id: 'chain_5', icon: '🔗', title: 'Kettenmeister', description: 'Erzeuge eine Kette mit 5 Verschmelzungen' },
-            { id: 'score_1000', icon: '💯', title: 'Punktejäger', description: 'Erreiche 1.000 Punkte' },
-            { id: 'score_5000', icon: '🏆', title: 'Punktekönig', description: 'Erreiche 5.000 Punkte' },
-            { id: 'games_10', icon: '🎮', title: 'Regelmäßiger Spieler', description: 'Spiele 10 Partien' }
-        ];
+<div id="tutorials-container"></div>
 
-        const CHALLENGES = [
-            { description: 'Erzeuge eine Kette mit mindestens 3 Verschmelzungen', target: 3, type: 'chain', reward: 500 },
-            { description: 'Erreiche eine 32er-Blase', target: 32, type: 'value', reward: 750 },
-            { description: 'Sammle 1.500 Punkte in einem Spiel', target: 1500, type: 'score', reward: 1000 },
-            { description: 'Erzeuge eine Kette mit mindestens 4 Verschmelzungen', target: 4, type: 'chain', reward: 1500 },
-            { description: 'Erreiche eine 64er-Blase', target: 64, type: 'value', reward: 2000 },
-            { description: 'Sammle 3.000 Punkte in einem Spiel', target: 3000, type: 'score', reward: 2500 },
-            { description: 'Erzeuge eine Kette mit mindestens 5 Verschmelzungen', target: 5, type: 'chain', reward: 3500 },
-            { description: 'Erreiche eine 128er-Blase', target: 128, type: 'value', reward: 5000 }
-        ];
+<script>
+	// Haupt-Game-State
+	const gameState = {
+		score: 0,
+		level: 1,
+		grid: [],
+		gridSize: 6,         // Initiale Spielfeldgröße
+		maxGridSize: 10,     // Maximale Spielfeldgröße
+		bubbles: [],
+		nextBubble: null,
+		maxLevel: 1,
+		maxValue: 2,         // Actual value (2^level)
+		draggedBubble: null,
+		dragOffsetX: 0,
+		dragOffsetY: 0,
+		hasSavedGame: false,
+		gameOver: false,
+		newGameStarted: false,
+		tutorialStep: 0,
+		moveMade: false,     // Flag für den ersten Zug
+		startTime: null,     // Startzeit des Spiels
+		playTime: 0,         // Spielzeit in Sekunden
+		moves: 0,            // Anzahl der Züge
+		chainCount: 0,       // Anzahl der Verschmelzungen in aktueller Kette
+		longestChain: 0,     // Längste Kette im Spiel
+		currentGoal: 4,      // Aktuelles Ziel (2^3 = 8)
+		goalProgress: 0,     // Fortschritt zum aktuellen Ziel (0-100%)
+		processingChain: false, // Flag für laufende Kettenreaktionen
+		mergeQueue: [],      // Queue für Kettenreaktionen
+		specialMode: 'normal', // Aktueller Spielmodus
+		gravityEnabled: false, // Schwerkraft Modus
 
-        // Verfügbare Upgrades
-        const UPGRADES = [
-            { 
-                id: 'grid_7', 
-                title: 'Spielfeld 7x7', 
-                description: 'Erweitere dein Spielfeld auf 7x7 Zellen',
-                cost: 1000,
-                gridSize: 7,
-                requires: []
-            },
-            { 
-                id: 'grid_8', 
-                title: 'Spielfeld 8x8', 
-                description: 'Erweitere dein Spielfeld auf 8x8 Zellen',
-                cost: 3000,
-                gridSize: 8,
-                requires: ['grid_7']
-            },
-            { 
-                id: 'grid_9', 
-                title: 'Spielfeld 9x9', 
-                description: 'Erweitere dein Spielfeld auf 9x9 Zellen',
-                cost: 7500,
-                gridSize: 9,
-                requires: ['grid_8']
-            },
-            { 
-                id: 'grid_10', 
-                title: 'Spielfeld 10x10', 
-                description: 'Erweitere dein Spielfeld auf 10x10 Zellen (Maximum)',
-                cost: 15000,
-                gridSize: 10,
-                requires: ['grid_9']
-            },
-            { 
-                id: 'chain_bonus', 
-                title: 'Kettenbonus +50%', 
-                description: 'Erhöhe deine Punkteausbeute bei Kettenreaktionen um 50%',
-                cost: 2500,
-                requires: ['grid_7']
-            },
-            { 
-                id: 'score_bonus', 
-                title: 'Punkte +25%', 
-                description: 'Erhöhe deine Grundpunktezahl um 25%',
-                cost: 5000,
-                requires: ['grid_8']
-            }
-        ];
+		// Stats für persistente Speicherung
+		stats: {
+			highscore: 0,
+			highestLevel: 1,
+			highestValue: 2,
+			longestChain: 0,
+			gamesPlayed: 0,
+			achievements: [],
+			currentChallenge: 0,
+			challengeProgress: 0,
+			gridSize: 6,
+			unlockedGridSize: 6,
+			coins: 0,
+			upgrades: []
+		},
+		// Aktuelle Challenge
+		challenge: null
+	};
 
-        // Spezial-Modi Beschreibungen
-        const MODE_DESCRIPTIONS = {
-            normal: '<strong>Standard-Modus:</strong> Das klassische Bubble Merge Spielerlebnis.',
-            gravity: '<strong>Schwerkraft-Modus:</strong> Blasen fallen nach jeder Bewegung nach unten. Erzeuge Kaskadeneffekte!',
-            timeAttack: '<strong>Zeit-Modus:</strong> Du hast nur begrenzte Zeit. Jede Verschmelzung gibt dir zusätzliche Sekunden.',
-            colorBlind: '<strong>Farbmuster-Modus:</strong> Blasen haben spezielle Muster statt Farben.'
-        };
+	// Achievements und Challenges definieren
+	const ACHIEVEMENTS = [
+		{id: 'first_merge', icon: '🔄', title: 'Erste Verschmelzung', description: 'Verschmelze zwei Blasen'},
+		{id: 'level_16', icon: '🔼', title: 'Erreiche 16', description: 'Erzeuge eine 16er-Blase'},
+		{id: 'level_64', icon: '⭐', title: 'Fortschritt', description: 'Erzeuge eine 64er-Blase'},
+		{id: 'level_256', icon: '🌟', title: 'Meister', description: 'Erzeuge eine 256er-Blase'},
+		{id: 'level_1024', icon: '👑', title: 'Legende', description: 'Erzeuge eine 1024er-Blase'},
+		{id: 'chain_3', icon: '⛓️', title: 'Kettenschmied', description: 'Erzeuge eine Kette mit 3 Verschmelzungen'},
+		{id: 'chain_5', icon: '🔗', title: 'Kettenmeister', description: 'Erzeuge eine Kette mit 5 Verschmelzungen'},
+		{id: 'score_1000', icon: '💯', title: 'Punktejäger', description: 'Erreiche 1.000 Punkte'},
+		{id: 'score_5000', icon: '🏆', title: 'Punktekönig', description: 'Erreiche 5.000 Punkte'},
+		{id: 'games_10', icon: '🎮', title: 'Regelmäßiger Spieler', description: 'Spiele 10 Partien'}
+	];
 
-        // Übersetzungs-Funktion
-        function translate(text) {
-            // Vereinfachte Version der Übersetzungsfunktion
-            return text.de;
-        }
+	const CHALLENGES = [
+		{description: 'Erzeuge eine Kette mit mindestens 3 Verschmelzungen', target: 3, type: 'chain', reward: 500},
+		{description: 'Erreiche eine 32er-Blase', target: 32, type: 'value', reward: 750},
+		{description: 'Sammle 1.500 Punkte in einem Spiel', target: 1500, type: 'score', reward: 1000},
+		{description: 'Erzeuge eine Kette mit mindestens 4 Verschmelzungen', target: 4, type: 'chain', reward: 1500},
+		{description: 'Erreiche eine 64er-Blase', target: 64, type: 'value', reward: 2000},
+		{description: 'Sammle 3.000 Punkte in einem Spiel', target: 3000, type: 'score', reward: 2500},
+		{description: 'Erzeuge eine Kette mit mindestens 5 Verschmelzungen', target: 5, type: 'chain', reward: 3500},
+		{description: 'Erreiche eine 128er-Blase', target: 128, type: 'value', reward: 5000}
+	];
 
-        // DOM-Elemente - Hier 'let' statt 'const' für Elemente, die später aktualisiert werden
-        const gameContainer = document.getElementById('game-container');
-        let gridOverlay = document.getElementById('grid-overlay');
-        const nextBubbleContainer = document.getElementById('next-bubble');
-        const goalBubbleContainer = document.getElementById('goal-bubble');
-        const goalProgress = document.getElementById('goal-progress');
-        const chainCounter = document.getElementById('chain-counter');
-        const scoreElement = document.querySelector('.score');
-        const levelElement = document.querySelector('.level');
-        const themeToggle = document.getElementById('theme-toggle');
-        const moonIcon = document.querySelector('.moon-icon');
-        const sunIcon = document.querySelector('.sun-icon');
-        const restartButton = document.getElementById('restart-button');
-        const statsButton = document.getElementById('stats-button');
-        const gameOverModal = document.getElementById('game-over-modal');
-        const statsModal = document.getElementById('stats-modal');
-        const finalScoreElement = document.getElementById('final-score');
-        const highestBubbleElement = document.getElementById('highest-bubble');
-        const highestValueElement = document.getElementById('highest-value');
-        const longestChainElement = document.getElementById('longest-chain');
-        const playedTimeElement = document.getElementById('played-time');
-        const totalMovesElement = document.getElementById('total-moves');
-        const playAgainButton = document.getElementById('play-again-button');
-        const shareButton = document.getElementById('share-button');
-        const tutorialModal = document.getElementById('tutorial-modal');
-        const startGameButton = document.getElementById('start-game-button');
-        const tutorialsContainer = document.getElementById('tutorials-container');
-        const statsHighscoreElement = document.getElementById('stats-highscore');
-        const statsHighestBubbleElement = document.getElementById('stats-highest-bubble');
-        const statsLongestChainElement = document.getElementById('stats-longest-chain');
-        const statsGamesPlayedElement = document.getElementById('stats-games-played');
-        const statsGridSizeElement = document.getElementById('stats-grid-size');
-        const achievementsContainer = document.getElementById('achievements-container');
-        const challengeDescription = document.getElementById('challenge-description');
-        const challengeProgressBar = document.getElementById('challenge-progress-bar');
-        const challengeProgressText = document.getElementById('challenge-progress-text');
-        const challengeReward = document.getElementById('challenge-reward');
-        const closeStatsButton = document.getElementById('close-stats-button');
-        const resetStatsButton = document.getElementById('reset-stats-button');
-        const upgradesContainer = document.getElementById('upgrades-container');
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const modeButtons = document.querySelectorAll('.mode-button');
-        const activeModeDescription = document.getElementById('active-mode-description');
-        const specialModeBanner = document.getElementById('special-mode-banner');
-        const specialModeIndicator = document.getElementById('special-mode-indicator');
+	// Verfügbare Upgrades
+	const UPGRADES = [
+		{
+			id: 'grid_7',
+			title: 'Spielfeld 7x7',
+			description: 'Erweitere dein Spielfeld auf 7x7 Zellen',
+			cost: 10000,
+			gridSize: 7,
+			requires: []
+		},
+		{
+			id: 'grid_8',
+			title: 'Spielfeld 8x8',
+			description: 'Erweitere dein Spielfeld auf 8x8 Zellen',
+			cost: 30000,
+			gridSize: 8,
+			requires: ['grid_7']
+		},
+		{
+			id: 'grid_9',
+			title: 'Spielfeld 9x9',
+			description: 'Erweitere dein Spielfeld auf 9x9 Zellen',
+			cost: 75000,
+			gridSize: 9,
+			requires: ['grid_8']
+		},
+		{
+			id: 'grid_10',
+			title: 'Spielfeld 10x10',
+			description: 'Erweitere dein Spielfeld auf 10x10 Zellen (Maximum)',
+			cost: 150000,
+			gridSize: 10,
+			requires: ['grid_9']
+		},
+		{
+			id: 'chain_bonus',
+			title: 'Kettenbonus +50%',
+			description: 'Erhöhe deine Punkteausbeute bei Kettenreaktionen um 50%',
+			cost: 2500,
+			requires: ['grid_7']
+		},
+		{
+			id: 'score_bonus',
+			title: 'Punkte +25%',
+			description: 'Erhöhe deine Grundpunktezahl um 25%',
+			cost: 5000,
+			requires: ['grid_8']
+		}
+	];
 
-        // Konstanten
-        const BUBBLE_COLORS = [
-            '#f87171', // rot
-            '#facc15', // gelb
-            '#4ade80', // grün
-            '#60a5fa', // blau
-            '#a78bfa', // lila
-            '#f472b6', // pink
-            '#fb923c', // orange
-            '#22d3ee'  // türkis
-        ];
+	// Spezial-Modi Beschreibungen
+	const MODE_DESCRIPTIONS = {
+		normal: '<strong>Standard-Modus:</strong> Das klassische Bubble Merge Spielerlebnis.',
+		gravity: '<strong>Schwerkraft-Modus:</strong> Blasen fallen nach jeder Bewegung nach unten. Erzeuge Kaskadeneffekte!',
+		timeAttack: '<strong>Zeit-Modus:</strong> Du hast nur begrenzte Zeit. Jede Verschmelzung gibt dir zusätzliche Sekunden.',
+		colorBlind: '<strong>Farbmuster-Modus:</strong> Blasen haben spezielle Muster statt Farben.'
+	};
 
-        // Formatierungsfunktion für große Zahlen
-        function formatNumber(num) {
-            if (num < 1000) return num;
-            if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
-            if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
-            return (num / 1000000000).toFixed(1) + 'G';
-        }
+	// Übersetzungs-Funktion
+	function translate(text) {
+		// Vereinfachte Version der Übersetzungsfunktion
+		return text.de;
+	}
 
-        // Zeit-Formatierung
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
+	// DOM-Elemente - Hier 'let' statt 'const' für Elemente, die später aktualisiert werden
+	const gameContainer = document.getElementById('game-container');
+	let gridOverlay = document.getElementById('grid-overlay');
+	const nextBubbleContainer = document.getElementById('next-bubble');
+	const goalBubbleContainer = document.getElementById('goal-bubble');
+	const goalProgress = document.getElementById('goal-progress');
+	let chainCounter = document.getElementById('chain-counter');
+	const scoreElement = document.querySelector('.score');
+	const levelElement = document.querySelector('.level');
+	const themeToggle = document.getElementById('theme-toggle');
+	const moonIcon = document.querySelector('.moon-icon');
+	const sunIcon = document.querySelector('.sun-icon');
+	const restartButton = document.getElementById('restart-button');
+	const statsButton = document.getElementById('stats-button');
+	const gameOverModal = document.getElementById('game-over-modal');
+	const statsModal = document.getElementById('stats-modal');
+	const finalScoreElement = document.getElementById('final-score');
+	const highestBubbleElement = document.getElementById('highest-bubble');
+	const highestValueElement = document.getElementById('highest-value');
+	const longestChainElement = document.getElementById('longest-chain');
+	const playedTimeElement = document.getElementById('played-time');
+	const totalMovesElement = document.getElementById('total-moves');
+	const playAgainButton = document.getElementById('play-again-button');
+	const shareButton = document.getElementById('share-button');
+	const tutorialModal = document.getElementById('tutorial-modal');
+	const startGameButton = document.getElementById('start-game-button');
+	const tutorialsContainer = document.getElementById('tutorials-container');
+	const statsHighscoreElement = document.getElementById('stats-highscore');
+	const statsHighestBubbleElement = document.getElementById('stats-highest-bubble');
+	const statsLongestChainElement = document.getElementById('stats-longest-chain');
+	const statsGamesPlayedElement = document.getElementById('stats-games-played');
+	const statsGridSizeElement = document.getElementById('stats-grid-size');
+	const achievementsContainer = document.getElementById('achievements-container');
+	const challengeDescription = document.getElementById('challenge-description');
+	const challengeProgressBar = document.getElementById('challenge-progress-bar');
+	const challengeProgressText = document.getElementById('challenge-progress-text');
+	const challengeReward = document.getElementById('challenge-reward');
+	const closeStatsButton = document.getElementById('close-stats-button');
+	const resetStatsButton = document.getElementById('reset-stats-button');
+	const upgradesContainer = document.getElementById('upgrades-container');
+	const tabButtons = document.querySelectorAll('.tab-button');
+	const tabContents = document.querySelectorAll('.tab-content');
+	const modeButtons = document.querySelectorAll('.mode-button');
+	const activeModeDescription = document.getElementById('active-mode-description');
+	const specialModeBanner = document.getElementById('special-mode-banner');
+	let specialModeIndicator = document.getElementById('special-mode-indicator');
 
-        // Hilfsfunktionen
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
+	// Konstanten
+	const BUBBLE_COLORS = [
+		'#f87171', // rot
+		'#facc15', // gelb
+		'#4ade80', // grün
+		'#60a5fa', // blau
+		'#a78bfa', // lila
+		'#f472b6', // pink
+		'#fb923c', // orange
+		'#22d3ee'  // türkis
+	];
 
-        function calculateBubbleSize() {
-            const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
-            return (containerSize / gameState.gridSize) * 0.85;
-        }
+	// Formatierungsfunktion für große Zahlen
+	function formatNumber(num) {
+		if (num < 1000) return num;
+		if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+		if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
+		return (num / 1000000000).toFixed(1) + 'G';
+	}
 
-        function getBubblePosition(row, col) {
-            const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
-            const cellSize = containerSize / gameState.gridSize;
-            const bubbleSize = calculateBubbleSize();
-            const offsetX = (cellSize - bubbleSize) / 2;
-            const offsetY = (cellSize - bubbleSize) / 2;
-            
-            return {
-                x: col * cellSize + offsetX,
-                y: row * cellSize + offsetY
-            };
-        }
+	// Zeit-Formatierung
+	function formatTime(seconds) {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins}:${secs.toString().padStart(2, '0')}`;
+	}
 
-        function getGridCellFromPosition(x, y) {
-            const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
-            const cellSize = containerSize / gameState.gridSize;
-            
-            const col = Math.floor(x / cellSize);
-            const row = Math.floor(y / cellSize);
-            
-            // Bounds check
-            if (row >= 0 && row < gameState.gridSize && col >= 0 && col < gameState.gridSize) {
-                return { row, col };
-            }
-            
-            return null;
-        }
+	// Hilfsfunktionen
+	function getRandomInt(min, max) {
+		return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
 
-        function createBubbleElement(level, row, col, isNext = false) {
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble new-bubble';
-            
-            const size = isNext ? 60 : calculateBubbleSize();
-            bubble.style.width = `${size}px`;
-            bubble.style.height = `${size}px`;
-            
-            // Verbesserte Farbgebung mit Helligkeitsanpassung
-            const colorIndex = (level - 1) % BUBBLE_COLORS.length;
-            const baseColor = BUBBLE_COLORS[colorIndex];
-            
-            // Glasartiger Effekt basierend auf Level
-            bubble.style.backgroundColor = baseColor;
-            
-            const inner = document.createElement('div');
-            inner.className = 'bubble-inner';
-            
-            // Wert berechnen (2^level)
-            const value = Math.pow(2, level);
-            inner.textContent = formatNumber(value);
-            
-            bubble.appendChild(inner);
-            
-            if (!isNext) {
-                const pos = getBubblePosition(row, col);
-                bubble.style.left = `${pos.x}px`;
-                bubble.style.top = `${pos.y}px`;
-                
-                // Datenspeicherung für einfachen Zugriff
-                bubble.dataset.row = row;
-                bubble.dataset.col = col;
-                bubble.dataset.level = level;
-                bubble.dataset.value = value;
-                
-                // Event-Listener für Desktop
-                bubble.addEventListener('mousedown', startDragging);
-                
-                // Event-Listener für Touch-Geräte
-                bubble.addEventListener('touchstart', handleTouchStart, { passive: false });
-            } else {
-                bubble.style.position = 'relative';
-                bubble.style.left = '0';
-                bubble.style.top = '0';
-            }
-            
-            return bubble;
-        }
+	function calculateBubbleSize() {
+		const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
+		return (containerSize / gameState.gridSize) * 0.85;
+	}
 
-        function createRandomBubble() {
-            // Wahrscheinlichkeiten basierend auf dem aktuellen Spielfortschritt
-            // Mit fortschreitendem Spiel leicht höhere Chancen auf wertvollere Blasen
-            const maxPossibleLevel = Math.min(gameState.maxLevel, 4);
-            const progressFactor = Math.min(gameState.score / 3000, 1); // Progression bis 3000 Punkte
-            
-            let level;
-            const rand = Math.random();
-            
-            if (rand < 0.7 - (0.2 * progressFactor)) {
-                // Basis-Chance für Level 1 (sinkt von 70% auf 50% bei hoher Punktzahl)
-                level = 1;
-            } else if (rand < 0.9 - (0.1 * progressFactor)) {
-                // Chance für Level 2 (bleibt etwa bei 20%)
-                level = Math.min(2, maxPossibleLevel);
-            } else if (rand < 0.98) {
-                // Chance für Level 3 (steigt leicht an)
-                level = Math.min(3, maxPossibleLevel);
-            } else {
-                // Kleine Chance für höhere Level (bis zum bisher erreichten)
-                level = getRandomInt(1, maxPossibleLevel);
-            }
-            
-            return level;
-        }
+	function getBubblePosition(row, col) {
+		const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
+		const cellSize = containerSize / gameState.gridSize;
+		const bubbleSize = calculateBubbleSize();
+		const offsetX = (cellSize - bubbleSize) / 2;
+		const offsetY = (cellSize - bubbleSize) / 2;
 
-        function addNewBubble() {
-            // Finde eine leere Zelle
-            const emptyCells = [];
-            
-            // Bei Schwerkraft-Modus bevorzugt oberste Reihe verwenden
-            if (gameState.gravityEnabled) {
-                for (let col = 0; col < gameState.gridSize; col++) {
-                    if (!gameState.grid[0][col]) {
-                        emptyCells.push({ row: 0, col: col });
-                    }
-                }
-                
-                // Falls oberste Reihe voll ist, andere Zellen suchen
-                if (emptyCells.length === 0) {
-                    for (let row = 1; row < gameState.gridSize; row++) {
-                        for (let col = 0; col < gameState.gridSize; col++) {
-                            if (!gameState.grid[row][col]) {
-                                emptyCells.push({ row, col });
-                            }
-                        }
-                    }
-                }
-            } else {
-                // Normal-Modus: Alle leeren Zellen berücksichtigen
-                for (let row = 0; row < gameState.gridSize; row++) {
-                    for (let col = 0; col < gameState.gridSize; col++) {
-                        if (!gameState.grid[row][col]) {
-                            emptyCells.push({ row, col });
-                        }
-                    }
-                }
-            }
-            
-            // Wenn keine leeren Zellen mehr, Spiel vorbei
-            if (emptyCells.length === 0) {
-                gameOver();
-                return false;
-            }
-            
-            // Zufällige leere Zelle auswählen
-            const cellIndex = getRandomInt(0, emptyCells.length - 1);
-            const { row, col } = emptyCells[cellIndex];
-            
-            // Neue Blase mit dem vorbereiteten Level hinzufügen
-            const level = gameState.nextBubble;
-            const bubble = createBubbleElement(level, row, col);
-            gameContainer.appendChild(bubble);
-            gameState.grid[row][col] = level;
-            gameState.bubbles.push(bubble);
-            
-            // Neue nächste Blase vorbereiten
-            prepareNextBubble();
-            
-            // Bei Schwerkraft-Modus: Nach dem Hinzufügen Schwerkraft anwenden
-            if (gameState.gravityEnabled) {
-                setTimeout(() => {
-                    applyGravity();
-                }, 100);
-            }
-            
-            // Prüfe, ob es mögliche Züge gibt
-            if (emptyCells.length === 1) {
-                setTimeout(checkForPossibleMoves, 300);
-            }
-            
-            // Chain-Counter zurücksetzen, wenn Zug abgeschlossen
-            resetChainCounter();
-            
-            return true;
-        }
+		return {
+			x: col * cellSize + offsetX,
+			y: row * cellSize + offsetY
+		};
+	}
 
-        function prepareNextBubble() {
-            gameState.nextBubble = createRandomBubble();
-            nextBubbleContainer.innerHTML = '';
-            const bubble = createBubbleElement(gameState.nextBubble, 0, 0, true);
-            nextBubbleContainer.appendChild(bubble);
-        }
+	function getGridCellFromPosition(x, y) {
+		const containerSize = Math.min(gameContainer.offsetWidth, gameContainer.offsetHeight);
+		const cellSize = containerSize / gameState.gridSize;
 
-        function updateGoalDisplay() {
-            // Ziel-Blase anzeigen (die nächste zu erreichende Blase)
-            const goalLevel = Math.log2(gameState.currentGoal);
-            goalBubbleContainer.innerHTML = '';
-            const bubble = createBubbleElement(goalLevel, 0, 0, true);
-            goalBubbleContainer.appendChild(bubble);
-            
-            // Fortschrittsbalken aktualisieren
-            goalProgress.style.width = `${gameState.goalProgress}%`;
-        }
+		const col = Math.floor(x / cellSize);
+		const row = Math.floor(y / cellSize);
 
-        function startDragging(e) {
-            if (gameState.gameOver || gameState.processingChain) return;
-            
-            const bubble = e.currentTarget;
-            const rect = bubble.getBoundingClientRect();
-            
-            gameState.draggedBubble = bubble;
-            gameState.dragOffsetX = e.clientX - rect.left;
-            gameState.dragOffsetY = e.clientY - rect.top;
-            
-            bubble.classList.add('dragging');
-            
-            document.addEventListener('mousemove', onDrag);
-            document.addEventListener('mouseup', stopDragging);
-            
-            e.preventDefault();
-        }
+		// Bounds check
+		if (row >= 0 && row < gameState.gridSize && col >= 0 && col < gameState.gridSize) {
+			return {row, col};
+		}
 
-        function handleTouchStart(e) {
-            if (gameState.gameOver || gameState.processingChain) return;
-            
-            const bubble = e.currentTarget;
-            const touch = e.touches[0];
-            const rect = bubble.getBoundingClientRect();
-            
-            gameState.draggedBubble = bubble;
-            gameState.dragOffsetX = touch.clientX - rect.left;
-            gameState.dragOffsetY = touch.clientY - rect.top;
-            
-            bubble.classList.add('dragging');
-            
-            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-            document.addEventListener('touchend', handleTouchEnd);
-            
-            e.preventDefault();
-        }
+		return null;
+	}
 
-        function handleTouchMove(e) {
-            if (!gameState.draggedBubble) return;
-            
-            const touch = e.touches[0];
-            onDrag({
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                preventDefault: () => e.preventDefault()
-            });
-        }
+	function createBubbleElement(level, row, col, isNext = false) {
+		const bubble = document.createElement('div');
+		bubble.className = 'bubble new-bubble';
 
-        function handleTouchEnd() {
-            stopDragging();
-            document.removeEventListener('touchmove', handleTouchMove);
-            document.removeEventListener('touchend', handleTouchEnd);
-        }
+		const size = isNext ? 60 : calculateBubbleSize();
+		bubble.style.width = `${size}px`;
+		bubble.style.height = `${size}px`;
 
-        function onDrag(e) {
-            if (!gameState.draggedBubble) return;
-            
-            const containerRect = gameContainer.getBoundingClientRect();
-            const x = e.clientX - containerRect.left - gameState.dragOffsetX;
-            const y = e.clientY - containerRect.top - gameState.dragOffsetY;
-            
-            gameState.draggedBubble.style.left = `${x}px`;
-            gameState.draggedBubble.style.top = `${y}px`;
-            
-            e.preventDefault();
-        }
+		// Verbesserte Farbgebung mit Helligkeitsanpassung
+		const colorIndex = (level - 1) % BUBBLE_COLORS.length;
+		const baseColor = BUBBLE_COLORS[colorIndex];
 
-        function stopDragging() {
-            if (!gameState.draggedBubble) return;
-            
-            const bubble = gameState.draggedBubble;
-            const oldRow = parseInt(bubble.dataset.row);
-            const oldCol = parseInt(bubble.dataset.col);
-            const level = parseInt(bubble.dataset.level);
-            
-            // Position im Container
-            const containerRect = gameContainer.getBoundingClientRect();
-            const bubbleRect = bubble.getBoundingClientRect();
-            const bubbleCenterX = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
-            const bubbleCenterY = bubbleRect.top + bubbleRect.height / 2 - containerRect.top;
-            
-            // Zielzelle finden
-            const targetCell = getGridCellFromPosition(bubbleCenterX, bubbleCenterY);
-            
-            // Blase zurück zur Ausgangsposition animieren
-            bubble.classList.remove('dragging');
-            
-            let moveMade = false;
-            
-            if (targetCell) {
-                const { row, col } = targetCell;
-                
-                // Gleiche Zelle - kein Zug
-                if (row === oldRow && col === oldCol) {
-                    const pos = getBubblePosition(oldRow, oldCol);
-                    bubble.style.left = `${pos.x}px`;
-                    bubble.style.top = `${pos.y}px`;
-                    gameState.draggedBubble = null;
-                    return;
-                }
-                
-                // Hauptveränderung: Blasen können nur direkt aufeinander gezogen werden
-                // Nicht mehr durch bloße Nachbarschaft verschmelzen
-                
-                // Wenn Zielzelle leer ist: normaler Zug
-                if (!gameState.grid[row][col]) {
-                    // Einfach bewegen
-                    gameState.grid[oldRow][oldCol] = null;
-                    gameState.grid[row][col] = level;
-                    
-                    bubble.dataset.row = row;
-                    bubble.dataset.col = col;
-                    
-                    const pos = getBubblePosition(row, col);
-                    bubble.style.left = `${pos.x}px`;
-                    bubble.style.top = `${pos.y}px`;
-                    
-                    moveMade = true;
-                    
-                    // Hier keine automatische Suche nach Verschmelzungen mehr!
-                    // Nur durch direktes Ziehen auf gleiche Blasen
-                    
-                    // Tutorial-Fortschritt
-                    if (gameState.tutorialStep === 1) {
-                        showTutorial(2);
-                    }
-                } else if (gameState.grid[row][col] === level) {
-                    // Gleiche Blasen verschmelzen
-                    gameState.grid[oldRow][oldCol] = null;
-                    gameState.grid[row][col] = level + 1;
-                    
-                    // Zielblase finden
-                    const targetBubble = gameState.bubbles.find(
-                        b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
-                    );
-                    
-                    if (targetBubble) {
-                        // Effekt und Animation
-                        queueMerge(bubble, targetBubble, level + 1, row, col);
-                        
-                        moveMade = true;
-                        
-                        // Starte Kettenreaktion-Zähler
-                        startChainReaction();
-                        
-                        // Prüfe Achievement "Erste Verschmelzung"
-                        unlockAchievement('first_merge');
-                        
-                        // Tutorial-Fortschritt
-                        if (gameState.tutorialStep === 2) {
-                            showTutorial(3);
-                        }
-                    } else {
-                        // Fallback, falls Bubble nicht gefunden
-                        const pos = getBubblePosition(oldRow, oldCol);
-                        bubble.style.left = `${pos.x}px`;
-                        bubble.style.top = `${pos.y}px`;
-                    }
-                } else {
-                    // Ungleiches Level, zurück zur Ausgangsposition
-                    const pos = getBubblePosition(oldRow, oldCol);
-                    bubble.style.left = `${pos.x}px`;
-                    bubble.style.top = `${pos.y}px`;
-                    gameContainer.classList.add('shake');
-                    setTimeout(() => gameContainer.classList.remove('shake'), 500);
-                }
-            } else {
-                // Außerhalb des Spielfelds, zurück zur Ausgangsposition
-                const pos = getBubblePosition(oldRow, oldCol);
-                bubble.style.left = `${pos.x}px`;
-                bubble.style.top = `${pos.y}px`;
-            }
-            
-            gameState.draggedBubble = null;
-            
-            document.removeEventListener('mousemove', onDrag);
-            document.removeEventListener('mouseup', stopDragging);
-            
-            // Neue Blase nach erfolgreichem Zug hinzufügen
-            if (moveMade) {
-                gameState.moveMade = true;
-                gameState.moves++;
-                
-                // Verzögerung, um Kettenreaktionen abzuwarten
-                // Überprüfe, ob die Warteschlange leer ist, bevor neue Blasen hinzugefügt werden
-                checkQueue(function() {
-                    if (!gameState.gameOver) {
-                        // Bei Schwerkraft-Modus: Schwerkraft anwenden
-                        if (gameState.gravityEnabled) {
-                            applyGravity(function() {
-                                addNewBubble();
-                            });
-                        } else {
-                            addNewBubble();
-                        }
-                    }
-                });
-            }
-        }
+		// Glasartiger Effekt basierend auf Level
+		bubble.style.backgroundColor = baseColor;
 
-        function startChainReaction() {
-            // Erhöhe Zähler und zeige ihn
-            gameState.chainCount++;
-            updateChainCounter();
-        }
+		const inner = document.createElement('div');
+		inner.className = 'bubble-inner';
 
-        function updateChainCounter() {
-            // Zeige den Chain-Counter nur bei mehr als 1 Verschmelzung
-            if (gameState.chainCount > 1) {
-                chainCounter.textContent = `x${gameState.chainCount}`;
-                chainCounter.style.opacity = '1';
-                
-                // Herausforderungen prüfen
-                checkChallengeProgress('chain', gameState.chainCount);
-                
-                // Achievement prüfen
-                if (gameState.chainCount >= 3) unlockAchievement('chain_3');
-                if (gameState.chainCount >= 5) unlockAchievement('chain_5');
-                
-                // Update längste Kette
-                if (gameState.chainCount > gameState.longestChain) {
-                    gameState.longestChain = gameState.chainCount;
-                }
-            }
-        }
+		// Wert berechnen (2^level)
+		const value = Math.pow(2, level);
+		inner.textContent = formatNumber(value);
 
-        function resetChainCounter() {
-            gameState.chainCount = 0;
-            chainCounter.style.opacity = '0';
-        }
+		bubble.appendChild(inner);
 
-        // NEU: Queue für Blasenverschmelzungen statt rekursiver Funktionen
-        function queueMerge(bubble1, bubble2, newLevel, row, col, isChain = false) {
-            gameState.processingChain = true;
-            
-            // Füge Verschmelzung zur Queue hinzu
-            gameState.mergeQueue.push({
-                bubble1: bubble1,
-                bubble2: bubble2,
-                newLevel: newLevel,
-                row: row,
-                col: col,
-                isChain: isChain
-            });
-            
-            // Starte die Verarbeitung, wenn sie nicht bereits läuft
-            if (gameState.mergeQueue.length === 1) {
-                processNextMerge();
-            }
-        }
+		if (!isNext) {
+			const pos = getBubblePosition(row, col);
+			bubble.style.left = `${pos.x}px`;
+			bubble.style.top = `${pos.y}px`;
 
-        // Verarbeite die nächste Verschmelzung in der Queue
-        function processNextMerge() {
-            if (gameState.mergeQueue.length === 0) {
-                gameState.processingChain = false;
-                return;
-            }
-            
-            const merge = gameState.mergeQueue[0];
-            const { bubble1, bubble2, newLevel, row, col, isChain } = merge;
-            
-            // Sicherheitscheck
-            if (!bubble1 || !bubble2 || !bubble1.parentNode || !bubble2.parentNode) {
-                gameState.mergeQueue.shift();
-                processNextMerge();
-                return;
-            }
-            
-            // Aktualisiere höchstes Level
-            if (newLevel > gameState.maxLevel) {
-                gameState.maxLevel = newLevel;
-                const newValue = Math.pow(2, newLevel);
-                gameState.maxValue = newValue;
-                
-                // Prüfe, ob wir das Ziel erreicht haben
-                if (newValue >= gameState.currentGoal) {
-                    // Neues Ziel setzen (nächste Potenz von 2)
-                    gameState.currentGoal = gameState.currentGoal * 2;
-                    gameState.goalProgress = 0;
-                    
-                    // Bonuspunkte für Zielerreichung
-                    const bonus = newValue * 2;
-                    updateScore(bonus, true);
-                    createScorePopup(`ZIEL! +${formatNumber(bonus)}`, row, col, true);
-                } else {
-                    // Fortschritt zum Ziel aktualisieren (logarithmisch)
-                    const progress = (Math.log2(newValue) / Math.log2(gameState.currentGoal)) * 100;
-                    gameState.goalProgress = Math.min(progress, 99); // Nie ganz 100% erreichen, bis zum tatsächlichen Ziel
-                }
-                
-                updateGoalDisplay();
-                
-                // Prüfe Achievements für bestimmte Werte
-                const value = Math.pow(2, newLevel);
-                if (value >= 16) unlockAchievement('level_16');
-                if (value >= 64) unlockAchievement('level_64');
-                if (value >= 256) unlockAchievement('level_256');
-                if (value >= 1024) unlockAchievement('level_1024');
-                
-                // Prüfe Challenge-Fortschritt für Werte
-                checkChallengeProgress('value', value);
-            }
-            
-            // Animation für die zweite Blase
-            bubble2.classList.add(isChain ? 'chain-merge' : 'merging');
-            
-            // Entferne die erste Blase sofort
-            if (bubble1 && bubble1.parentNode) {
-                bubble1.remove();
-            }
-            
-            // Aktualisiere die Blasen-Liste
-            gameState.bubbles = gameState.bubbles.filter(b => b !== bubble1);
-            
-            // Punkte hinzufügen mit Chain-Bonus
-            const chainMultiplier = Math.max(1, isChain ? Math.min(gameState.chainCount, 10) : 1);
-            
-            // Verbesserter Chain-Bonus mit Upgrades
-            let bonusMultiplier = 1;
-            if (gameState.stats.upgrades.includes('chain_bonus')) {
-                bonusMultiplier = 1.5; // +50% für Chain-Bonus-Upgrade
-            }
-            
-            // Anwendung des verbesserten Multiplikators
-            const effectiveMultiplier = chainMultiplier * bonusMultiplier;
-            const points = Math.pow(2, newLevel) * 5 * effectiveMultiplier;
-            
-            updateScore(points);
-            
-            // Punkte-Popup
-            const pos = getBubblePosition(row, col);
-            if (effectiveMultiplier > 1) {
-                createScorePopup(`+${formatNumber(points)} (x${effectiveMultiplier.toFixed(1)})`, pos.x, pos.y, true);
-            } else {
-                createScorePopup(`+${formatNumber(points)}`, pos.x, pos.y);
-            }
-            
-            // Nach Animationszeit die aktualisierte Blase zeigen
-            setTimeout(() => {
-                // Nochmals prüfen, ob die Blase noch existiert
-                if (bubble2 && bubble2.parentNode) {
-                    bubble2.dataset.level = newLevel;
-                    const value = Math.pow(2, newLevel);
-                    bubble2.dataset.value = value;
-                    
-                    const bubbleInner = bubble2.querySelector('.bubble-inner');
-                    if (bubbleInner) {
-                        bubbleInner.textContent = formatNumber(value);
-                    }
-                    
-                    const colorIndex = (newLevel - 1) % BUBBLE_COLORS.length;
-                    bubble2.style.backgroundColor = BUBBLE_COLORS[colorIndex];
-                    
-                    bubble2.classList.remove(isChain ? 'chain-merge' : 'merging');
-                    
-                    // Entferne diese Verschmelzung aus der Queue
-                    gameState.mergeQueue.shift();
-                    
-                    // Prüfe mögliche Nachbar-Verschmelzungen (nur direkte Nachbarn)
-                    checkAdjacentMerges(row, col, newLevel);
-                    
-                    // Verarbeite die nächste Verschmelzung in der Queue
-                    setTimeout(processNextMerge, 50);
-                } else {
-                    // Fallback, wenn die Blase nicht mehr existiert
-                    gameState.mergeQueue.shift();
-                    processNextMerge();
-                }
-            }, 300);
-        }
+			// Datenspeicherung für einfachen Zugriff
+			bubble.dataset.row = row;
+			bubble.dataset.col = col;
+			bubble.dataset.level = level;
+			bubble.dataset.value = value;
 
-        // Prüft, ob die Queue leer ist und ruft den Callback auf
-        function checkQueue(callback) {
-            if (gameState.mergeQueue.length === 0) {
-                gameState.processingChain = false;
-                if (callback) callback();
-            } else {
-                // Warte, bis die Queue leer ist
-                setTimeout(() => checkQueue(callback), 100);
-            }
-        }
+			// Event-Listener für Desktop
+			bubble.addEventListener('mousedown', startDragging);
 
-        // Sucht nach direkten Nachbarn zum Verschmelzen
-        function checkAdjacentMerges(row, col, level) {
-            // Nur direkte Nachbarn (keine Diagonalen)
-            const neighbors = [
-                { row: row - 1, col: col },  // oben
-                { row: row + 1, col: col },  // unten
-                { row: row, col: col - 1 },  // links
-                { row: row, col: col + 1 }   // rechts
-            ];
-            
-            // Filtere gültige Nachbarn
-            const validNeighbors = neighbors.filter(n => 
-                n.row >= 0 && n.row < gameState.gridSize && 
-                n.col >= 0 && n.col < gameState.gridSize &&
-                gameState.grid[n.row][n.col] === level
-            );
-            
-            if (validNeighbors.length > 0) {
-                // Wähle den ersten passenden Nachbarn
-                const target = validNeighbors[0];
-                
-                // Finde Quell- und Ziel-Blasen
-                const sourceBubble = gameState.bubbles.find(
-                    b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
-                );
-                
-                const targetBubble = gameState.bubbles.find(
-                    b => parseInt(b.dataset.row) === target.row && parseInt(b.dataset.col) === target.col
-                );
-                
-                // Sicherheitscheck
-                if (!sourceBubble || !targetBubble) {
-                    return false;
-                }
-                
-                // Aktualisiere das Spielfeld
-                gameState.grid[row][col] = null;
-                gameState.grid[target.row][target.col] = level + 1;
-                
-                // Erhöhe Kettenreaktion-Zähler
-                startChainReaction();
-                
-                // Füge neue Verschmelzung zur Queue hinzu
-                queueMerge(sourceBubble, targetBubble, level + 1, target.row, target.col, true);
-                
-                return true;
-            }
-            
-            return false;
-        }
+			// Event-Listener für Touch-Geräte
+			bubble.addEventListener('touchstart', handleTouchStart, {passive: false});
+		} else {
+			bubble.style.position = 'relative';
+			bubble.style.left = '0';
+			bubble.style.top = '0';
+		}
 
-        // Schwerkraft-Funktion
-        function applyGravity(callback) {
-            if (!gameState.gravityEnabled) {
-                if (callback) callback();
-                return;
-            }
-            
-            let movesMade = 0;
-            const movesNeeded = [];
-            
-            // Gehe von unten nach oben durch das Spielfeld
-            for (let col = 0; col < gameState.gridSize; col++) {
-                for (let row = gameState.gridSize - 1; row > 0; row--) {
-                    // Wenn aktuelle Zelle leer ist
-                    if (!gameState.grid[row][col]) {
-                        // Suche nach der nächsten nicht-leeren Zelle darüber
-                        for (let above = row - 1; above >= 0; above--) {
-                            if (gameState.grid[above][col]) {
-                                // Verschiebe diese Blase nach unten
-                                movesNeeded.push({
-                                    fromRow: above,
-                                    fromCol: col,
-                                    toRow: row,
-                                    toCol: col
-                                });
-                                
-                                // Aktualisiere das Grid sofort
-                                gameState.grid[row][col] = gameState.grid[above][col];
-                                gameState.grid[above][col] = null;
-                                
-                                movesMade++;
-                                break; // Zur nächsten leeren Zelle
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Wende die Verschiebungen an
-            if (movesMade > 0) {
-                movesNeeded.forEach(move => {
-                    const bubble = gameState.bubbles.find(
-                        b => parseInt(b.dataset.row) === move.fromRow && parseInt(b.dataset.col) === move.fromCol
-                    );
-                    
-                    if (bubble) {
-                        // Aktualisiere die Blasendaten
-                        bubble.dataset.row = move.toRow;
-                        bubble.dataset.col = move.toCol;
-                        
-                        // Füge Fallanimation hinzu
-                        bubble.classList.add('falling');
-                        
-                        // Setze neue Position
-                        const pos = getBubblePosition(move.toRow, move.toCol);
-                        bubble.style.left = `${pos.x}px`;
-                        bubble.style.top = `${pos.y}px`;
-                    }
-                });
-                
-                // Warte auf die Animation und prüfe dann auf Kettenreaktionen
-                setTimeout(() => {
-                    movesNeeded.forEach(move => {
-                        const level = gameState.grid[move.toRow][move.toCol];
-                        // Entferne Fallanimation
-                        const bubble = gameState.bubbles.find(
-                            b => parseInt(b.dataset.row) === move.toRow && parseInt(b.dataset.col) === move.toCol
-                        );
-                        if (bubble) {
-                            bubble.classList.remove('falling');
-                        }
-                        
-                        // Prüfe auf Verschmelzungen nach dem Fallen
-                        checkAdjacentMerges(move.toRow, move.toCol, level);
-                    });
-                    
-                    // Warte auf Abschluss aller Verschmelzungen
-                    checkQueue(() => {
-                        // Überprüfe, ob weitere Schwerkraft-Bewegungen nötig sind
-                        if (movesMade > 0) {
-                            applyGravity(callback);
-                        } else if (callback) {
-                            callback();
-                        }
-                    });
-                }, 300);
-            } else {
-                // Keine Verschiebungen mehr nötig
-                if (callback) callback();
-            }
-        }
+		return bubble;
+	}
 
-        function updateScore(points, isBonus = false) {
-            // Bonus für Punkte-Upgrade
-            if (gameState.stats.upgrades.includes('score_bonus')) {
-                points = Math.floor(points * 1.25); // +25% für Punkte-Bonus-Upgrade
-            }
-            
-            gameState.score += points;
-            scoreElement.textContent = formatNumber(gameState.score);
-            
-            // Coins für Upgrades sammeln (10% der erzielten Punkte)
-            gameState.stats.coins += Math.floor(points * 0.1);
-            
-            // Levelberechnung mit logarithmischer Progression
-            const newLevel = Math.floor(Math.log2(gameState.score + 1) / 2) + 1;
-            if (newLevel > gameState.level) {
-                gameState.level = newLevel;
-                levelElement.textContent = translate({ de: `Level ${gameState.level}` });
-            }
-            
-            // Prüfe Achievements für Punkte
-            if (gameState.score >= 1000) unlockAchievement('score_1000');
-            if (gameState.score >= 5000) unlockAchievement('score_5000');
-            
-            // Prüfe Challenge-Fortschritt für Punkte
-            checkChallengeProgress('score', gameState.score);
-        }
+	function createRandomBubble() {
+		// Wahrscheinlichkeiten basierend auf dem aktuellen Spielfortschritt
+		// Mit fortschreitendem Spiel leicht höhere Chancen auf wertvollere Blasen
+		const maxPossibleLevel = Math.min(gameState.maxLevel, 4);
+		const progressFactor = Math.min(gameState.score / 3000, 1); // Progression bis 3000 Punkte
 
-        function createScorePopup(text, x, y, isBonus = false) {
-            const popup = document.createElement('div');
-            popup.className = isBonus ? 'score-popup chain-bonus' : 'score-popup';
-            popup.textContent = text;
-            popup.style.left = `${x}px`;
-            popup.style.top = `${y}px`;
-            
-            gameContainer.appendChild(popup);
-            
-            // Entferne nach Animation
-            setTimeout(() => popup.remove(), isBonus ? 1500 : 1200);
-        }
+		let level;
+		const rand = Math.random();
 
-        function checkForPossibleMoves() {
-            let hasMoves = false;
-            
-            // Prüfe auf leere Zellen
-            for (let row = 0; row < gameState.gridSize; row++) {
-                for (let col = 0; col < gameState.gridSize; col++) {
-                    if (!gameState.grid[row][col]) {
-                        hasMoves = true;
-                        break;
-                    }
-                }
-                if (hasMoves) break;
-            }
-            
-            // Prüfe auf mögliche Verschmelzungen
-            if (!hasMoves) {
-                for (let row = 0; row < gameState.gridSize; row++) {
-                    for (let col = 0; col < gameState.gridSize; col++) {
-                        const level = gameState.grid[row][col];
-                        
-                        // Nachbarn prüfen
-                        const neighbors = [
-                            { row: row - 1, col: col },  // oben
-                            { row: row + 1, col: col },  // unten
-                            { row: row, col: col - 1 },  // links
-                            { row: row, col: col + 1 }   // rechts
-                        ];
-                        
-                        for (const n of neighbors) {
-                            if (n.row >= 0 && n.row < gameState.gridSize && 
-                                n.col >= 0 && n.col < gameState.gridSize &&
-                                gameState.grid[n.row][n.col] === level) {
-                                hasMoves = true;
-                                break;
-                            }
-                        }
-                        
-                        if (hasMoves) break;
-                    }
-                    if (hasMoves) break;
-                }
-            }
-            
-            if (!hasMoves) {
-                gameOver();
-            }
-            
-            return hasMoves;
-        }
+		if (rand < 0.7 - (0.2 * progressFactor)) {
+			// Basis-Chance für Level 1 (sinkt von 70% auf 50% bei hoher Punktzahl)
+			level = 1;
+		} else if (rand < 0.9 - (0.1 * progressFactor)) {
+			// Chance für Level 2 (bleibt etwa bei 20%)
+			level = Math.min(2, maxPossibleLevel);
+		} else if (rand < 0.98) {
+			// Chance für Level 3 (steigt leicht an)
+			level = Math.min(3, maxPossibleLevel);
+		} else {
+			// Kleine Chance für höhere Level (bis zum bisher erreichten)
+			level = getRandomInt(1, maxPossibleLevel);
+		}
 
-        function gameOver() {
-            if (gameState.gameOver) return;
-            
-            gameState.gameOver = true;
-            
-            // Spielzeit berechnen
-            if (gameState.startTime) {
-                const endTime = new Date();
-                gameState.playTime = Math.floor((endTime - gameState.startTime) / 1000);
-            }
-            
-            // Statistik-Updates
-            updateStats();
-            
-            // UI aktualisieren
-            finalScoreElement.textContent = formatNumber(gameState.score);
-            highestBubbleElement.textContent = gameState.maxLevel;
-            highestValueElement.textContent = formatNumber(gameState.maxValue);
-            longestChainElement.textContent = gameState.longestChain;
-            playedTimeElement.textContent = formatTime(gameState.playTime);
-            totalMovesElement.textContent = gameState.moves;
-            
-            setTimeout(() => {
-                gameOverModal.classList.add('active');
-            }, 500);
-        }
+		return level;
+	}
 
-        function updateStats() {
-            // Highscore
-            if (gameState.score > gameState.stats.highscore) {
-                gameState.stats.highscore = gameState.score;
-            }
-            
-            // Höchste Blase
-            if (gameState.maxLevel > gameState.stats.highestLevel) {
-                gameState.stats.highestLevel = gameState.maxLevel;
-                gameState.stats.highestValue = gameState.maxValue;
-            }
-            
-            // Längste Kette
-            if (gameState.longestChain > gameState.stats.longestChain) {
-                gameState.stats.longestChain = gameState.longestChain;
-            }
-            
-            // Spiele gezählt
-            gameState.stats.gamesPlayed++;
-            
-            // Achievement für Anzahl der Spiele
-            if (gameState.stats.gamesPlayed >= 10) {
-                unlockAchievement('games_10');
-            }
-            
-            // In LocalStorage speichern
-            saveStatsToStorage();
-        }
+	function addNewBubble() {
+		// Finde eine leere Zelle
+		const emptyCells = [];
 
-        function createGridOverlay() {
-            gridOverlay.innerHTML = '';
-            gridOverlay.style.gridTemplateColumns = `repeat(${gameState.gridSize}, 1fr)`;
-            gridOverlay.style.gridTemplateRows = `repeat(${gameState.gridSize}, 1fr)`;
-            
-            for (let i = 0; i < gameState.gridSize * gameState.gridSize; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'grid-cell';
-                gridOverlay.appendChild(cell);
-            }
-        }
+		// Bei Schwerkraft-Modus bevorzugt oberste Reihe verwenden
+		if (gameState.gravityEnabled) {
+			for (let col = 0; col < gameState.gridSize; col++) {
+				if (!gameState.grid[0][col]) {
+					emptyCells.push({row: 0, col: col});
+				}
+			}
 
-        function initNewGame() {
-            // Zurücksetzen des Spielstatus
-            gameState.score = 0;
-            gameState.level = 1;
-            gameState.maxLevel = 1;
-            gameState.maxValue = 2;
-            gameState.gridSize = gameState.stats.gridSize; // Verwende gespeicherte Größe
-            gameState.grid = Array(gameState.gridSize).fill().map(() => Array(gameState.gridSize).fill(null));
-            gameState.bubbles = [];
-            gameState.draggedBubble = null;
-            gameState.gameOver = false;
-            gameState.moveMade = false;
-            gameState.startTime = new Date();
-            gameState.playTime = 0;
-            gameState.moves = 0;
-            gameState.chainCount = 0;
-            gameState.longestChain = 0;
-            gameState.currentGoal = 8; // Start mit 8 (2^3)
-            gameState.goalProgress = 0;
-            gameState.processingChain = false;
-            gameState.mergeQueue = [];
-            
-            // UI zurücksetzen
-            gameContainer.innerHTML = '<div class="grid-overlay" id="grid-overlay"></div><div class="chain-counter" id="chain-counter">x1</div>';
-            
-            // Spezial-Modus-Indikator hinzufügen, wenn aktiviert
-            if (gameState.specialMode !== 'normal') {
-                const indicator = document.createElement('div');
-                indicator.id = 'special-mode-indicator';
-                indicator.className = 'special-mode-indicator';
-                
-                if (gameState.specialMode === 'gravity') {
-                    indicator.innerHTML = '🔄 Schwerkraft';
-                }
-                
-                gameContainer.appendChild(indicator);
-            }
-            
-            gridOverlay = document.getElementById('grid-overlay');
-            createGridOverlay();
-            
-            scoreElement.textContent = '0';
-            levelElement.textContent = translate({ de: 'Level 1' });
-            
-            // Nächste Blase und Ziel vorbereiten
-            prepareNextBubble();
-            updateGoalDisplay();
-            
-            // Weniger Anfangsblasen für mehr Spielraum
-            const initialBubbles = Math.floor(gameState.gridSize * gameState.gridSize * 0.25);
-            for (let i = 0; i < initialBubbles; i++) {
-                addNewBubble();
-            }
-            
-            // Erster Spielstart
-            if (!gameState.newGameStarted) {
-                gameState.newGameStarted = true;
-                loadStatsFromStorage();
-                setCurrentChallenge();
-                setTimeout(() => showTutorial(1), 500);
-            }
-        }
+			// Falls oberste Reihe voll ist, andere Zellen suchen
+			if (emptyCells.length === 0) {
+				for (let row = 1; row < gameState.gridSize; row++) {
+					for (let col = 0; col < gameState.gridSize; col++) {
+						if (!gameState.grid[row][col]) {
+							emptyCells.push({row, col});
+						}
+					}
+				}
+			}
+		} else {
+			// Normal-Modus: Alle leeren Zellen berücksichtigen
+			for (let row = 0; row < gameState.gridSize; row++) {
+				for (let col = 0; col < gameState.gridSize; col++) {
+					if (!gameState.grid[row][col]) {
+						emptyCells.push({row, col});
+					}
+				}
+			}
+		}
 
-        function showTutorial(step) {
-            // Tutorials nur beim ersten Spielstart anzeigen
-            if (gameState.tutorialStep > step) return;
-            
-            gameState.tutorialStep = step;
-            tutorialsContainer.innerHTML = '';
-            
-            let tutorial;
-            
-            switch (step) {
-                case 1:
-                    // Erste Anleitung: Bewegen
-                    tutorial = document.createElement('div');
-                    tutorial.className = 'tutorial bottom';
-                    tutorial.style.bottom = '70%';
-                    tutorial.style.left = '50%';
-                    tutorial.style.transform = 'translateX(-50%)';
-                    tutorial.innerHTML = translate({ 
-                        de: 'Ziehe eine Blase, um sie zu bewegen.<br><button>Verstanden</button>' 
-                    });
-                    tutorialsContainer.appendChild(tutorial);
-                    
-                    tutorial.querySelector('button').addEventListener('click', () => {
-                        tutorial.remove();
-                    });
-                    break;
-                
-                case 2:
-                    // Zweite Anleitung: Verschmelzen
-                    tutorial = document.createElement('div');
-                    tutorial.className = 'tutorial top';
-                    tutorial.style.top = '70%';
-                    tutorial.style.left = '50%';
-                    tutorial.style.transform = 'translateX(-50%)';
-                    tutorial.innerHTML = translate({ 
-                        de: 'Ziehe eine Blase direkt auf eine gleiche Blase, um sie zu verschmelzen!<br><button>Verstanden</button>' 
-                    });
-                    tutorialsContainer.appendChild(tutorial);
-                    
-                    tutorial.querySelector('button').addEventListener('click', () => {
-                        tutorial.remove();
-                    });
-                    break;
-                
-                case 3:
-                    // Dritte Anleitung: Ketten
-                    tutorial = document.createElement('div');
-                    tutorial.className = 'tutorial bottom';
-                    tutorial.style.top = '20%';
-                    tutorial.style.left = '50%';
-                    tutorial.style.transform = 'translateX(-50%)';
-                    tutorial.innerHTML = translate({ 
-                        de: 'Super! Versuche Kettenreaktionen zu erzeugen für extra Bonuspunkte.<br>Jede Verschmelzung in einer Kette gibt mehr Punkte!<br><button>Verstanden</button>' 
-                    });
-                    tutorialsContainer.appendChild(tutorial);
-                    
-                    tutorial.querySelector('button').addEventListener('click', () => {
-                        tutorial.remove();
-                    });
-                    break;
-                }
-                }
-                
-                // Neue Funktionen für Achievements und Challenges
-                function unlockAchievement(id) {
-                    // Prüfe, ob Achievement bereits freigeschaltet
-                    if (gameState.stats.achievements.includes(id)) return;
-                    
-                    // Achievement freischalten
-                    gameState.stats.achievements.push(id);
-                    
-                    // Badge-Notification aktivieren
-                    statsButton.classList.add('active');
-                    
-                    // In LocalStorage speichern
-                    saveStatsToStorage();
-                }
-                
-                function setCurrentChallenge() {
-                    // Nächste Challenge setzen
-                    const challengeIndex = gameState.stats.currentChallenge % CHALLENGES.length;
-                    gameState.challenge = CHALLENGES[challengeIndex];
-                    gameState.stats.challengeProgress = 0;
-                    
-                    // UI aktualisieren
-                    updateChallengeUI();
-                }
-                
-                function checkChallengeProgress(type, value) {
-                    if (!gameState.challenge || gameState.challenge.type !== type) return;
-                    
-                    // Fortschritt aktualisieren
-                    const currentValue = Math.max(value, gameState.stats.challengeProgress);
-                    gameState.stats.challengeProgress = currentValue;
-                    
-                    // Prüfe auf Challenge-Abschluss
-                    if (currentValue >= gameState.challenge.target) {
-                        // Belohnung gewähren
-                        updateScore(gameState.challenge.reward, true);
-                        createScorePopup(`Herausforderung geschafft! +${formatNumber(gameState.challenge.reward)}`, 
-                            gameContainer.offsetWidth / 2, gameContainer.offsetHeight / 2, true);
-                        
-                        // Coins als zusätzliche Belohnung
-                        gameState.stats.coins += Math.floor(gameState.challenge.reward * 0.2);
-                        
-                        // Nächste Challenge
-                        gameState.stats.currentChallenge++;
-                        setCurrentChallenge();
-                        
-                        // Badge-Notification aktivieren
-                        statsButton.classList.add('active');
-                    } else {
-                        // Fortschritt aktualisieren
-                        updateChallengeUI();
-                    }
-                    
-                    // Speichern
-                    saveStatsToStorage();
-                }
-                
-                function updateChallengeUI() {
-                    if (!gameState.challenge) return;
-                    
-                    // Beschreibung
-                    challengeDescription.textContent = gameState.challenge.description;
-                    
-                    // Fortschrittstext
-                    challengeProgressText.textContent = `${gameState.stats.challengeProgress}/${gameState.challenge.target}`;
-                    
-                    // Fortschrittsbalken
-                    const progress = Math.min(
-                        (gameState.stats.challengeProgress / gameState.challenge.target) * 100, 
-                        100
-                    );
-                    challengeProgressBar.style.width = `${progress}%`;
-                    
-                    // Belohnung
-                    challengeReward.textContent = `+${formatNumber(gameState.challenge.reward)} Punkte`;
-                }
-                
-                function updateAchievementsUI() {
-                    achievementsContainer.innerHTML = '';
-                    
-                    // Alle Achievements anzeigen
-                    ACHIEVEMENTS.forEach(achievement => {
-                        const isUnlocked = gameState.stats.achievements.includes(achievement.id);
-                        
-                        const badge = document.createElement('div');
-                        badge.className = 'achievement-badge';
-                        badge.style.opacity = isUnlocked ? '1' : '0.5';
-                        
-                        badge.innerHTML = `
+		// Wenn keine leeren Zellen mehr, Spiel vorbei
+		if (emptyCells.length === 0) {
+			gameOver();
+			return false;
+		}
+
+		// Zufällige leere Zelle auswählen
+		const cellIndex = getRandomInt(0, emptyCells.length - 1);
+		const {row, col} = emptyCells[cellIndex];
+
+		// Neue Blase mit dem vorbereiteten Level hinzufügen
+		const level = gameState.nextBubble;
+		const bubble = createBubbleElement(level, row, col);
+		gameContainer.appendChild(bubble);
+		gameState.grid[row][col] = level;
+		gameState.bubbles.push(bubble);
+
+		// Neue nächste Blase vorbereiten
+		prepareNextBubble();
+
+		// Bei Schwerkraft-Modus: Nach dem Hinzufügen Schwerkraft anwenden
+		if (gameState.gravityEnabled) {
+			setTimeout(() => {
+				applyGravity();
+			}, 100);
+		}
+
+		// Prüfe, ob es mögliche Züge gibt
+		if (emptyCells.length === 1) {
+			setTimeout(checkForPossibleMoves, 300);
+		}
+
+		// Chain-Counter zurücksetzen, wenn Zug abgeschlossen
+		resetChainCounter();
+
+		return true;
+	}
+
+	function prepareNextBubble() {
+		gameState.nextBubble = createRandomBubble();
+		nextBubbleContainer.innerHTML = '';
+		const bubble = createBubbleElement(gameState.nextBubble, 0, 0, true);
+		nextBubbleContainer.appendChild(bubble);
+	}
+
+	function updateGoalDisplay() {
+		// Ziel-Blase anzeigen (die nächste zu erreichende Blase)
+		const goalLevel = Math.log2(gameState.currentGoal);
+		goalBubbleContainer.innerHTML = '';
+		const bubble = createBubbleElement(goalLevel, 0, 0, true);
+		goalBubbleContainer.appendChild(bubble);
+
+		// Fortschrittsbalken aktualisieren
+		goalProgress.style.width = `${gameState.goalProgress}%`;
+	}
+
+	function startDragging(e) {
+		if (gameState.gameOver || gameState.processingChain) return;
+
+		const bubble = e.currentTarget;
+		const rect = bubble.getBoundingClientRect();
+
+		gameState.draggedBubble = bubble;
+		gameState.dragOffsetX = e.clientX - rect.left;
+		gameState.dragOffsetY = e.clientY - rect.top;
+
+		bubble.classList.add('dragging');
+
+		document.addEventListener('mousemove', onDrag);
+		document.addEventListener('mouseup', stopDragging);
+
+		e.preventDefault();
+	}
+
+	function handleTouchStart(e) {
+		if (gameState.gameOver || gameState.processingChain) return;
+
+		const bubble = e.currentTarget;
+		const touch = e.touches[0];
+		const rect = bubble.getBoundingClientRect();
+
+		gameState.draggedBubble = bubble;
+		gameState.dragOffsetX = touch.clientX - rect.left;
+		gameState.dragOffsetY = touch.clientY - rect.top;
+
+		bubble.classList.add('dragging');
+
+		document.addEventListener('touchmove', handleTouchMove, {passive: false});
+		document.addEventListener('touchend', handleTouchEnd);
+
+		e.preventDefault();
+	}
+
+	function handleTouchMove(e) {
+		if (!gameState.draggedBubble) return;
+
+		const touch = e.touches[0];
+		onDrag({
+			clientX: touch.clientX,
+			clientY: touch.clientY,
+			preventDefault: () => e.preventDefault()
+		});
+	}
+
+	function handleTouchEnd() {
+		stopDragging();
+		document.removeEventListener('touchmove', handleTouchMove);
+		document.removeEventListener('touchend', handleTouchEnd);
+	}
+
+	function onDrag(e) {
+		if (!gameState.draggedBubble) return;
+
+		const containerRect = gameContainer.getBoundingClientRect();
+		const x = e.clientX - containerRect.left - gameState.dragOffsetX;
+		const y = e.clientY - containerRect.top - gameState.dragOffsetY;
+
+		gameState.draggedBubble.style.left = `${x}px`;
+		gameState.draggedBubble.style.top = `${y}px`;
+
+		e.preventDefault();
+	}
+
+	function stopDragging() {
+		if (!gameState.draggedBubble) return;
+
+		const bubble = gameState.draggedBubble;
+		const oldRow = parseInt(bubble.dataset.row);
+		const oldCol = parseInt(bubble.dataset.col);
+		const level = parseInt(bubble.dataset.level);
+
+		// Position im Container
+		const containerRect = gameContainer.getBoundingClientRect();
+		const bubbleRect = bubble.getBoundingClientRect();
+		const bubbleCenterX = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
+		const bubbleCenterY = bubbleRect.top + bubbleRect.height / 2 - containerRect.top;
+
+		// Zielzelle finden
+		const targetCell = getGridCellFromPosition(bubbleCenterX, bubbleCenterY);
+
+		// Blase zurück zur Ausgangsposition animieren
+		bubble.classList.remove('dragging');
+
+		let moveMade = false;
+
+		if (targetCell) {
+			const {row, col} = targetCell;
+
+			// Gleiche Zelle - kein Zug
+			if (row === oldRow && col === oldCol) {
+				const pos = getBubblePosition(oldRow, oldCol);
+				bubble.style.left = `${pos.x}px`;
+				bubble.style.top = `${pos.y}px`;
+				gameState.draggedBubble = null;
+				return;
+			}
+
+			// WICHTIG: Strikte Prüfung, ob die Zielzelle leer ist
+			if (gameState.grid[row][col] === null) {
+				// Einfach bewegen
+				gameState.grid[oldRow][oldCol] = null;
+				gameState.grid[row][col] = level;
+
+				bubble.dataset.row = row;
+				bubble.dataset.col = col;
+
+				const pos = getBubblePosition(row, col);
+				bubble.style.left = `${pos.x}px`;
+				bubble.style.top = `${pos.y}px`;
+
+				moveMade = true;
+
+				// Tutorial-Fortschritt
+				if (gameState.tutorialStep === 1) {
+					showTutorial(2);
+				}
+			} else if (gameState.grid[row][col] === level) {
+				// Gleiche Blasen verschmelzen
+				gameState.grid[oldRow][oldCol] = null;
+
+				// Zielblase finden
+				const targetBubble = gameState.bubbles.find(
+					b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
+				);
+
+				if (targetBubble) {
+					// Level erhöhen
+					gameState.grid[row][col] = level + 1;
+
+					// Effekt und Animation
+					queueMerge(bubble, targetBubble, level + 1, row, col);
+
+					moveMade = true;
+
+					// Starte Kettenreaktion-Zähler
+					startChainReaction();
+
+					// Prüfe Achievement "Erste Verschmelzung"
+					unlockAchievement('first_merge');
+
+					// Tutorial-Fortschritt
+					if (gameState.tutorialStep === 2) {
+						showTutorial(3);
+					}
+				} else {
+					// Fallback, falls Bubble nicht gefunden
+					const pos = getBubblePosition(oldRow, oldCol);
+					bubble.style.left = `${pos.x}px`;
+					bubble.style.top = `${pos.y}px`;
+				}
+			} else {
+				// Ungleiches Level, zurück zur Ausgangsposition
+				const pos = getBubblePosition(oldRow, oldCol);
+				bubble.style.left = `${pos.x}px`;
+				bubble.style.top = `${pos.y}px`;
+				gameContainer.classList.add('shake');
+				setTimeout(() => gameContainer.classList.remove('shake'), 500);
+			}
+		} else {
+			// Außerhalb des Spielfelds, zurück zur Ausgangsposition
+			const pos = getBubblePosition(oldRow, oldCol);
+			bubble.style.left = `${pos.x}px`;
+			bubble.style.top = `${pos.y}px`;
+		}
+
+		gameState.draggedBubble = null;
+
+		document.removeEventListener('mousemove', onDrag);
+		document.removeEventListener('mouseup', stopDragging);
+
+		// Neue Blase nach erfolgreichem Zug hinzufügen
+		if (moveMade) {
+			gameState.moveMade = true;
+			gameState.moves++;
+
+			// Auto-Save nach erfolgreicher Bewegung
+			saveStatsToStorage();
+
+			// Verzögerung, um Kettenreaktionen abzuwarten
+			// Überprüfe, ob die Warteschlange leer ist, bevor neue Blasen hinzugefügt werden
+			checkQueue(function () {
+				if (!gameState.gameOver) {
+					// Bei Schwerkraft-Modus: Schwerkraft anwenden
+					if (gameState.gravityEnabled) {
+						applyGravity(function () {
+							addNewBubble();
+						});
+					} else {
+						addNewBubble();
+					}
+				}
+			});
+		}
+	}
+
+	function startChainReaction() {
+		// Erhöhe Zähler und zeige ihn
+		gameState.chainCount++;
+		updateChainCounter();
+	}
+
+	function updateChainCounter() {
+		// Zeige den Chain-Counter nur bei mehr als 1 Verschmelzung
+		if (gameState.chainCount > 1) {
+			chainCounter.textContent = `x${gameState.chainCount}`;
+			chainCounter.style.opacity = '1';
+
+			// Herausforderungen prüfen
+			checkChallengeProgress('chain', gameState.chainCount);
+
+			// Achievement prüfen
+			if (gameState.chainCount >= 3) unlockAchievement('chain_3');
+			if (gameState.chainCount >= 5) unlockAchievement('chain_5');
+
+			// Update längste Kette
+			if (gameState.chainCount > gameState.longestChain) {
+				gameState.longestChain = gameState.chainCount;
+			}
+		}
+	}
+
+	function resetChainCounter() {
+		gameState.chainCount = 0;
+		chainCounter.style.opacity = '0';
+	}
+
+	// NEU: Queue für Blasenverschmelzungen statt rekursiver Funktionen
+	function queueMerge(bubble1, bubble2, newLevel, row, col, isChain = false) {
+		gameState.processingChain = true;
+
+		// Füge Verschmelzung zur Queue hinzu
+		gameState.mergeQueue.push({
+			bubble1: bubble1,
+			bubble2: bubble2,
+			newLevel: newLevel,
+			row: row,
+			col: col,
+			isChain: isChain
+		});
+
+		// Starte die Verarbeitung, wenn sie nicht bereits läuft
+		if (gameState.mergeQueue.length === 1) {
+			processNextMerge();
+		}
+	}
+
+	// Verarbeite die nächste Verschmelzung in der Queue
+	function processNextMerge() {
+		if (gameState.mergeQueue.length === 0) {
+			gameState.processingChain = false;
+			return;
+		}
+
+		const merge = gameState.mergeQueue[0];
+		const {bubble1, bubble2, newLevel, row, col, isChain} = merge;
+
+		// Sicherheitscheck
+		if (!bubble1 || !bubble2 || !bubble1.parentNode || !bubble2.parentNode) {
+			gameState.mergeQueue.shift();
+			processNextMerge();
+			return;
+		}
+
+		// Aktualisiere höchstes Level
+		if (newLevel > gameState.maxLevel) {
+			gameState.maxLevel = newLevel;
+			const newValue = Math.pow(2, newLevel);
+			gameState.maxValue = newValue;
+
+			// Prüfe, ob wir das Ziel erreicht haben
+			if (newValue >= gameState.currentGoal) {
+				// Neues Ziel setzen (nächste Potenz von 2)
+				gameState.currentGoal = gameState.currentGoal * 2;
+				gameState.goalProgress = 0;
+
+				// Bonuspunkte für Zielerreichung
+				const bonus = newValue * 2;
+				updateScore(bonus, true);
+				createScorePopup(`ZIEL! +${formatNumber(bonus)}`, row, col, true);
+			} else {
+				// Fortschritt zum Ziel aktualisieren (logarithmisch)
+				const progress = (Math.log2(newValue) / Math.log2(gameState.currentGoal)) * 100;
+				gameState.goalProgress = Math.min(progress, 99); // Nie ganz 100% erreichen, bis zum tatsächlichen Ziel
+			}
+
+			updateGoalDisplay();
+
+			// Prüfe Achievements für bestimmte Werte
+			const value = Math.pow(2, newLevel);
+			if (value >= 16) unlockAchievement('level_16');
+			if (value >= 64) unlockAchievement('level_64');
+			if (value >= 256) unlockAchievement('level_256');
+			if (value >= 1024) unlockAchievement('level_1024');
+
+			// Prüfe Challenge-Fortschritt für Werte
+			checkChallengeProgress('value', value);
+		}
+
+		// Animation für die zweite Blase
+		bubble2.classList.add(isChain ? 'chain-merge' : 'merging');
+
+		// Entferne die erste Blase sofort
+		if (bubble1 && bubble1.parentNode) {
+			bubble1.remove();
+		}
+
+		// Aktualisiere die Blasen-Liste
+		gameState.bubbles = gameState.bubbles.filter(b => b !== bubble1);
+
+		// Punkte hinzufügen mit Chain-Bonus
+		const chainMultiplier = Math.max(1, isChain ? Math.min(gameState.chainCount, 10) : 1);
+
+		// Verbesserter Chain-Bonus mit Upgrades
+		let bonusMultiplier = 1;
+		if (gameState.stats.upgrades.includes('chain_bonus')) {
+			bonusMultiplier = 1.5; // +50% für Chain-Bonus-Upgrade
+		}
+
+		// Anwendung des verbesserten Multiplikators
+		const effectiveMultiplier = chainMultiplier * bonusMultiplier;
+		const points = Math.pow(2, newLevel) * 5 * effectiveMultiplier;
+
+		updateScore(points);
+
+		// Punkte-Popup
+		const pos = getBubblePosition(row, col);
+		if (effectiveMultiplier > 1) {
+			createScorePopup(`+${formatNumber(points)} (x${effectiveMultiplier.toFixed(1)})`, pos.x, pos.y, true);
+		} else {
+			createScorePopup(`+${formatNumber(points)}`, pos.x, pos.y);
+		}
+
+		// Nach Animationszeit die aktualisierte Blase zeigen
+		setTimeout(() => {
+			// Nochmals prüfen, ob die Blase noch existiert
+			if (bubble2 && bubble2.parentNode) {
+				bubble2.dataset.level = newLevel;
+				const value = Math.pow(2, newLevel);
+				bubble2.dataset.value = value;
+
+				const bubbleInner = bubble2.querySelector('.bubble-inner');
+				if (bubbleInner) {
+					bubbleInner.textContent = formatNumber(value);
+				}
+
+				const colorIndex = (newLevel - 1) % BUBBLE_COLORS.length;
+				bubble2.style.backgroundColor = BUBBLE_COLORS[colorIndex];
+
+				bubble2.classList.remove(isChain ? 'chain-merge' : 'merging');
+
+				// Entferne diese Verschmelzung aus der Queue
+				gameState.mergeQueue.shift();
+
+				// Prüfe mögliche Nachbar-Verschmelzungen (nur direkte Nachbarn)
+				checkAdjacentMerges(row, col, newLevel);
+
+				// Verarbeite die nächste Verschmelzung in der Queue
+				setTimeout(processNextMerge, 50);
+			} else {
+				// Fallback, wenn die Blase nicht mehr existiert
+				gameState.mergeQueue.shift();
+				processNextMerge();
+			}
+		}, 300);
+	}
+
+	// Prüft, ob die Queue leer ist und ruft den Callback auf
+	function checkQueue(callback) {
+		if (gameState.mergeQueue.length === 0) {
+			gameState.processingChain = false;
+			if (callback) callback();
+		} else {
+			// Warte, bis die Queue leer ist
+			setTimeout(() => checkQueue(callback), 100);
+		}
+	}
+
+	// Sucht nach direkten Nachbarn zum Verschmelzen
+	function checkAdjacentMerges(row, col, level) {
+		// Nur direkte Nachbarn (keine Diagonalen)
+		const neighbors = [
+			{row: row - 1, col: col},  // oben
+			{row: row + 1, col: col},  // unten
+			{row: row, col: col - 1},  // links
+			{row: row, col: col + 1}   // rechts
+		];
+
+		// Filtere gültige Nachbarn
+		const validNeighbors = neighbors.filter(n =>
+			n.row >= 0 && n.row < gameState.gridSize &&
+			n.col >= 0 && n.col < gameState.gridSize &&
+			gameState.grid[n.row][n.col] === level
+		);
+
+		if (validNeighbors.length > 0) {
+			// Wähle den ersten passenden Nachbarn
+			const target = validNeighbors[0];
+
+			// Finde Quell- und Ziel-Blasen
+			const sourceBubble = gameState.bubbles.find(
+				b => parseInt(b.dataset.row) === row && parseInt(b.dataset.col) === col
+			);
+
+			const targetBubble = gameState.bubbles.find(
+				b => parseInt(b.dataset.row) === target.row && parseInt(b.dataset.col) === target.col
+			);
+
+			// Sicherheitscheck
+			if (!sourceBubble || !targetBubble) {
+				return false;
+			}
+
+			// Aktualisiere das Spielfeld
+			gameState.grid[row][col] = null;
+			gameState.grid[target.row][target.col] = level + 1;
+
+			// Erhöhe Kettenreaktion-Zähler
+			startChainReaction();
+
+			// Füge neue Verschmelzung zur Queue hinzu
+			queueMerge(sourceBubble, targetBubble, level + 1, target.row, target.col, true);
+
+			return true;
+		}
+
+		return false;
+	}
+
+	// Schwerkraft-Funktion
+	function applyGravity(callback) {
+		if (!gameState.gravityEnabled) {
+			if (callback) callback();
+			return;
+		}
+
+		let movesMade = 0;
+		const movesNeeded = [];
+
+		// Gehe von unten nach oben durch das Spielfeld
+		for (let col = 0; col < gameState.gridSize; col++) {
+			for (let row = gameState.gridSize - 1; row > 0; row--) {
+				// Wenn aktuelle Zelle leer ist
+				if (!gameState.grid[row][col]) {
+					// Suche nach der nächsten nicht-leeren Zelle darüber
+					for (let above = row - 1; above >= 0; above--) {
+						if (gameState.grid[above][col]) {
+							// Verschiebe diese Blase nach unten
+							movesNeeded.push({
+								fromRow: above,
+								fromCol: col,
+								toRow: row,
+								toCol: col
+							});
+
+							// Aktualisiere das Grid sofort
+							gameState.grid[row][col] = gameState.grid[above][col];
+							gameState.grid[above][col] = null;
+
+							movesMade++;
+							break; // Zur nächsten leeren Zelle
+						}
+					}
+				}
+			}
+		}
+
+		// Wende die Verschiebungen an
+		if (movesMade > 0) {
+			movesNeeded.forEach(move => {
+				const bubble = gameState.bubbles.find(
+					b => parseInt(b.dataset.row) === move.fromRow && parseInt(b.dataset.col) === move.fromCol
+				);
+
+				if (bubble) {
+					// Aktualisiere die Blasendaten
+					bubble.dataset.row = move.toRow;
+					bubble.dataset.col = move.toCol;
+
+					// Füge Fallanimation hinzu
+					bubble.classList.add('falling');
+
+					// Setze neue Position
+					const pos = getBubblePosition(move.toRow, move.toCol);
+					bubble.style.left = `${pos.x}px`;
+					bubble.style.top = `${pos.y}px`;
+				}
+			});
+
+			// Warte auf die Animation und prüfe dann auf Kettenreaktionen
+			setTimeout(() => {
+				movesNeeded.forEach(move => {
+					const level = gameState.grid[move.toRow][move.toCol];
+					// Entferne Fallanimation
+					const bubble = gameState.bubbles.find(
+						b => parseInt(b.dataset.row) === move.toRow && parseInt(b.dataset.col) === move.toCol
+					);
+					if (bubble) {
+						bubble.classList.remove('falling');
+					}
+
+					// Prüfe auf Verschmelzungen nach dem Fallen
+					checkAdjacentMerges(move.toRow, move.toCol, level);
+				});
+
+				// Warte auf Abschluss aller Verschmelzungen
+				checkQueue(() => {
+					// Überprüfe, ob weitere Schwerkraft-Bewegungen nötig sind
+					if (movesMade > 0) {
+						applyGravity(callback);
+					} else if (callback) {
+						callback();
+					}
+				});
+			}, 300);
+		} else {
+			// Keine Verschiebungen mehr nötig
+			if (callback) callback();
+		}
+	}
+
+	function updateScore(points, isBonus = false) {
+		// Bonus für Punkte-Upgrade
+		if (gameState.stats.upgrades.includes('score_bonus')) {
+			points = Math.floor(points * 1.25); // +25% für Punkte-Bonus-Upgrade
+		}
+
+		gameState.score += points;
+		scoreElement.textContent = formatNumber(gameState.score);
+
+		// Coins für Upgrades sammeln (2% der erzielten Punkte)
+		gameState.stats.coins += Math.floor(points * 0.02);
+
+		// Levelberechnung mit logarithmischer Progression
+		const newLevel = Math.floor(Math.log2(gameState.score + 1) / 2) + 1;
+		if (newLevel > gameState.level) {
+			gameState.level = newLevel;
+			levelElement.textContent = translate({de: `Level ${gameState.level}`});
+		}
+
+		// Prüfe Achievements für Punkte
+		if (gameState.score >= 1000) unlockAchievement('score_1000');
+		if (gameState.score >= 5000) unlockAchievement('score_5000');
+
+		// Prüfe Challenge-Fortschritt für Punkte
+		checkChallengeProgress('score', gameState.score);
+	}
+
+	function createScorePopup(text, x, y, isBonus = false) {
+		const popup = document.createElement('div');
+		popup.className = isBonus ? 'score-popup chain-bonus' : 'score-popup';
+		popup.textContent = text;
+		popup.style.left = `${x}px`;
+		popup.style.top = `${y}px`;
+
+		gameContainer.appendChild(popup);
+
+		// Entferne nach Animation
+		setTimeout(() => popup.remove(), isBonus ? 1500 : 1200);
+	}
+
+	function checkForPossibleMoves() {
+		let hasMoves = false;
+
+		// Prüfe auf leere Zellen
+		for (let row = 0; row < gameState.gridSize; row++) {
+			for (let col = 0; col < gameState.gridSize; col++) {
+				if (!gameState.grid[row][col]) {
+					hasMoves = true;
+					break;
+				}
+			}
+			if (hasMoves) break;
+		}
+
+		// Prüfe auf mögliche Verschmelzungen
+		if (!hasMoves) {
+			for (let row = 0; row < gameState.gridSize; row++) {
+				for (let col = 0; col < gameState.gridSize; col++) {
+					const level = gameState.grid[row][col];
+
+					// Nachbarn prüfen
+					const neighbors = [
+						{row: row - 1, col: col},  // oben
+						{row: row + 1, col: col},  // unten
+						{row: row, col: col - 1},  // links
+						{row: row, col: col + 1}   // rechts
+					];
+
+					for (const n of neighbors) {
+						if (n.row >= 0 && n.row < gameState.gridSize &&
+							n.col >= 0 && n.col < gameState.gridSize &&
+							gameState.grid[n.row][n.col] === level) {
+							hasMoves = true;
+							break;
+						}
+					}
+
+					if (hasMoves) break;
+				}
+				if (hasMoves) break;
+			}
+		}
+
+		if (!hasMoves) {
+			gameOver();
+		}
+
+		return hasMoves;
+	}
+
+	function gameOver() {
+		if (gameState.gameOver) return;
+
+		gameState.gameOver = true;
+
+		// Spielzeit berechnen
+		if (gameState.startTime) {
+			const endTime = new Date();
+			gameState.playTime = Math.floor((endTime - gameState.startTime) / 1000);
+		}
+
+		// Statistik-Updates
+		updateStats();
+
+		// UI aktualisieren
+		finalScoreElement.textContent = formatNumber(gameState.score);
+		highestBubbleElement.textContent = gameState.maxLevel;
+		highestValueElement.textContent = formatNumber(gameState.maxValue);
+		longestChainElement.textContent = gameState.longestChain;
+		playedTimeElement.textContent = formatTime(gameState.playTime);
+		totalMovesElement.textContent = gameState.moves;
+
+		setTimeout(() => {
+			gameOverModal.classList.add('active');
+		}, 500);
+	}
+
+	function updateStats() {
+		// Highscore
+		if (gameState.score > gameState.stats.highscore) {
+			gameState.stats.highscore = gameState.score;
+		}
+
+		// Höchste Blase
+		if (gameState.maxLevel > gameState.stats.highestLevel) {
+			gameState.stats.highestLevel = gameState.maxLevel;
+			gameState.stats.highestValue = gameState.maxValue;
+		}
+
+		// Längste Kette
+		if (gameState.longestChain > gameState.stats.longestChain) {
+			gameState.stats.longestChain = gameState.longestChain;
+		}
+
+		// Spiele gezählt
+		gameState.stats.gamesPlayed++;
+
+		// Achievement für Anzahl der Spiele
+		if (gameState.stats.gamesPlayed >= 10) {
+			unlockAchievement('games_10');
+		}
+
+		// In LocalStorage speichern
+		saveStatsToStorage();
+	}
+
+	function createGridOverlay() {
+		gridOverlay.innerHTML = '';
+		gridOverlay.style.gridTemplateColumns = `repeat(${gameState.gridSize}, 1fr)`;
+		gridOverlay.style.gridTemplateRows = `repeat(${gameState.gridSize}, 1fr)`;
+
+		for (let i = 0; i < gameState.gridSize * gameState.gridSize; i++) {
+			const cell = document.createElement('div');
+			cell.className = 'grid-cell';
+			gridOverlay.appendChild(cell);
+		}
+	}
+
+	function initNewGame(forceNew = false) {
+		// Überprüfe, ob ein gespeichertes Spiel vorhanden ist
+		const restoreSavedGame = !forceNew && gameState.hasSavedGame;
+
+		if (!restoreSavedGame) {
+			// Normales neues Spiel starten
+			gameState.score = 0;
+			gameState.level = 1;
+			gameState.maxLevel = 1;
+			gameState.maxValue = 2;
+			gameState.currentGoal = 8; // Start mit 8 (2^3)
+			gameState.goalProgress = 0;
+			gameState.longestChain = 0;
+			gameState.moves = 0;
+		}
+
+		// Aktuelle Spielfeldgröße verwenden
+		gameState.gridSize = gameState.stats.gridSize;
+
+		// Wenn kein gespeichertes Spiel oder erzwungenes Neuspiel, neues Grid erstellen
+		if (!restoreSavedGame) {
+			gameState.grid = [];
+			for (let i = 0; i < gameState.gridSize; i++) {
+				gameState.grid[i] = new Array(gameState.gridSize).fill(null);
+			}
+		}
+
+		gameState.bubbles = [];
+		gameState.draggedBubble = null;
+		gameState.gameOver = false;
+		gameState.moveMade = restoreSavedGame; // Bei gespeichertem Spiel bereits als "gestartet" markieren
+		gameState.startTime = new Date();
+		gameState.playTime = 0;
+		gameState.processingChain = false;
+		gameState.mergeQueue = [];
+
+		// UI zurücksetzen
+		gameContainer.innerHTML = '<div class="grid-overlay" id="grid-overlay"></div><div class="chain-counter" id="chain-counter">x1</div>';
+
+		// Spezial-Modus-Indikator hinzufügen, wenn aktiviert
+		if (gameState.specialMode !== 'normal') {
+			const indicator = document.createElement('div');
+			indicator.id = 'special-mode-indicator';
+			indicator.className = 'special-mode-indicator';
+
+			if (gameState.specialMode === 'gravity') {
+				indicator.innerHTML = '🔄 Schwerkraft';
+			}
+
+			gameContainer.appendChild(indicator);
+			specialModeIndicator = document.getElementById('special-mode-indicator');
+		}
+
+		gridOverlay = document.getElementById('grid-overlay');
+		chainCounter = document.getElementById('chain-counter');
+		createGridOverlay();
+
+		scoreElement.textContent = formatNumber(gameState.score);
+		levelElement.textContent = translate({de: `Level ${gameState.level}`});
+
+		// Nächste Blase und Ziel vorbereiten
+		if (restoreSavedGame && gameState.nextBubble) {
+			nextBubbleContainer.innerHTML = '';
+			const bubble = createBubbleElement(gameState.nextBubble, 0, 0, true);
+			nextBubbleContainer.appendChild(bubble);
+		} else {
+			prepareNextBubble();
+		}
+
+		updateGoalDisplay();
+
+		if (restoreSavedGame) {
+			// Gespeicherte Blasen wiederherstellen
+			restoreBubblesFromSave();
+		} else {
+			// Neue Anfangsblasen erzeugen
+			const initialBubbles = Math.floor(gameState.gridSize * gameState.gridSize * 0.25);
+			for (let i = 0; i < initialBubbles; i++) {
+				addNewBubble();
+			}
+		}
+
+		// Erster Spielstart
+		if (!gameState.newGameStarted) {
+			gameState.newGameStarted = true;
+			loadStatsFromStorage();
+			setCurrentChallenge();
+			setTimeout(() => showTutorial(1), 500);
+		}
+
+		// Aktualisiere Spezialmodus-UI
+		updateSpecialModeUI();
+	}
+
+	function restoreBubblesFromSave() {
+		try {
+			const savedGame = localStorage.getItem('bubbleMergeSavedGame');
+			if (savedGame) {
+				const parsedGame = JSON.parse(savedGame);
+
+				if (parsedGame.bubbles && Array.isArray(parsedGame.bubbles)) {
+					// Erzeuge jede gespeicherte Blase und platziere sie
+					parsedGame.bubbles.forEach(bubbleData => {
+						const { level, row, col } = bubbleData;
+
+						// Sicherheitscheck für gültige Positionen im aktuellen Spielfeld
+						if (row >= 0 && row < gameState.gridSize && col >= 0 && col < gameState.gridSize) {
+							// Stelle sicher, dass an dieser Position keine Blase existiert
+							if (!gameState.grid[row][col]) {
+								const bubble = createBubbleElement(level, row, col);
+								gameContainer.appendChild(bubble);
+								gameState.bubbles.push(bubble);
+								gameState.grid[row][col] = level;
+							}
+						}
+					});
+				}
+			}
+		} catch (e) {
+			console.error('Failed to restore bubbles from save', e);
+
+			// Fallback: Füge neue Blasen hinzu, wenn Wiederherstellung fehlgeschlagen ist
+			const initialBubbles = Math.floor(gameState.gridSize * gameState.gridSize * 0.25);
+			for (let i = 0; i < initialBubbles; i++) {
+				addNewBubble();
+			}
+		}
+	}
+
+	function showTutorial(step) {
+		// Tutorials nur beim ersten Spielstart anzeigen
+		if (gameState.tutorialStep > step) return;
+
+		gameState.tutorialStep = step;
+		tutorialsContainer.innerHTML = '';
+
+		let tutorial;
+
+		switch (step) {
+			case 1:
+				// Erste Anleitung: Bewegen
+				tutorial = document.createElement('div');
+				tutorial.className = 'tutorial bottom';
+				tutorial.style.bottom = '70%';
+				tutorial.style.left = '50%';
+				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.innerHTML = translate({
+					de: 'Ziehe eine Blase, um sie zu bewegen.<br><button>Verstanden</button>'
+				});
+				tutorialsContainer.appendChild(tutorial);
+
+				tutorial.querySelector('button').addEventListener('click', () => {
+					tutorial.remove();
+				});
+				break;
+
+			case 2:
+				// Zweite Anleitung: Verschmelzen
+				tutorial = document.createElement('div');
+				tutorial.className = 'tutorial top';
+				tutorial.style.top = '70%';
+				tutorial.style.left = '50%';
+				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.innerHTML = translate({
+					de: 'Ziehe eine Blase direkt auf eine gleiche Blase, um sie zu verschmelzen!<br><button>Verstanden</button>'
+				});
+				tutorialsContainer.appendChild(tutorial);
+
+				tutorial.querySelector('button').addEventListener('click', () => {
+					tutorial.remove();
+				});
+				break;
+
+			case 3:
+				// Dritte Anleitung: Ketten
+				tutorial = document.createElement('div');
+				tutorial.className = 'tutorial bottom';
+				tutorial.style.top = '20%';
+				tutorial.style.left = '50%';
+				tutorial.style.transform = 'translateX(-50%)';
+				tutorial.innerHTML = translate({
+					de: 'Super! Versuche Kettenreaktionen zu erzeugen für extra Bonuspunkte.<br>Jede Verschmelzung in einer Kette gibt mehr Punkte!<br><button>Verstanden</button>'
+				});
+				tutorialsContainer.appendChild(tutorial);
+
+				tutorial.querySelector('button').addEventListener('click', () => {
+					tutorial.remove();
+				});
+				break;
+		}
+	}
+
+	// Neue Funktionen für Achievements und Challenges
+	function unlockAchievement(id) {
+		// Prüfe, ob Achievement bereits freigeschaltet
+		if (gameState.stats.achievements.includes(id)) return;
+
+		// Achievement freischalten
+		gameState.stats.achievements.push(id);
+
+		// Badge-Notification aktivieren
+		statsButton.classList.add('active');
+
+		// In LocalStorage speichern
+		saveStatsToStorage();
+	}
+
+	function setCurrentChallenge() {
+		// Nächste Challenge setzen
+		const challengeIndex = gameState.stats.currentChallenge % CHALLENGES.length;
+		gameState.challenge = CHALLENGES[challengeIndex];
+		gameState.stats.challengeProgress = 0;
+
+		// UI aktualisieren
+		updateChallengeUI();
+	}
+
+	function checkChallengeProgress(type, value) {
+		if (!gameState.challenge || gameState.challenge.type !== type) return;
+
+		// Fortschritt aktualisieren
+		const currentValue = Math.max(value, gameState.stats.challengeProgress);
+		gameState.stats.challengeProgress = currentValue;
+
+		// Prüfe auf Challenge-Abschluss
+		if (currentValue >= gameState.challenge.target) {
+			// Belohnung gewähren
+			gameState.score += gameState.challenge.reward;
+			scoreElement.textContent = formatNumber(gameState.score);
+			createScorePopup(`Herausforderung geschafft! +${formatNumber(gameState.challenge.reward)}`,
+				gameContainer.offsetWidth / 2, gameContainer.offsetHeight / 2, true);
+
+			// Coins als zusätzliche Belohnung
+			gameState.stats.coins += Math.floor(gameState.challenge.reward * 0.05);
+
+			// Nächste Challenge
+			gameState.stats.currentChallenge++;
+			setCurrentChallenge();
+
+			// Badge-Notification aktivieren
+			statsButton.classList.add('active');
+		} else {
+			// Fortschritt aktualisieren
+			updateChallengeUI();
+		}
+
+		// Speichern
+		saveStatsToStorage();
+	}
+
+	function updateChallengeUI() {
+		if (!gameState.challenge) return;
+
+		// Beschreibung
+		challengeDescription.textContent = gameState.challenge.description;
+
+		// Fortschrittstext
+		challengeProgressText.textContent = `${gameState.stats.challengeProgress}/${gameState.challenge.target}`;
+
+		// Fortschrittsbalken
+		const progress = Math.min(
+			(gameState.stats.challengeProgress / gameState.challenge.target) * 100,
+			100
+		);
+		challengeProgressBar.style.width = `${progress}%`;
+
+		// Belohnung
+		challengeReward.textContent = `+${formatNumber(gameState.challenge.reward)} Punkte`;
+	}
+
+	function updateAchievementsUI() {
+		achievementsContainer.innerHTML = '';
+
+		// Alle Achievements anzeigen
+		ACHIEVEMENTS.forEach(achievement => {
+			const isUnlocked = gameState.stats.achievements.includes(achievement.id);
+
+			const badge = document.createElement('div');
+			badge.className = 'achievement-badge';
+			badge.style.opacity = isUnlocked ? '1' : '0.5';
+
+			badge.innerHTML = `
                             <div class="achievement-icon">${achievement.icon}</div>
                             <div class="achievement-info">
                                 <div class="achievement-title">${achievement.title}</div>
                                 <div class="achievement-desc">${achievement.description}</div>
                             </div>
                         `;
-                        
-                        achievementsContainer.appendChild(badge);
-                    });
-                }
-                
-                // Upgrade-Funktionen
-                function updateUpgradesUI() {
-                    upgradesContainer.innerHTML = '';
-                    
-                    // Alle verfügbaren Upgrades anzeigen
-                    UPGRADES.forEach(upgrade => {
-                        const isOwned = gameState.stats.upgrades.includes(upgrade.id);
-                        const canAfford = gameState.stats.coins >= upgrade.cost;
-                        
-                        // Prüfe Abhängigkeiten
-                        let dependenciesMet = true;
-                        for (const req of upgrade.requires) {
-                            if (!gameState.stats.upgrades.includes(req)) {
-                                dependenciesMet = false;
-                                break;
-                            }
-                        }
-                        
-                        const upgradeItem = document.createElement('div');
-                        upgradeItem.className = 'upgrade-item';
-                        
-                        upgradeItem.innerHTML = `
+
+			achievementsContainer.appendChild(badge);
+		});
+	}
+
+	// Upgrade-Funktionen
+	function updateUpgradesUI() {
+		upgradesContainer.innerHTML = '';
+
+		// Alle verfügbaren Upgrades anzeigen
+		UPGRADES.forEach(upgrade => {
+			const isOwned = gameState.stats.upgrades.includes(upgrade.id);
+			const canAfford = gameState.stats.coins >= upgrade.cost;
+
+			// Prüfe Abhängigkeiten
+			let dependenciesMet = true;
+			for (const req of upgrade.requires) {
+				if (!gameState.stats.upgrades.includes(req)) {
+					dependenciesMet = false;
+					break;
+				}
+			}
+
+			const upgradeItem = document.createElement('div');
+			upgradeItem.className = 'upgrade-item';
+
+			upgradeItem.innerHTML = `
                             <div class="upgrade-info">
                                 <div class="upgrade-title">${upgrade.title}</div>
                                 <div class="upgrade-desc">${upgrade.description}</div>
@@ -2423,286 +2504,479 @@
                                 ${isOwned ? 'Freigeschaltet' : `Kaufen<span class="upgrade-cost">${formatNumber(upgrade.cost)} Münzen</span>`}
                             </button>
                         `;
-                        
-                        upgradesContainer.appendChild(upgradeItem);
-                        
-                        if (!isOwned) {
-                            const button = upgradeItem.querySelector('.upgrade-button');
-                            button.addEventListener('click', () => {
-                                purchaseUpgrade(upgrade.id);
-                            });
-                        }
-                    });
-                }
-                
-                function purchaseUpgrade(upgradeId) {
-                    // Finde das Upgrade
-                    const upgrade = UPGRADES.find(u => u.id === upgradeId);
-                    if (!upgrade) return;
-                    
-                    // Prüfe, ob wir genug Münzen haben
-                    if (gameState.stats.coins < upgrade.cost) return;
-                    
-                    // Prüfe, ob alle abhängigen Upgrades freigeschaltet sind
-                    for (const req of upgrade.requires) {
-                        if (!gameState.stats.upgrades.includes(req)) {
-                            return;
-                        }
-                    }
-                    
-                    // Kaufen
-                    gameState.stats.coins -= upgrade.cost;
-                    gameState.stats.upgrades.push(upgradeId);
-                    
-                    // Spezielle Upgrades anwenden
-                    if (upgradeId.startsWith('grid_')) {
-                        gameState.stats.unlockedGridSize = upgrade.gridSize;
-                        gameState.stats.gridSize = upgrade.gridSize;
-                        statsGridSizeElement.textContent = `${gameState.stats.gridSize}x${gameState.stats.gridSize}`;
-                    }
-                    
-                    // UI aktualisieren
-                    updateUpgradesUI();
-                    
-                    // In LocalStorage speichern
-                    saveStatsToStorage();
-                }
-                
-                function updateStatsUI() {
-                    statsHighscoreElement.textContent = formatNumber(gameState.stats.highscore);
-                    statsHighestBubbleElement.textContent = `${gameState.stats.highestLevel} (${formatNumber(gameState.stats.highestValue)})`;
-                    statsLongestChainElement.textContent = gameState.stats.longestChain;
-                    statsGamesPlayedElement.textContent = gameState.stats.gamesPlayed;
-                    statsGridSizeElement.textContent = `${gameState.stats.gridSize}x${gameState.stats.gridSize}`;
-                    
-                    updateAchievementsUI();
-                    updateChallengeUI();
-                    updateUpgradesUI();
-                }
-                
-                // Spielmodus-Funktionen
-                function setGameMode(mode) {
-                    // Modus setzen
-                    gameState.specialMode = mode;
-                    
-                    // Schwerkraft-Flag setzen
-                    gameState.gravityEnabled = (mode === 'gravity');
-                    
-                    // UI-Elemente aktualisieren
-                    activeModeDescription.innerHTML = MODE_DESCRIPTIONS[mode];
-                    
-                    // Modus-Banner anzeigen/verstecken
-                    if (mode !== 'normal') {
-                        specialModeBanner.textContent = mode === 'gravity' ? 'Schwerkraft-Modus: Blasen fallen nach unten' : 
-                                                       mode === 'timeAttack' ? 'Zeit-Modus: Reagiere schnell!' : 
-                                                       'Farbmuster-Modus: Achte auf die Muster';
-                        specialModeBanner.style.display = 'block';
-                    } else {
-                        specialModeBanner.style.display = 'none';
-                    }
-                    
-                    // Modus-Buttons aktualisieren
-                    document.querySelectorAll('.mode-button').forEach(btn => {
-                        if (btn.dataset.mode === mode) {
-                            btn.classList.add('active');
-                        } else {
-                            btn.classList.remove('active');
-                        }
-                    });
-                    
-                    // Spiel neu starten
-                    setTimeout(() => {
-                        statsModal.classList.remove('active');
-                        initNewGame();
-                    }, 300);
-                }
-                
-                // Local Storage Funktionen
-                function saveStatsToStorage() {
-                    try {
-                        localStorage.setItem('bubbleMergeStats', JSON.stringify(gameState.stats));
-                    } catch (e) {
-                        console.error('Failed to save stats to localStorage', e);
-                    }
-                }
-                
-                function loadStatsFromStorage() {
-                    try {
-                        const storedStats = localStorage.getItem('bubbleMergeStats');
-                        if (storedStats) {
-                            gameState.stats = JSON.parse(storedStats);
-                            
-                            // Stellen sicher, dass die Grid-Größe gesetzt ist
-                            gameState.gridSize = gameState.stats.gridSize || 6;
-                            
-                            // Stellen sicher, dass alle erforderlichen Werte existieren
-                            if (!gameState.stats.upgrades) gameState.stats.upgrades = [];
-                            if (!gameState.stats.coins) gameState.stats.coins = 0;
-                            if (!gameState.stats.unlockedGridSize) gameState.stats.unlockedGridSize = 6;
-                        }
-                    } catch (e) {
-                        console.error('Failed to load stats from localStorage', e);
-                    }
-                }
-                
-                function resetStats() {
-                    if (confirm(translate({ de: 'Möchtest du wirklich alle Statistiken zurücksetzen? Dies kann nicht rückgängig gemacht werden.' }))) {
-                        gameState.stats = {
-                            highscore: 0,
-                            highestLevel: 1,
-                            highestValue: 2,
-                            longestChain: 0,
-                            gamesPlayed: 0,
-                            achievements: [],
-                            currentChallenge: 0,
-                            challengeProgress: 0,
-                            gridSize: 6,
-                            unlockedGridSize: 6,
-                            coins: 0,
-                            upgrades: []
-                        };
-                        
-                        saveStatsToStorage();
-                        updateStatsUI();
-                        setCurrentChallenge();
-                        
-                        // Setze Spielfeldgröße zurück
-                        gameState.gridSize = 6;
-                        
-                        // Spiel neu starten
-                        initNewGame();
-                    }
-                }
-                
-                // Event-Listener
-                themeToggle.addEventListener('click', () => {
-                    const isDark = document.body.getAttribute('data-theme') === 'dark';
-                    
-                    if (isDark) {
-                        document.body.removeAttribute('data-theme');
-                        moonIcon.style.display = 'block';
-                        sunIcon.style.display = 'none';
-                    } else {
-                        document.body.setAttribute('data-theme', 'dark');
-                        moonIcon.style.display = 'none';
-                        sunIcon.style.display = 'block';
-                    }
-                });
-                
-                restartButton.addEventListener('click', () => {
-                    initNewGame();
-                });
-                
-                statsButton.addEventListener('click', () => {
-                    updateStatsUI();
-                    statsModal.classList.add('active');
-                    statsButton.classList.remove('active'); // Notification zurücksetzen
-                });
-                
-                closeStatsButton.addEventListener('click', () => {
-                    statsModal.classList.remove('active');
-                });
-                
-                resetStatsButton.addEventListener('click', resetStats);
-                
-                playAgainButton.addEventListener('click', () => {
-                    gameOverModal.classList.remove('active');
-                    initNewGame();
-                });
-                
-                shareButton.addEventListener('click', () => {
-                    const text = translate({ 
-                        de: `Ich habe ${formatNumber(gameState.score)} Punkte in Bubble Merge erreicht, mit einer Blase vom Level ${gameState.maxLevel} (${formatNumber(gameState.maxValue)}) und einer Kette von ${gameState.longestChain} Verschmelzungen!` 
-                    });
-                    
-                    // Versuche Web Share API wenn verfügbar
-                    if (navigator.share) {
-                        navigator.share({
-                            title: 'Bubble Merge',
-                            text: text
-                        }).catch(err => {
-                            // Fallback: In Zwischenablage kopieren
-                            navigator.clipboard.writeText(text)
-                                .then(() => alert(translate({ de: 'Ergebnis in die Zwischenablage kopiert!' })))
-                                .catch(() => alert(translate({ de: 'Konnte nicht geteilt werden. Bitte manuell kopieren.' })));
-                        });
-                    } else {
-                        // Fallback: In Zwischenablage kopieren
-                        navigator.clipboard.writeText(text)
-                            .then(() => alert(translate({ de: 'Ergebnis in die Zwischenablage kopiert!' })))
-                            .catch(() => alert(translate({ de: 'Konnte nicht geteilt werden. Bitte manuell kopieren.' })));
-                    }
-                });
-                
-                startGameButton.addEventListener('click', () => {
-                    tutorialModal.classList.remove('active');
-                    initNewGame();
-                });
-                
-                // Tab-Wechsel-Logik
-                tabButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        // Aktiven Tab in Button-Gruppe markieren
-                        tabButtons.forEach(btn => btn.classList.remove('active'));
-                        button.classList.add('active');
-                        
-                        // Entsprechenden Tab-Inhalt anzeigen
-                        const tabId = button.dataset.tab;
-                        tabContents.forEach(content => {
-                            content.classList.remove('active');
-                        });
-                        document.getElementById(`${tabId}-tab`).classList.add('active');
-                    });
-                });
-                
-                // Spielmodus-Buttons
-                modeButtons.forEach(button => {
-                    if (!button.disabled) {
-                        button.addEventListener('click', () => {
-                            setGameMode(button.dataset.mode);
-                        });
-                    }
-                });
-                
-                // Window Resize Handler
-                window.addEventListener('resize', () => {
-                    createGridOverlay();
-                    
-                    if (gameState.bubbles.length > 0) {
-                        // Positionen aller Blasen neu berechnen
-                        gameState.bubbles.forEach(bubble => {
-                            const row = parseInt(bubble.dataset.row);
-                            const col = parseInt(bubble.dataset.col);
-                            const pos = getBubblePosition(row, col);
-                            
-                            const size = calculateBubbleSize();
-                            bubble.style.width = `${size}px`;
-                            bubble.style.height = `${size}px`;
-                            bubble.style.left = `${pos.x}px`;
-                            bubble.style.top = `${pos.y}px`;
-                        });
-                    }
-                });
-                
-                // Spielzeit-Tracking
-                setInterval(() => {
-                    if (gameState.startTime && !gameState.gameOver) {
-                        const now = new Date();
-                        gameState.playTime = Math.floor((now - gameState.startTime) / 1000);
-                    }
-                }, 1000);
-                
-                // Bevorzugtes Farbschema
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.body.setAttribute('data-theme', 'dark');
-                    moonIcon.style.display = 'none';
-                    sunIcon.style.display = 'block';
-                }
-                
-                // Spiel starten
-                setTimeout(() => {
-                    tutorialModal.classList.add('active');
-                }, 500);
-    </script>
+
+			upgradesContainer.appendChild(upgradeItem);
+
+			if (!isOwned) {
+				const button = upgradeItem.querySelector('.upgrade-button');
+				button.addEventListener('click', () => {
+					purchaseUpgrade(upgrade.id);
+				});
+			}
+		});
+	}
+
+	function purchaseUpgrade(upgradeId) {
+		// Finde das Upgrade
+		const upgrade = UPGRADES.find(u => u.id === upgradeId);
+		if (!upgrade) return;
+
+		// Prüfe, ob wir genug Münzen haben
+		if (gameState.stats.coins < upgrade.cost) return;
+
+		// Prüfe, ob alle abhängigen Upgrades freigeschaltet sind
+		for (const req of upgrade.requires) {
+			if (!gameState.stats.upgrades.includes(req)) {
+				return;
+			}
+		}
+
+		// Kaufen
+		gameState.stats.coins -= upgrade.cost;
+		gameState.stats.upgrades.push(upgradeId);
+
+		// Spezielle Upgrades anwenden
+		if (upgradeId.startsWith('grid_')) {
+			const oldGridSize = gameState.stats.gridSize;
+			const newGridSize = upgrade.gridSize;
+
+			// Spielfeldgröße aktualisieren
+			gameState.stats.unlockedGridSize = newGridSize;
+			gameState.stats.gridSize = newGridSize;
+			gameState.gridSize = newGridSize;
+			statsGridSizeElement.textContent = `${newGridSize}x${newGridSize}`;
+
+			// Grid auf neue Größe erweitern und bestehende Werte behalten
+			const oldGrid = gameState.grid;
+			const newGrid = [];
+
+			// Neues größeres Grid erstellen
+			for (let i = 0; i < newGridSize; i++) {
+				newGrid[i] = new Array(newGridSize).fill(null);
+
+				// Bestehende Werte kopieren, wenn innerhalb der alten Grenzen
+				if (i < oldGridSize) {
+					for (let j = 0; j < oldGridSize; j++) {
+						if (oldGrid[i] && oldGrid[i][j] !== undefined) {
+							newGrid[i][j] = oldGrid[i][j];
+						}
+					}
+				}
+			}
+
+			// Neues Grid anwenden
+			gameState.grid = newGrid;
+
+			// Grid-Overlay aktualisieren
+			createGridOverlay();
+
+			// Blasen-Positionen aktualisieren (Größe könnte sich geändert haben)
+			gameState.bubbles.forEach(bubble => {
+				const row = parseInt(bubble.dataset.row);
+				const col = parseInt(bubble.dataset.col);
+
+				// Position aktualisieren
+				const pos = getBubblePosition(row, col);
+				const size = calculateBubbleSize();
+
+				bubble.style.width = `${size}px`;
+				bubble.style.height = `${size}px`;
+				bubble.style.left = `${pos.x}px`;
+				bubble.style.top = `${pos.y}px`;
+			});
+
+			// UI aktualisieren
+			statsModal.classList.remove('active');
+		}
+
+		// UI aktualisieren
+		updateUpgradesUI();
+
+		// In LocalStorage speichern
+		saveStatsToStorage();
+	}
+
+	function updateStatsUI() {
+		statsHighscoreElement.textContent = formatNumber(gameState.stats.highscore);
+		statsHighestBubbleElement.textContent = `${gameState.stats.highestLevel} (${formatNumber(gameState.stats.highestValue)})`;
+		statsLongestChainElement.textContent = gameState.stats.longestChain;
+		statsGamesPlayedElement.textContent = gameState.stats.gamesPlayed;
+		statsGridSizeElement.textContent = `${gameState.stats.gridSize}x${gameState.stats.gridSize}`;
+
+		updateAchievementsUI();
+		updateChallengeUI();
+		updateUpgradesUI();
+	}
+
+	// Spielmodus-Funktionen
+	function setGameMode(mode) {
+		// Modus setzen
+		gameState.specialMode = mode;
+
+		// Schwerkraft-Flag setzen
+		gameState.gravityEnabled = (mode === 'gravity');
+
+		// Aktuellen Spielstand speichern, bevor wir den Modus wechseln
+		saveStatsToStorage();
+
+		// UI-Elemente aktualisieren
+		activeModeDescription.innerHTML = MODE_DESCRIPTIONS[mode];
+
+		// Modus-Banner anzeigen/verstecken
+		if (mode !== 'normal') {
+			specialModeBanner.textContent = mode === 'gravity' ? 'Schwerkraft-Modus: Blasen fallen nach unten' :
+				mode === 'timeAttack' ? 'Zeit-Modus: Reagiere schnell!' :
+					'Farbmuster-Modus: Achte auf die Muster';
+			specialModeBanner.style.display = 'block';
+		} else {
+			specialModeBanner.style.display = 'none';
+		}
+
+		// Modus-Buttons aktualisieren
+		document.querySelectorAll('.mode-button').forEach(btn => {
+			if (btn.dataset.mode === mode) {
+				btn.classList.add('active');
+			} else {
+				btn.classList.remove('active');
+			}
+		});
+
+		// Aktualisiere auch das gespeicherte Spiel, um den neuen Modus zu reflektieren
+		try {
+			const savedGame = localStorage.getItem('bubbleMergeSavedGame');
+			if (savedGame) {
+				const parsedGame = JSON.parse(savedGame);
+				parsedGame.specialMode = mode;
+				parsedGame.gravityEnabled = (mode === 'gravity');
+				localStorage.setItem('bubbleMergeSavedGame', JSON.stringify(parsedGame));
+			}
+		} catch (e) {
+			console.error('Failed to update saved game mode', e);
+		}
+
+		// Spiel neu starten
+		setTimeout(() => {
+			statsModal.classList.remove('active');
+			initNewGame();
+		}, 300);
+	}
+
+	function updateSpecialModeUI() {
+		// UI-Elemente für Spezialmodus aktualisieren
+		if (gameState.specialMode !== 'normal') {
+			specialModeBanner.textContent = gameState.specialMode === 'gravity' ?
+				'Schwerkraft-Modus: Blasen fallen nach unten' :
+				gameState.specialMode === 'timeAttack' ?
+					'Zeit-Modus: Reagiere schnell!' :
+					'Farbmuster-Modus: Achte auf die Muster';
+			specialModeBanner.style.display = 'block';
+
+			// Auch den Modus-Indikator im Spielfeld aktualisieren
+			if (specialModeIndicator) {
+				specialModeIndicator.innerHTML = gameState.specialMode === 'gravity' ?
+					'🔄 Schwerkraft' :
+					gameState.specialMode === 'timeAttack' ?
+						'⏱️ Zeit' : '🎨 Muster';
+				specialModeIndicator.style.display = 'block';
+			}
+		} else {
+			specialModeBanner.style.display = 'none';
+			if (specialModeIndicator) {
+				specialModeIndicator.style.display = 'none';
+			}
+		}
+
+		// Modus-Buttons aktualisieren
+		document.querySelectorAll('.mode-button').forEach(btn => {
+			if (btn.dataset.mode === gameState.specialMode) {
+				btn.classList.add('active');
+			} else {
+				btn.classList.remove('active');
+			}
+		});
+
+		// Modus-Beschreibung aktualisieren
+		if (activeModeDescription) {
+			activeModeDescription.innerHTML = MODE_DESCRIPTIONS[gameState.specialMode] ||
+				MODE_DESCRIPTIONS['normal'];
+		}
+	}
+
+	// Local Storage Funktionen
+	function saveStatsToStorage() {
+		try {
+			// Nur die Statistiken speichern (ohne laufendes Spiel)
+			localStorage.setItem('bubbleMergeStats', JSON.stringify(gameState.stats));
+
+			// Nur aktuelles Spiel speichern, wenn tatsächlich ein Spiel läuft
+			if (!gameState.gameOver && gameState.moveMade) {
+				// Aktuelles Spielfeld in separatem Speicherplatz speichern
+				const gameStateToSave = {
+					grid: gameState.grid,
+					bubbles: gameState.bubbles.map(bubble => ({
+						level: parseInt(bubble.dataset.level),
+						row: parseInt(bubble.dataset.row),
+						col: parseInt(bubble.dataset.col),
+						value: parseInt(bubble.dataset.value)
+					})),
+					score: gameState.score,
+					level: gameState.level,
+					maxLevel: gameState.maxLevel,
+					maxValue: gameState.maxValue,
+					currentGoal: gameState.currentGoal,
+					goalProgress: gameState.goalProgress,
+					specialMode: gameState.specialMode,
+					gravityEnabled: gameState.gravityEnabled,
+					nextBubble: gameState.nextBubble,
+					chainCount: gameState.chainCount,
+					longestChain: gameState.longestChain,
+					moves: gameState.moves,
+					gridSize: gameState.gridSize
+				};
+
+				localStorage.setItem('bubbleMergeSavedGame', JSON.stringify(gameStateToSave));
+			}
+		} catch (e) {
+			console.error('Failed to save stats to localStorage', e);
+		}
+	}
+
+	function loadStatsFromStorage() {
+		try {
+			// Zuerst die Spielstatistiken laden
+			const storedStats = localStorage.getItem('bubbleMergeStats');
+			if (storedStats) {
+				const parsedStats = JSON.parse(storedStats);
+
+				// Basis-Statistiken
+				gameState.stats = {
+					highscore: parsedStats.highscore || 0,
+					highestLevel: parsedStats.highestLevel || 1,
+					highestValue: parsedStats.highestValue || 2,
+					longestChain: parsedStats.longestChain || 0,
+					gamesPlayed: parsedStats.gamesPlayed || 0,
+					achievements: parsedStats.achievements || [],
+					currentChallenge: parsedStats.currentChallenge || 0,
+					challengeProgress: parsedStats.challengeProgress || 0,
+					gridSize: parsedStats.gridSize || 6,
+					unlockedGridSize: parsedStats.unlockedGridSize || 6,
+					coins: parsedStats.coins || 0,
+					upgrades: parsedStats.upgrades || []
+				};
+
+				// Stellen sicher, dass die Grid-Größe gesetzt ist
+				gameState.gridSize = gameState.stats.gridSize || 6;
+			}
+
+			// Dann den aktuellen Spielstand laden (separat)
+			const savedGame = localStorage.getItem('bubbleMergeSavedGame');
+			if (savedGame) {
+				const parsedGame = JSON.parse(savedGame);
+
+				// Prüfen, ob ein gültiger Spielstand vorliegt
+				if (parsedGame.grid && parsedGame.bubbles && parsedGame.bubbles.length > 0) {
+					gameState.grid = parsedGame.grid;
+					gameState.score = parsedGame.score || 0;
+					gameState.level = parsedGame.level || 1;
+					gameState.maxLevel = parsedGame.maxLevel || 1;
+					gameState.maxValue = parsedGame.maxValue || 2;
+					gameState.currentGoal = parsedGame.currentGoal || 8;
+					gameState.goalProgress = parsedGame.goalProgress || 0;
+					gameState.hasSavedGame = true;
+					gameState.specialMode = parsedGame.specialMode || 'normal';
+					gameState.gravityEnabled = parsedGame.gravityEnabled || false;
+					gameState.nextBubble = parsedGame.nextBubble || createRandomBubble();
+					gameState.chainCount = parsedGame.chainCount || 0;
+					gameState.longestChain = parsedGame.longestChain || 0;
+					gameState.moves = parsedGame.moves || 0;
+					gameState.gridSize = parsedGame.gridSize || gameState.stats.gridSize;
+
+					// Banner und Indikator für Spezialmodus anzeigen
+					updateSpecialModeUI();
+				}
+			}
+		} catch (e) {
+			console.error('Failed to load stats from localStorage', e);
+			// Bei Fehler: Standardwerte
+			gameState.hasSavedGame = false;
+		}
+	}
+
+	function resetStats() {
+		if (confirm(translate({de: 'Möchtest du wirklich alle Statistiken zurücksetzen? Dies kann nicht rückgängig gemacht werden.'}))) {
+			// Komplett neues Stats-Objekt erstellen
+			gameState.stats = {
+				highscore: 0,
+				highestLevel: 1,
+				highestValue: 2,
+				longestChain: 0,
+				gamesPlayed: 0,
+				achievements: [],
+				currentChallenge: 0,
+				challengeProgress: 0,
+				gridSize: 6,
+				unlockedGridSize: 6,
+				coins: 0,
+				upgrades: []
+			};
+
+			// Aktuelles Spiel löschen (wichtig!)
+			localStorage.removeItem('bubbleMergeSavedGame');
+
+			// Stats speichern
+			saveStatsToStorage();
+			updateStatsUI();
+			setCurrentChallenge();
+
+			// Explizit neues Spiel erzwingen
+			gameState.hasSavedGame = false;
+			gameState.gridSize = 6;
+
+			// Spiel komplett neu starten
+			initNewGame(true); // Parameter true bedeutet: forciere neues Spiel
+		}
+	}
+
+	// Event-Listener
+	themeToggle.addEventListener('click', () => {
+		const isDark = document.body.getAttribute('data-theme') === 'dark';
+
+		if (isDark) {
+			document.body.removeAttribute('data-theme');
+			moonIcon.style.display = 'block';
+			sunIcon.style.display = 'none';
+		} else {
+			document.body.setAttribute('data-theme', 'dark');
+			moonIcon.style.display = 'none';
+			sunIcon.style.display = 'block';
+		}
+	});
+
+	restartButton.addEventListener('click', () => {
+		initNewGame();
+	});
+
+	statsButton.addEventListener('click', () => {
+		updateStatsUI();
+		statsModal.classList.add('active');
+		statsButton.classList.remove('active'); // Notification zurücksetzen
+	});
+
+	closeStatsButton.addEventListener('click', () => {
+		statsModal.classList.remove('active');
+	});
+
+	resetStatsButton.addEventListener('click', resetStats);
+
+	playAgainButton.addEventListener('click', () => {
+		gameOverModal.classList.remove('active');
+		initNewGame();
+	});
+
+	shareButton.addEventListener('click', () => {
+		const text = translate({
+			de: `Ich habe ${formatNumber(gameState.score)} Punkte in Bubble Merge erreicht, mit einer Blase vom Level ${gameState.maxLevel} (${formatNumber(gameState.maxValue)}) und einer Kette von ${gameState.longestChain} Verschmelzungen!`
+		});
+
+		// Versuche Web Share API wenn verfügbar
+		if (navigator.share) {
+			navigator.share({
+				title: 'Bubble Merge',
+				text: text
+			}).catch(err => {
+				// Fallback: In Zwischenablage kopieren
+				navigator.clipboard.writeText(text)
+					.then(() => alert(translate({de: 'Ergebnis in die Zwischenablage kopiert!'})))
+					.catch(() => alert(translate({de: 'Konnte nicht geteilt werden. Bitte manuell kopieren.'})));
+			});
+		} else {
+			// Fallback: In Zwischenablage kopieren
+			navigator.clipboard.writeText(text)
+				.then(() => alert(translate({de: 'Ergebnis in die Zwischenablage kopiert!'})))
+				.catch(() => alert(translate({de: 'Konnte nicht geteilt werden. Bitte manuell kopieren.'})));
+		}
+	});
+
+	startGameButton.addEventListener('click', () => {
+		tutorialModal.classList.remove('active');
+		initNewGame();
+	});
+
+	// Tab-Wechsel-Logik
+	tabButtons.forEach(button => {
+		button.addEventListener('click', () => {
+			// Aktiven Tab in Button-Gruppe markieren
+			tabButtons.forEach(btn => btn.classList.remove('active'));
+			button.classList.add('active');
+
+			// Entsprechenden Tab-Inhalt anzeigen
+			const tabId = button.dataset.tab;
+			tabContents.forEach(content => {
+				content.classList.remove('active');
+			});
+			document.getElementById(`${tabId}-tab`).classList.add('active');
+		});
+	});
+
+	// Spielmodus-Buttons
+	modeButtons.forEach(button => {
+		if (!button.disabled) {
+			button.addEventListener('click', () => {
+				setGameMode(button.dataset.mode);
+			});
+		}
+	});
+
+	// Window Resize Handler
+	window.addEventListener('resize', () => {
+		createGridOverlay();
+
+		if (gameState.bubbles.length > 0) {
+			// Positionen aller Blasen neu berechnen
+			gameState.bubbles.forEach(bubble => {
+				const row = parseInt(bubble.dataset.row);
+				const col = parseInt(bubble.dataset.col);
+				const pos = getBubblePosition(row, col);
+
+				const size = calculateBubbleSize();
+				bubble.style.width = `${size}px`;
+				bubble.style.height = `${size}px`;
+				bubble.style.left = `${pos.x}px`;
+				bubble.style.top = `${pos.y}px`;
+			});
+		}
+	});
+
+	// Spielzeit-Tracking
+	setInterval(() => {
+		if (gameState.startTime && !gameState.gameOver) {
+			const now = new Date();
+			gameState.playTime = Math.floor((now - gameState.startTime) / 1000);
+		}
+	}, 1000);
+
+	// Bevorzugtes Farbschema
+	if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+		document.body.setAttribute('data-theme', 'dark');
+		moonIcon.style.display = 'none';
+		sunIcon.style.display = 'block';
+	}
+
+	// Spiel starten
+	setTimeout(() => {
+		tutorialModal.classList.add('active');
+	}, 500);
+
+	// Auto-Save alle 30 Sekunden
+	setInterval(() => {
+		if (!gameState.gameOver && gameState.moveMade) {
+			saveStatsToStorage();
+		}
+	}, 30000);
+
+	window.addEventListener('DOMContentLoaded', function() {
+		loadStatsFromStorage();
+	});
+</script>
 </body>
 </html>
