@@ -2801,10 +2801,8 @@
 			return true; // Nehme an, dass Züge möglich sind, um Game Over zu vermeiden
 		}
 
-		// Setze ein Minimum an leeren Feldern, um Game Over zu verhindern
+		// Zähle leere Felder
 		let emptyCount = 0;
-
-		// Rest der Funktion bleibt gleich, aber zähle leere Felder...
 		for (let row = 0; row < gameState.gridSize; row++) {
 			for (let col = 0; col < gameState.gridSize; col++) {
 				if (!gameState.grid[row][col]) {
@@ -2824,6 +2822,7 @@
 			for (let row = 0; row < gameState.gridSize; row++) {
 				for (let col = 0; col < gameState.gridSize; col++) {
 					const level = gameState.grid[row][col];
+					if (level === null) continue;
 
 					// Nachbarn prüfen
 					const neighbors = [
