@@ -1,0 +1,2852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Builder Platformer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+        }
+
+        canvas {
+            border: 2px solid #555;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            background-color: #111;
+        }
+
+        #uiContainer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #phaseIndicator {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #ffcc00;
+        }
+
+        #instructions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 250px;
+            z-index: 10;
+        }
+
+        #levelIndicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            text-shadow: 1px 1px 2px black;
+        }
+    </style>
+</head>
+<body>
+<div id="gameContainer">
+    <canvas id="gameCanvas" width="1000" height="700"></canvas>
+    <div id="uiContainer">
+        <div id="phaseIndicator">BUILDING PHASE</div>
+        <div id="timer">Time: 60s</div>
+        <div id="score">Score: 0</div>
+        <div id="lives">Lives: 5</div>
+        <div id="coins">Coins: 0</div>
+    </div>
+    <div id="levelIndicator">Level: 1</div>
+    <div id="instructions"></div>
+</div>
+
+<script>
+	// Game configuration
+	const config = {
+		buildTime: 60, // Increased time for build phase
+		gridWidth: 50, // Doubled number of blocks horizontally
+		gridHeight: 20, // Increased height for more building space
+		blockSize: 20, // Size of blocks in build phase
+		playBlockSize: 40, // Size of blocks in play phase (2x)
+		gravity: 0.5,
+		playerSpeed: 5,
+		jumpPower: 12,
+		enemySpeed: 1.5,
+		enemySpawnChance: 0.3, // Chance an eligible platform gets an enemy
+		coinSpawnChance: 0.4, // Chance a space gets a coin
+		normalDropSpeed: 800, // ms between auto drops
+		fastDropSpeed: 50, // ms between drops when down arrow is held
+		maxLives: 5,
+		initialLevel: 1,
+		levelCompleteBonus: 1000, // Score bonus for completing a level
+		pathValidationAttempts: 100, // Number of attempts to ensure level is playable
+		tetrisKeyRepeatDelay: 150, // Milliseconds between key repeats for Tetris controls
+		tetrisInitialKeyDelay: 200 // Milliseconds for initial key delay
+	};
+
+	// Game state
+	const state = {
+		phase: 'building', // 'building', 'playing', 'victory', 'gameover'
+		grid: [], // 2D array for level design
+		timeLeft: config.buildTime,
+		score: 0,
+		level: config.initialLevel,
+		lives: config.maxLives,
+		coins: 0,
+		blocks: [], // Available block types
+		currentBlock: null,
+		nextBlock: null,
+		heldBlock: null, // For holding a block
+		canHold: true, // To prevent continuous holds
+		dropTimer: 0, // Timer for automatic block dropping
+		dropSpeed: config.normalDropSpeed, // Current speed of block dropping
+		player: {
+			x: 50,
+			y: 300,
+			width: 32,
+			height: 48,
+			velX: 0,
+			velY: 0,
+			jumping: false,
+			grounded: false,
+			facing: 'right',
+			shooting: false,
+			invulnerable: false,
+			bullets: [],
+			animation: {
+				frame: 0,
+				maxFrames: 8,
+				frameSpeed: 5, // Frames per animation cycle
+				frameCounter: 0
+			}
+		},
+		enemies: [],
+		coins: [],
+		particles: [], // For visual effects
+		camera: {
+			x: 0,
+			y: 0
+		},
+		parallax: {
+			layers: [],
+			speeds: [0.1, 0.2, 0.3, 0.5]
+		},
+		keys: {},
+		keyProcessed: {}, // Track processed keys to prevent rapid fire
+		lastTime: 0,
+		timerInterval: null,
+		goalX: 0,
+		goalReached: false,
+		pathValid: false, // Track if level has a valid path
+		transitionAlpha: 0, // For screen transitions
+		showingTransition: false
+	};
+
+	// Block types with enhanced properties
+	const blockTypes = [
+		{
+			id: 'ground',
+			name: 'Ground',
+			color: '#8B4513', // Brown
+			solid: true,
+			topGrass: true,
+			playColor: '#8B4513',
+			weight: 3 // Higher weight = more common
+		},
+		{
+			id: 'stone',
+			name: 'Stone',
+			color: '#777777', // Gray
+			solid: true,
+			playColor: '#777777',
+			weight: 2
+		},
+		{
+			id: 'cave',
+			name: 'Cave',
+			color: '#555555', // Dark gray
+			solid: true,
+			cave: true,
+			playColor: '#555555',
+			weight: 1
+		},
+		{
+			id: 'bounce',
+			name: 'Bounce',
+			color: '#FF6B6B', // Reddish
+			solid: true,
+			bounce: true,
+			playColor: '#FF6B6B',
+			weight: 1
+		},
+		{
+			id: 'water',
+			name: 'Water',
+			color: '#4DA6FF', // Blue
+			solid: false,
+			liquid: true,
+			playColor: 'rgba(77, 166, 255, 0.7)',
+			weight: 1
+		}
+	];
+
+	// Get DOM elements
+	const canvas = document.getElementById('gameCanvas');
+	const ctx = canvas.getContext('2d');
+	const phaseIndicator = document.getElementById('phaseIndicator');
+	const timerElement = document.getElementById('timer');
+	const scoreElement = document.getElementById('score');
+	const livesElement = document.getElementById('lives');
+	const coinsElement = document.getElementById('coins');
+	const levelIndicator = document.getElementById('levelIndicator');
+	const instructionsElement = document.getElementById('instructions');
+
+	// Sounds (placeholders)
+	const sounds = {
+		// These would be initialized with actual sound files in a complete implementation
+		jump: null,
+		coin: null,
+		enemyHit: null,
+		playerHit: null,
+		blockPlace: null,
+		levelComplete: null,
+		gameOver: null
+	};
+
+	// Initialize the game
+	function init() {
+		// Initialize the grid with empty cells
+		resetGrid();
+
+		// Create parallax background layers
+		initParallaxLayers();
+
+		// Set available blocks
+		state.blocks = weightedBlockTypes();
+
+		// Generate first and next blocks
+		generateNewBlock();
+		generateNewBlock();
+
+		// Initialize arrays to prevent errors
+		state.enemies = [];
+		state.coins = [];
+		state.particles = [];
+		state.player.bullets = [];
+
+		// Set up instructions
+		updateInstructions();
+
+		// Start the build timer
+		startBuildTimer();
+
+		// Set up event listeners
+		setupEventListeners();
+
+		// Start the game loop
+		requestAnimationFrame(gameLoop);
+	}
+
+	// Get weighted block types (some blocks are more common than others)
+	function weightedBlockTypes() {
+		const weighted = [];
+		for (const type of blockTypes) {
+			for (let i = 0; i < type.weight; i++) {
+				weighted.push(type);
+			}
+		}
+		return weighted;
+	}
+
+	// Reset the grid to empty
+	function resetGrid() {
+		state.grid = [];
+		for (let y = 0; y < config.gridHeight; y++) {
+			state.grid[y] = [];
+			for (let x = 0; x < config.gridWidth; x++) {
+				state.grid[y][x] = null;
+			}
+		}
+
+		// Add starting platform (5 blocks to ensure stability)
+		for (let x = 0; x < 5; x++) {
+			state.grid[config.gridHeight - 1][x] = { type: 'ground' };
+
+			// Add some ground beneath for stability (3 blocks down)
+			for (let d = 1; d <= 3 && config.gridHeight - 1 + d < config.gridHeight; d++) {
+				state.grid[config.gridHeight - 1 + d][x] = { type: 'ground' };
+			}
+		}
+
+		// Add ending platform (5 blocks)
+		for (let x = config.gridWidth - 5; x < config.gridWidth; x++) {
+			state.grid[config.gridHeight - 1][x] = { type: 'ground' };
+
+			// Add some ground beneath for stability (3 blocks down)
+			for (let d = 1; d <= 3 && config.gridHeight - 1 + d < config.gridHeight; d++) {
+				state.grid[config.gridHeight - 1 + d][x] = { type: 'ground' };
+			}
+		}
+	}
+
+	// Create parallax background layers
+	function initParallaxLayers() {
+		state.parallax.layers = [];
+
+		// Layer 1: Distant mountains
+		const mountains = {
+			elements: [],
+			speed: state.parallax.speeds[0]
+		};
+
+		for (let i = 0; i < 5; i++) {
+			mountains.elements.push({
+				x: i * 300,
+				y: canvas.height - 200 - Math.random() * 100,
+				width: 250 + Math.random() * 150,
+				height: 150 + Math.random() * 100,
+				color: `rgb(${100 + Math.random() * 50}, ${100 + Math.random() * 30}, ${130 + Math.random() * 50})`
+			});
+		}
+
+		// Layer 2: Hills
+		const hills = {
+			elements: [],
+			speed: state.parallax.speeds[1]
+		};
+
+		for (let i = 0; i < 7; i++) {
+			hills.elements.push({
+				x: i * 200,
+				y: canvas.height - 120 - Math.random() * 50,
+				width: 180 + Math.random() * 80,
+				height: 100 + Math.random() * 60,
+				color: `rgb(${50 + Math.random() * 40}, ${120 + Math.random() * 50}, ${50 + Math.random() * 30})`
+			});
+		}
+
+		// Layer 3: Clouds
+		const clouds = {
+			elements: [],
+			speed: state.parallax.speeds[2]
+		};
+
+		for (let i = 0; i < 8; i++) {
+			clouds.elements.push({
+				x: i * 180 + Math.random() * 100,
+				y: 50 + Math.random() * 100,
+				width: 60 + Math.random() * 40,
+				height: 30 + Math.random() * 20,
+				color: `rgba(255, 255, 255, ${0.6 + Math.random() * 0.3})`
+			});
+		}
+
+		// Add layers to state
+		state.parallax.layers.push(mountains, hills, clouds);
+	}
+
+	// Generate a new block for placement
+	function generateNewBlock() {
+		if (state.currentBlock === null) {
+			state.currentBlock = createRandomBlock();
+		} else {
+			state.currentBlock = state.nextBlock;
+		}
+		state.nextBlock = createRandomBlock();
+	}
+
+	// Create a random tetromino-like block
+	function createRandomBlock() {
+		const shapes = [
+			// I shape
+			[
+				[1, 1, 1, 1]
+			],
+			// Square shape
+			[
+				[1, 1],
+				[1, 1]
+			],
+			// L shape
+			[
+				[1, 0],
+				[1, 0],
+				[1, 1]
+			],
+			// Reverse L shape
+			[
+				[0, 1],
+				[0, 1],
+				[1, 1]
+			],
+			// T shape
+			[
+				[1, 1, 1],
+				[0, 1, 0]
+			],
+			// Z shape
+			[
+				[1, 1, 0],
+				[0, 1, 1]
+			],
+			// S shape
+			[
+				[0, 1, 1],
+				[1, 1, 0]
+			],
+			// Platform shape
+			[
+				[1, 1, 1]
+			],
+			// Single block
+			[
+				[1]
+			],
+			// Step up
+			[
+				[1, 0],
+				[1, 1]
+			],
+			// Step down
+			[
+				[0, 1],
+				[1, 1]
+			]
+		];
+
+		// Randomly select a shape
+		const shape = shapes[Math.floor(Math.random() * shapes.length)];
+
+		// Randomly select a block type
+		const blockType = state.blocks[Math.floor(Math.random() * state.blocks.length)];
+
+		return {
+			shape: shape,
+			type: blockType,
+			x: Math.floor((config.gridWidth - shape[0].length) / 2), // Center horizontally
+			y: 0 // Start at the top
+		};
+	}
+
+	// Update instructions based on game phase
+	function updateInstructions() {
+		if (state.phase === 'building') {
+			instructionsElement.innerHTML = `
+                    <h3>Building Phase</h3>
+                    <p>↑: Rotate Block</p>
+                    <p>←/→: Move Block</p>
+                    <p>↓: Drop Faster</p>
+                    <p>Space: Hard Drop</p>
+                    <p>C: Hold Block</p>
+                    <p>Build a challenging level with gaps and platforms!</p>
+                `;
+		} else if (state.phase === 'playing') {
+			instructionsElement.innerHTML = `
+                    <h3>Playing Phase</h3>
+                    <p>Arrow Keys: Move</p>
+                    <p>Space: Jump</p>
+                    <p>Z: Shoot</p>
+                    <p>Watch out for gaps - you'll fall to your death!</p>
+                    <p>Reach the flag to complete level ${state.level}!</p>
+                `;
+		} else if (state.phase === 'victory') {
+			instructionsElement.innerHTML = `
+                    <h3>Level Complete!</h3>
+                    <p>Press ENTER to continue to Level ${state.level + 1}</p>
+                `;
+		} else if (state.phase === 'gameover') {
+			instructionsElement.innerHTML = `
+                    <h3>Game Over</h3>
+                    <p>Press ENTER to start a new game</p>
+                    <p>Final Score: ${state.score}</p>
+                    <p>Final Level: ${state.level}</p>
+                `;
+		}
+	}
+
+	// Start the build timer
+	function startBuildTimer() {
+		state.timeLeft = config.buildTime;
+		timerElement.textContent = `Time: ${state.timeLeft}s`;
+
+		state.timerInterval = setInterval(() => {
+			state.timeLeft--;
+			timerElement.textContent = `Time: ${state.timeLeft}s`;
+
+			if (state.timeLeft <= 0) {
+				clearInterval(state.timerInterval);
+				validateAndStartPlaying();
+			}
+		}, 1000);
+	}
+
+	// Validate the level and start playing if it's valid - more robust
+	function validateAndStartPlaying() {
+		try {
+			// Clear any existing intervals to prevent conflicts
+			if (state.timerInterval) {
+				clearInterval(state.timerInterval);
+				state.timerInterval = null;
+			}
+
+			// Simple check that we have placed some blocks
+			let blockCount = 0;
+			for (let y = 0; y < config.gridHeight; y++) {
+				for (let x = 0; x < config.gridWidth; x++) {
+					if (state.grid[y][x] !== null) {
+						blockCount++;
+					}
+				}
+			}
+
+			console.log("Validating level, block count:", blockCount);
+
+			if (blockCount < 10) {
+				// Not enough blocks placed, add some random platforms to make it playable
+				addRandomPlatforms();
+				console.log("Added random platforms");
+			}
+
+			// Ensure there's a path from start to end
+			console.log("Ensuring valid path...");
+			ensureValidPath();
+			console.log("Path validation complete");
+
+			// Start the playing phase
+			console.log("Starting playing phase...");
+			startPlayingPhase();
+		} catch (error) {
+			console.error("Error in validateAndStartPlaying:", error);
+			// Fallback to a simpler transition if something goes wrong
+			state.phase = 'playing';
+			phaseIndicator.textContent = 'PLAYING PHASE';
+			updateInstructions();
+			state.player.x = 50;
+			state.player.y = 100;
+			ensureValidPath(); // Make sure we at least have a valid path
+		}
+	}
+
+	// Add random platforms to ensure minimum level complexity
+	function addRandomPlatforms() {
+		const minPlatforms = 5;
+		let platformsAdded = 0;
+
+		while (platformsAdded < minPlatforms) {
+			const x = 3 + Math.floor(Math.random() * (config.gridWidth - 6));
+			const y = Math.floor(config.gridHeight * 0.3) + Math.floor(Math.random() * (config.gridHeight * 0.6));
+
+			// Don't place on existing blocks
+			if (state.grid[y][x] === null) {
+				const width = 2 + Math.floor(Math.random() * 3);
+
+				for (let i = 0; i < width; i++) {
+					if (x + i < config.gridWidth && state.grid[y][x + i] === null) {
+						state.grid[y][x + i] = { type: 'ground' };
+					}
+				}
+				platformsAdded++;
+			}
+		}
+	}
+
+	// Ensure there's a valid path from start to end - simplified for reliability
+	function ensureValidPath() {
+		// Simplified approach: Just add platforms at regular intervals
+
+		// Maximum jump distance (horizontal blocks)
+		const jumpDistance = Math.floor(config.jumpPower / config.playBlockSize);
+		const safeJumpDistance = Math.max(3, jumpDistance - 1); // Conservative estimate
+
+		// Start with the initial platform (first 3 blocks)
+		const platformWidth = 3;
+
+		// Add platforms at regular intervals
+		for (let x = platformWidth + safeJumpDistance; x < config.gridWidth - platformWidth; x += safeJumpDistance) {
+			// Height can vary slightly for interest
+			const y = config.gridHeight - 3 - Math.floor(Math.random() * 3);
+
+			// Add a platform if there isn't already a solid block there
+			for (let i = 0; i < platformWidth; i++) {
+				if (x + i < config.gridWidth - platformWidth &&
+					(state.grid[y][x + i] === null ||
+						!blockTypes.find(t => t.id === state.grid[y][x + i].type).solid)) {
+					state.grid[y][x + i] = { type: 'ground' };
+				}
+			}
+		}
+
+		// Always add a final platform at the end
+		const endY = config.gridHeight - 2;
+		for (let i = 0; i < platformWidth; i++) {
+			const x = config.gridWidth - platformWidth + i;
+			state.grid[endY][x] = { type: 'ground' };
+		}
+
+		state.pathValid = true;
+	}
+
+	// Transition to playing phase
+	function startPlayingPhase() {
+		// Clear any existing intervals
+		if (state.timerInterval) {
+			clearInterval(state.timerInterval);
+			state.timerInterval = null;
+		}
+
+		// Make sure we have stable ground
+		ensureStableGround();
+
+		// Show transition effect
+		showTransition(() => {
+			state.phase = 'playing';
+			phaseIndicator.textContent = 'PLAYING PHASE';
+			timerElement.textContent = '';  // Hide timer in play phase
+			updateInstructions();
+
+			// Add a goal flag at the right end of the level
+			state.goalX = (config.gridWidth - 1) * config.playBlockSize;
+			state.goalReached = false;
+
+			// Reset the player position to the start - ensure they start safely
+			state.player.x = 80; // A bit away from edge
+			state.player.y = 100; // Higher up to avoid falling through
+			state.player.velX = 0;
+			state.player.velY = 0;
+			state.player.invulnerable = true;
+			state.player.grounded = false;
+
+			// Reset camera
+			state.camera.x = 0;
+			state.camera.y = 0;
+
+			// Initialize arrays to prevent errors
+			state.enemies = [];
+			state.coins = [];
+			state.particles = [];
+			state.player.bullets = [];
+
+			// Enhance the level (add decorations, enemies, etc.)
+			enhanceLevel();
+
+			// Make player invulnerable for a few seconds to start
+			setTimeout(() => {
+				state.player.invulnerable = false;
+			}, 2000);
+		});
+	}
+
+	// Ensure there's stable ground in the level
+	function ensureStableGround() {
+		// Add soil beneath existing ground blocks
+		for (let x = 0; x < config.gridWidth; x++) {
+			for (let y = 0; y < config.gridHeight - 1; y++) {
+				if (state.grid[y][x] && state.grid[y][x].type === 'ground') {
+					// Check blocks below
+					for (let d = 1; d <= 3 && y + d < config.gridHeight; d++) {
+						if (!state.grid[y + d][x]) {
+							state.grid[y + d][x] = { type: 'ground' };
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Show screen transition effect - simplified and more reliable
+	function showTransition(callback) {
+		// Immediately apply the callback to prevent hanging
+		if (callback) {
+			setTimeout(callback, 100);
+		}
+
+		// Visual transition is separate from game state changes
+		state.showingTransition = true;
+		state.transitionAlpha = 0;
+
+		// Simple fade in
+		setTimeout(() => {
+			state.transitionAlpha = 0.5;
+
+			// Then fade out
+			setTimeout(() => {
+				state.transitionAlpha = 0;
+				state.showingTransition = false;
+			}, 300);
+		}, 100);
+	}
+
+	// Enhance the built level for the playing phase
+	function enhanceLevel() {
+		// Add enemies to suitable platforms
+		addEnemiesToLevel();
+
+		// Add coins to the level
+		addCoinsToLevel();
+	}
+
+	// Add enemies to suitable platforms - simplified and more reliable
+	function addEnemiesToLevel() {
+		// Limit the number of enemies based on level
+		const maxEnemies = 3 + Math.min(7, state.level);
+		let enemyCount = 0;
+
+		// Try to place enemies on platforms
+		for (let y = 0; y < config.gridHeight - 1; y++) {
+			for (let x = 3; x < config.gridWidth - 3; x++) {
+				// Stop if we've reached the maximum number of enemies
+				if (enemyCount >= maxEnemies) break;
+
+				// Check if this is a solid block with empty space above it
+				if (state.grid[y][x] &&
+					blockTypes.find(t => t.id === state.grid[y][x].type)?.solid &&
+					y > 0 && !state.grid[y-1][x] &&
+					Math.random() < config.enemySpawnChance) {
+
+					// Only add enemy if there's a solid platform of at least 3 blocks
+					let platformWidth = 0;
+					for (let px = x; px < Math.min(config.gridWidth, x + 5); px++) {
+						if (state.grid[y][px] && blockTypes.find(t => t.id === state.grid[y][px].type).solid) {
+							platformWidth++;
+						} else {
+							break;
+						}
+					}
+
+					if (platformWidth >= 3) {
+						// Create an enemy on this platform
+						state.enemies.push({
+							x: x * config.playBlockSize + config.playBlockSize / 2,
+							y: y * config.playBlockSize - 20,
+							width: 32,
+							height: 32,
+							velX: config.enemySpeed * (Math.random() > 0.5 ? 1 : -1),
+							velY: 0,
+							type: Math.random() > 0.7 ? 'jumper' : 'walker',
+							health: 1,
+							state: 'patrol',
+							jumpTimer: 0,
+							animation: {
+								frame: 0,
+								maxFrames: 4,
+								frameSpeed: 8,
+								frameCounter: 0
+							}
+						});
+
+						enemyCount++;
+						x += 3; // Skip a few blocks to avoid enemies too close together
+					}
+				}
+			}
+
+			if (enemyCount >= maxEnemies) break;
+		}
+	}
+
+	// Add coins to the level - simplified and more reliable
+	function addCoinsToLevel() {
+		// Limit the number of coins based on level
+		const maxCoins = 10 + state.level * 2;
+		let coinCount = 0;
+
+		// Create a new array for coins to avoid possible reference issues
+		state.coins = [];
+
+		// First add coins in a pattern that encourages exploration
+		for (let y = 1; y < config.gridHeight - 1; y++) {
+			for (let x = 1; x < config.gridWidth - 1; x++) {
+				// Stop if we've reached the maximum number of coins
+				if (coinCount >= maxCoins) break;
+
+				// Place coins in empty spaces above solid blocks
+				if (!state.grid[y][x] &&
+					y + 1 < config.gridHeight &&
+					state.grid[y+1][x] &&
+					blockTypes.find(t => t.id === state.grid[y+1][x].type)?.solid &&
+					Math.random() < config.coinSpawnChance) {
+
+					// Add a coin
+					state.coins.push({
+						x: x * config.playBlockSize + config.playBlockSize / 2,
+						y: y * config.playBlockSize + config.playBlockSize / 2,
+						width: 15,
+						height: 15,
+						collected: false,
+						animation: {
+							frame: 0,
+							maxFrames: 6,
+							frameSpeed: 10,
+							frameCounter: 0,
+							offsetY: 0
+						}
+					});
+
+					coinCount++;
+
+					// Skip a bit to avoid coins too close together
+					x += 1;
+				}
+			}
+
+			if (coinCount >= maxCoins) break;
+		}
+
+		// Ensure we have at least some minimum number of coins
+		const minCoins = 5;
+		if (coinCount < minCoins) {
+			// Add some coins along the path
+			for (let x = 3; x < config.gridWidth - 3 && coinCount < minCoins; x += 3) {
+				for (let y = 0; y < config.gridHeight - 1; y++) {
+					if (!state.grid[y][x] &&
+						y + 1 < config.gridHeight &&
+						state.grid[y+1][x] &&
+						blockTypes.find(t => t.id === state.grid[y+1][x].type)?.solid) {
+
+						// Add a coin
+						state.coins.push({
+							x: x * config.playBlockSize + config.playBlockSize / 2,
+							y: y * config.playBlockSize + config.playBlockSize / 2,
+							width: 15,
+							height: 15,
+							collected: false,
+							animation: {
+								frame: 0,
+								maxFrames: 6,
+								frameSpeed: 10,
+								frameCounter: 0,
+								offsetY: 0
+							}
+						});
+
+						coinCount++;
+						break;
+					}
+				}
+			}
+		}
+
+		console.log("Added", state.coins.length, "coins to level");
+	}
+
+	// Set up event listeners for keyboard input
+	function setupEventListeners() {
+		// Key press timestamps for tetris controls
+		const keyTimestamps = {};
+		const keyRepeating = {};
+
+		// Key down events
+		document.addEventListener('keydown', (e) => {
+			if (!keyTimestamps[e.key]) {
+				// First press
+				keyTimestamps[e.key] = Date.now();
+				handleKeyPress(e.key);
+			} else {
+				// Check if we should repeat based on timing
+				const currentTime = Date.now();
+				const timeElapsed = currentTime - keyTimestamps[e.key];
+
+				if (!keyRepeating[e.key] && timeElapsed > config.tetrisInitialKeyDelay) {
+					// Start repeating after initial delay
+					keyRepeating[e.key] = true;
+					handleKeyPress(e.key);
+					keyTimestamps[e.key] = currentTime;
+				} else if (keyRepeating[e.key] && timeElapsed > config.tetrisKeyRepeatDelay) {
+					// Continue repeating at regular intervals
+					handleKeyPress(e.key);
+					keyTimestamps[e.key] = currentTime;
+				}
+			}
+
+			// Prevent default for arrow keys and space to avoid page scrolling
+			if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) {
+				e.preventDefault();
+			}
+		});
+
+		// Key up events
+		document.addEventListener('keyup', (e) => {
+			keyTimestamps[e.key] = null;
+			keyRepeating[e.key] = false;
+			state.keys[e.key] = false;
+			state.keyProcessed[e.key] = false;
+		});
+
+		// Handle key press based on game phase
+		function handleKeyPress(key) {
+			state.keys[key] = true;
+
+			if (state.phase === 'building') {
+				if (key === ' ' && !state.keyProcessed[' ']) { // Space to hard drop
+					state.keyProcessed[' '] = true;
+					hardDropBlock();
+
+					setTimeout(() => {
+						state.keyProcessed[' '] = false;
+					}, 200);
+				} else if ((key === 'ArrowUp' || key === 'r' || key === 'R') && !state.keyProcessed['r']) { // Up arrow or R to rotate
+					state.keyProcessed['r'] = true;
+					rotateCurrentBlock();
+
+					setTimeout(() => {
+						state.keyProcessed['r'] = false;
+					}, 200);
+				} else if (key === 'ArrowLeft') { // Left to move block
+					moveBlockHorizontally(-1);
+				} else if (key === 'ArrowRight') { // Right to move block
+					moveBlockHorizontally(1);
+				} else if (key === 'ArrowDown') { // Down to soft drop
+					state.dropSpeed = config.fastDropSpeed;
+				} else if ((key === 'c' || key === 'C') && !state.keyProcessed['c'] && state.canHold) { // C to hold block
+					state.keyProcessed['c'] = true;
+					holdCurrentBlock();
+
+					setTimeout(() => {
+						state.keyProcessed['c'] = false;
+					}, 200);
+				}
+			} else if (state.phase === 'playing') {
+				if ((key === 'z' || key === 'Z') && !state.keyProcessed['z']) { // Z to shoot
+					state.keyProcessed['z'] = true;
+					shootBullet();
+
+					setTimeout(() => {
+						state.keyProcessed['z'] = false;
+					}, 200);
+				}
+			} else if (state.phase === 'victory' || state.phase === 'gameover') {
+				if (key === 'Enter' && !state.keyProcessed['Enter']) {
+					state.keyProcessed['Enter'] = true;
+
+					if (state.phase === 'victory') {
+						startNextLevel();
+					} else {
+						restartGame();
+					}
+
+					setTimeout(() => {
+						state.keyProcessed['Enter'] = false;
+					}, 500);
+				}
+			}
+		}
+	}
+
+	// Move block horizontally with collision detection
+	function moveBlockHorizontally(direction) {
+		if (!state.currentBlock) return;
+
+		const block = state.currentBlock;
+		const newX = block.x + direction;
+
+		// Save current position
+		const originalX = block.x;
+
+		// Try the move
+		block.x = newX;
+
+		// If it doesn't fit, revert back
+		if (!doesBlockFit(block)) {
+			block.x = originalX;
+		}
+	}
+
+	// Hard drop the current block immediately
+	function hardDropBlock() {
+		if (!state.currentBlock) return;
+
+		const block = state.currentBlock;
+
+		// Drop all the way down
+		while (doesBlockFit(block)) {
+			block.y += 1;
+		}
+
+		// Back up one step (we went one too far)
+		block.y -= 1;
+
+		// Place the block
+		placeCurrentBlock();
+	}
+
+	// Hold the current block
+	function holdCurrentBlock() {
+		if (!state.canHold) return;
+
+		state.canHold = false;
+
+		// Swap current block with held block
+		if (state.heldBlock === null) {
+			state.heldBlock = {
+				shape: state.currentBlock.shape,
+				type: state.currentBlock.type
+			};
+			generateNewBlock();
+		} else {
+			const temp = {
+				shape: state.currentBlock.shape,
+				type: state.currentBlock.type
+			};
+			state.currentBlock = {
+				shape: state.heldBlock.shape,
+				type: state.heldBlock.type,
+				x: Math.floor((config.gridWidth - state.heldBlock.shape[0].length) / 2),
+				y: 0
+			};
+			state.heldBlock = temp;
+		}
+	}
+
+	// Place the current block on the grid
+	function placeCurrentBlock() {
+		if (!state.currentBlock) return;
+
+		const block = state.currentBlock;
+
+		// Check if the block fits at the current position
+		if (doesBlockFit(block)) {
+			// Place the block on the grid
+			for (let y = 0; y < block.shape.length; y++) {
+				for (let x = 0; x < block.shape[0].length; x++) {
+					if (block.shape[y][x] === 1) {
+						const gridY = block.y + y;
+						const gridX = block.x + x;
+
+						if (gridY >= 0 && gridY < config.gridHeight &&
+							gridX >= 0 && gridX < config.gridWidth) {
+							state.grid[gridY][gridX] = { type: block.type.id };
+						}
+					}
+				}
+			}
+
+			// Play sound effect
+			// if (sounds.blockPlace) sounds.blockPlace.play();
+
+			// Create particles for visual feedback
+			for (let y = 0; y < block.shape.length; y++) {
+				for (let x = 0; x < block.shape[0].length; x++) {
+					if (block.shape[y][x] === 1) {
+						createParticles(
+							(block.x + x) * config.blockSize,
+							(block.y + y) * config.blockSize,
+							5,
+							block.type.color
+						);
+					}
+				}
+			}
+
+			// Move to the next block
+			generateNewBlock();
+
+			// Reset hold ability
+			state.canHold = true;
+
+			// Add some score
+			state.score += 10;
+			scoreElement.textContent = `Score: ${state.score}`;
+
+			// Check for filled rows (optional Tetris mechanic)
+			checkForFilledRows();
+		}
+	}
+
+	// Create particle effects
+	function createParticles(x, y, count, color) {
+		for (let i = 0; i < count; i++) {
+			state.particles.push({
+				x: x,
+				y: y,
+				velX: (Math.random() - 0.5) * 3,
+				velY: (Math.random() - 0.5) * 3,
+				size: 2 + Math.random() * 3,
+				color: color,
+				life: 30 + Math.random() * 20
+			});
+		}
+	}
+
+	// Check for filled rows and remove them (Tetris mechanic)
+	function checkForFilledRows() {
+		let rowsCleared = 0;
+
+		for (let y = 0; y < config.gridHeight; y++) {
+			let rowFilled = true;
+
+			for (let x = 0; x < config.gridWidth; x++) {
+				if (state.grid[y][x] === null) {
+					rowFilled = false;
+					break;
+				}
+			}
+
+			if (rowFilled) {
+				rowsCleared++;
+
+				// Remove the row
+				for (let ry = y; ry > 0; ry--) {
+					for (let x = 0; x < config.gridWidth; x++) {
+						state.grid[ry][x] = state.grid[ry-1][x];
+					}
+				}
+
+				// Clear the top row
+				for (let x = 0; x < config.gridWidth; x++) {
+					state.grid[0][x] = null;
+				}
+
+				// Create particles for the entire row
+				for (let x = 0; x < config.gridWidth; x++) {
+					createParticles(
+						x * config.blockSize,
+						y * config.blockSize,
+						3,
+						'#FFFFFF'
+					);
+				}
+			}
+		}
+
+		// Award points for cleared rows
+		if (rowsCleared > 0) {
+			const points = [0, 100, 300, 600, 1000]; // Points for 0, 1, 2, 3, 4 rows
+			state.score += points[Math.min(rowsCleared, 4)];
+			scoreElement.textContent = `Score: ${state.score}`;
+		}
+	}
+
+	// Check if the current block fits at its position
+	function doesBlockFit(block) {
+		for (let y = 0; y < block.shape.length; y++) {
+			for (let x = 0; x < block.shape[0].length; x++) {
+				if (block.shape[y][x] === 1) {
+					const gridY = block.y + y;
+					const gridX = block.x + x;
+
+					// Check bounds
+					if (gridY < 0 || gridY >= config.gridHeight ||
+						gridX < 0 || gridX >= config.gridWidth) {
+						return false;
+					}
+
+					// Check collision with existing blocks
+					if (state.grid[gridY][gridX] !== null) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	// Rotate the current block
+	function rotateCurrentBlock() {
+		if (!state.currentBlock) return;
+
+		const block = state.currentBlock;
+
+		// Create a new matrix for the rotated shape
+		const rotated = [];
+		for (let x = 0; x < block.shape[0].length; x++) {
+			rotated[x] = [];
+			for (let y = 0; y < block.shape.length; y++) {
+				rotated[x][block.shape.length - 1 - y] = block.shape[y][x];
+			}
+		}
+
+		// Save current shape
+		const originalShape = block.shape;
+		const originalX = block.x;
+
+		// Try the rotation
+		block.shape = rotated;
+
+		// Wall kicks - if rotation doesn't fit, try shifting left/right
+		if (!doesBlockFit(block)) {
+			// Try moving left
+			block.x -= 1;
+			if (!doesBlockFit(block)) {
+				// Try moving right
+				block.x = originalX + 1;
+				if (!doesBlockFit(block)) {
+					// Try moving right more
+					block.x += 1;
+					if (!doesBlockFit(block)) {
+						// If all fails, revert back
+						block.x = originalX;
+						block.shape = originalShape;
+					}
+				}
+			}
+		}
+	}
+
+	// Shoot a bullet from the player
+	function shootBullet() {
+		if (state.phase !== 'playing') return;
+
+		if (!state.player.shooting) {
+			state.player.shooting = true;
+
+			// Create a new bullet
+			state.player.bullets.push({
+				x: state.player.x + (state.player.facing === 'right' ? state.player.width : 0),
+				y: state.player.y + state.player.height / 2,
+				width: 10,
+				height: 5,
+				velX: state.player.facing === 'right' ? 10 : -10
+			});
+
+			// Reset shooting after a delay
+			setTimeout(() => {
+				state.player.shooting = false;
+			}, 250);
+		}
+	}
+
+	// Update the building phase - Tetris style
+	function updateBuildingPhase(deltaTime) {
+		if (!state.currentBlock) return;
+
+		const block = state.currentBlock;
+
+		// Auto drop timer
+		state.dropTimer += deltaTime;
+
+		// Move block down automatically at regular intervals
+		if (state.dropTimer >= state.dropSpeed) {
+			state.dropTimer = 0;
+
+			// Try to move down
+			const newY = block.y + 1;
+
+			// Save current position
+			const originalY = block.y;
+
+			// Try the move
+			block.y = newY;
+
+			// If it doesn't fit, place the block and generate a new one
+			if (!doesBlockFit(block)) {
+				block.y = originalY;
+				placeCurrentBlock();
+			}
+		}
+
+		// Return to normal drop speed if down arrow is released
+		if (!state.keys['ArrowDown']) {
+			state.dropSpeed = config.normalDropSpeed;
+		}
+
+		// Update particles
+		updateParticles(deltaTime);
+	}
+
+	// Update particles
+	function updateParticles(deltaTime) {
+		for (let i = state.particles.length - 1; i >= 0; i--) {
+			const particle = state.particles[i];
+
+			particle.x += particle.velX;
+			particle.y += particle.velY;
+			particle.life -= 1;
+
+			if (particle.life <= 0) {
+				state.particles.splice(i, 1);
+			}
+		}
+	}
+
+	// Update the playing phase
+	function updatePlayingPhase(deltaTime) {
+		// If goal is reached, show victory screen
+		if (state.goalReached) {
+			return;
+		}
+
+		// Apply gravity to player
+		state.player.velY += config.gravity;
+
+		// Handle player movement
+		if (state.keys['ArrowLeft']) {
+			state.player.velX = -config.playerSpeed;
+			state.player.facing = 'left';
+		} else if (state.keys['ArrowRight']) {
+			state.player.velX = config.playerSpeed;
+			state.player.facing = 'right';
+		} else {
+			// Apply deceleration
+			state.player.velX *= 0.8;
+			if (Math.abs(state.player.velX) < 0.1) {
+				state.player.velX = 0;
+			}
+		}
+
+		// Handle jumping
+		if (state.keys[' '] && state.player.grounded) {
+			state.player.velY = -config.jumpPower;
+			state.player.grounded = false;
+			state.player.jumping = true;
+
+			// Play jump sound
+			// if (sounds.jump) sounds.jump.play();
+		}
+
+		// Update player position
+		state.player.x += state.player.velX;
+		state.player.y += state.player.velY;
+
+		// Update animation
+		updatePlayerAnimation(deltaTime);
+
+		// Check collisions with level
+		playerCollisions();
+
+		// Update bullets
+		updateBullets();
+
+		// Update enemies
+		updateEnemies(deltaTime);
+
+		// Update coins
+		updateCoins(deltaTime);
+
+		// Update particles
+		updateParticles(deltaTime);
+
+		// Check if player reached the goal
+		if (state.player.x >= state.goalX) {
+			state.goalReached = true;
+			showVictoryScreen();
+		}
+
+		// Check if player fell off the level
+		if (state.player.y > canvas.height + 100) {
+			playerDied();
+		}
+
+		// Update camera to follow player
+		updateCamera();
+	}
+
+	// Update player animation
+	function updatePlayerAnimation(deltaTime) {
+		// Increment the frame counter
+		state.player.animation.frameCounter++;
+
+		// Update animation frame
+		if (state.player.animation.frameCounter >= state.player.animation.frameSpeed) {
+			state.player.animation.frameCounter = 0;
+			state.player.animation.frame = (state.player.animation.frame + 1) % state.player.animation.maxFrames;
+		}
+	}
+
+	// Check collisions between player and level
+	function playerCollisions() {
+		// Reset grounded status
+		state.player.grounded = false;
+
+		// Get blocks that are relevant to the player's position
+		const startX = Math.floor(state.player.x / config.playBlockSize) - 1;
+		const endX = Math.ceil((state.player.x + state.player.width) / config.playBlockSize) + 1;
+		const startY = Math.floor(state.player.y / config.playBlockSize) - 1;
+		const endY = Math.ceil((state.player.y + state.player.height) / config.playBlockSize) + 1;
+
+		// Check each potential collision block
+		for (let y = Math.max(0, startY); y < Math.min(endY, config.gridHeight); y++) {
+			for (let x = Math.max(0, startX); x < Math.min(endX, config.gridWidth); x++) {
+				// Check if there's a valid block at this position
+				if (state.grid[y] && state.grid[y][x]) {
+					const blockType = blockTypes.find(t => t.id === state.grid[y][x].type);
+
+					// Skip if block type doesn't exist or isn't solid
+					if (!blockType || !blockType.solid) {
+						// Special handling for liquid blocks
+						if (blockType && blockType.liquid) {
+							handleLiquidCollision(x, y);
+						}
+						continue;
+					}
+
+					// Calculate block position in world coordinates
+					const blockX = x * config.playBlockSize;
+					const blockY = y * config.playBlockSize;
+
+					// Check for collision
+					if (state.player.x + state.player.width > blockX &&
+						state.player.x < blockX + config.playBlockSize &&
+						state.player.y + state.player.height > blockY &&
+						state.player.y < blockY + config.playBlockSize) {
+
+						// Determine the side of collision
+						const overlapLeft = (state.player.x + state.player.width) - blockX;
+						const overlapRight = (blockX + config.playBlockSize) - state.player.x;
+						const overlapTop = (state.player.y + state.player.height) - blockY;
+						const overlapBottom = (blockY + config.playBlockSize) - state.player.y;
+
+						// Find the minimal overlap
+						const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+						// Resolve the collision
+						if (minOverlap === overlapTop && state.player.velY >= 0) {
+							// Collision from top
+							state.player.y = blockY - state.player.height;
+							state.player.velY = 0;
+							state.player.grounded = true;
+							state.player.jumping = false;
+
+							// Handle bounce blocks
+							if (blockType.bounce) {
+								state.player.velY = -config.jumpPower * 1.5;
+								state.player.grounded = false;
+								state.player.jumping = true;
+
+								// Create bounce particles
+								createParticles(
+									state.player.x + state.player.width / 2,
+									state.player.y + state.player.height,
+									10,
+									'#FFD700'
+								);
+							}
+						} else if (minOverlap === overlapBottom && state.player.velY < 0) {
+							// Collision from bottom
+							state.player.y = blockY + config.playBlockSize;
+							state.player.velY = 0;
+						} else if (minOverlap === overlapLeft && state.player.velX > 0) {
+							// Collision from left
+							state.player.x = blockX - state.player.width;
+							state.player.velX = 0;
+						} else if (minOverlap === overlapRight && state.player.velX < 0) {
+							// Collision from right
+							state.player.x = blockX + config.playBlockSize;
+							state.player.velX = 0;
+						}
+					}
+				}
+			}
+		}
+
+		// Prevent falling through the bottom of the level
+		if (state.player.y > canvas.height) {
+			playerDied();
+		}
+	}
+
+	// Handle player in liquid blocks
+	function handleLiquidCollision(x, y) {
+		// Calculate block position in world coordinates
+		const blockX = x * config.playBlockSize;
+		const blockY = y * config.playBlockSize;
+
+		// Check if player is in water
+		if (state.player.x + state.player.width > blockX &&
+			state.player.x < blockX + config.playBlockSize &&
+			state.player.y + state.player.height > blockY &&
+			state.player.y < blockY + config.playBlockSize) {
+
+			// Slow down in water
+			state.player.velX *= 0.9;
+			state.player.velY *= 0.9;
+
+			// Reduced gravity in water
+			if (state.player.velY > config.gravity) {
+				state.player.velY = config.gravity;
+			}
+
+			// Create bubble particles
+			if (Math.random() < 0.1) {
+				createParticles(
+					state.player.x + Math.random() * state.player.width,
+					state.player.y + Math.random() * state.player.height,
+					1,
+					'rgba(255, 255, 255, 0.7)'
+				);
+			}
+		}
+	}
+
+	// Update bullets
+	function updateBullets() {
+		// Move bullets
+		for (let i = state.player.bullets.length - 1; i >= 0; i--) {
+			const bullet = state.player.bullets[i];
+			bullet.x += bullet.velX;
+
+			// Check for collisions with level
+			const bulletX = Math.floor(bullet.x / config.playBlockSize);
+			const bulletY = Math.floor(bullet.y / config.playBlockSize);
+
+			if (bulletY >= 0 && bulletY < config.gridHeight &&
+				bulletX >= 0 && bulletX < config.gridWidth &&
+				state.grid[bulletY][bulletX] &&
+				blockTypes.find(t => t.id === state.grid[bulletY][bulletX].type).solid) {
+				// Bullet hit a solid block
+				createParticles(bullet.x, bullet.y, 5, '#FFD700');
+				state.player.bullets.splice(i, 1);
+				continue;
+			}
+
+			// Check for collisions with enemies
+			for (let j = state.enemies.length - 1; j >= 0; j--) {
+				const enemy = state.enemies[j];
+
+				if (bullet.x + bullet.width > enemy.x - enemy.width/2 &&
+					bullet.x < enemy.x + enemy.width/2 &&
+					bullet.y + bullet.height > enemy.y - enemy.height/2 &&
+					bullet.y < enemy.y + enemy.height/2) {
+					// Bullet hit an enemy
+					enemy.health--;
+
+					// Play enemy hit sound
+					// if (sounds.enemyHit) sounds.enemyHit.play();
+
+					if (enemy.health <= 0) {
+						// Create explosion particles
+						createParticles(enemy.x, enemy.y, 20, '#FF0000');
+
+						state.enemies.splice(j, 1);
+						state.score += 100;
+						scoreElement.textContent = `Score: ${state.score}`;
+					}
+
+					state.player.bullets.splice(i, 1);
+					break;
+				}
+			}
+
+			// Remove bullets that are off-screen
+			if (bullet.x < state.camera.x - 100 || bullet.x > state.camera.x + canvas.width + 100) {
+				state.player.bullets.splice(i, 1);
+			}
+		}
+	}
+
+	// Update enemies
+	function updateEnemies(deltaTime) {
+		for (let i = state.enemies.length - 1; i >= 0; i--) {
+			const enemy = state.enemies[i];
+
+			// Update animation
+			enemy.animation.frameCounter++;
+			if (enemy.animation.frameCounter >= enemy.animation.frameSpeed) {
+				enemy.animation.frameCounter = 0;
+				enemy.animation.frame = (enemy.animation.frame + 1) % enemy.animation.maxFrames;
+			}
+
+			// Apply gravity
+			enemy.velY = enemy.velY || 0;
+			enemy.velY += config.gravity * 0.7;
+
+			// Simple AI based on enemy type
+			if (enemy.type === 'walker') {
+				// Move horizontally and change direction if hitting a wall
+				enemy.x += enemy.velX;
+
+				// Check if enemy would fall off or hit a wall
+				const aheadX = Math.floor((enemy.x + enemy.velX * 10 + (enemy.velX > 0 ? enemy.width/2 : -enemy.width/2)) / config.playBlockSize);
+				const belowX = Math.floor((enemy.x + (enemy.velX > 0 ? enemy.width/2 : -enemy.width/2)) / config.playBlockSize);
+				const belowY = Math.floor((enemy.y + enemy.height/2 + 5) / config.playBlockSize);
+				const atX = Math.floor((enemy.x + (enemy.velX > 0 ? enemy.width/2 : -enemy.width/2)) / config.playBlockSize);
+				const atY = Math.floor((enemy.y) / config.playBlockSize);
+
+				// Check for edge or wall
+				const hasPlatformAhead = belowY < config.gridHeight && aheadX >= 0 && aheadX < config.gridWidth &&
+					state.grid[belowY][belowX] && blockTypes.find(t => t.id === state.grid[belowY][belowX].type).solid;
+				const hasWallAhead = atY >= 0 && atY < config.gridHeight && aheadX >= 0 && aheadX < config.gridWidth &&
+					state.grid[atY][aheadX] && blockTypes.find(t => t.id === state.grid[atY][aheadX].type).solid;
+
+				if (!hasPlatformAhead || hasWallAhead) {
+					// Change direction
+					enemy.velX = -enemy.velX;
+				}
+			} else if (enemy.type === 'jumper') {
+				// Move
+				enemy.x += enemy.velX;
+				enemy.y += enemy.velY;
+
+				// Check for ground
+				const enemyBottomX = Math.floor(enemy.x / config.playBlockSize);
+				const enemyBottomY = Math.floor((enemy.y + enemy.height/2) / config.playBlockSize);
+
+				if (enemyBottomY < config.gridHeight && enemyBottomX >= 0 && enemyBottomX < config.gridWidth &&
+					state.grid[enemyBottomY][enemyBottomX] && blockTypes.find(t => t.id === state.grid[enemyBottomY][enemyBottomX].type).solid) {
+					// On ground
+					enemy.y = enemyBottomY * config.playBlockSize - enemy.height/2;
+					enemy.velY = 0;
+
+					// Jump if timer is up
+					enemy.jumpTimer = enemy.jumpTimer || 0;
+					enemy.jumpTimer += deltaTime;
+
+					if (enemy.jumpTimer > 1000) { // Jump every second
+						enemy.velY = -8;
+						enemy.jumpTimer = 0;
+
+						// Chance to change direction
+						if (Math.random() < 0.3) {
+							enemy.velX = -enemy.velX;
+						}
+					}
+				}
+
+				// Check for walls
+				const enemyX = Math.floor((enemy.x + (enemy.velX > 0 ? enemy.width/2 : -enemy.width/2)) / config.playBlockSize);
+				const enemyY = Math.floor(enemy.y / config.playBlockSize);
+
+				if (enemyY >= 0 && enemyY < config.gridHeight && enemyX >= 0 && enemyX < config.gridWidth &&
+					state.grid[enemyY][enemyX] && blockTypes.find(t => t.id === state.grid[enemyY][enemyX].type).solid) {
+					// Hit a wall, change direction
+					enemy.velX = -enemy.velX;
+				}
+			}
+
+			// Check for collision with player (only if player is not invulnerable)
+			if (!state.player.invulnerable &&
+				state.player.x + state.player.width > enemy.x - enemy.width/2 &&
+				state.player.x < enemy.x + enemy.width/2 &&
+				state.player.y + state.player.height > enemy.y - enemy.height/2 &&
+				state.player.y < enemy.y + enemy.height/2) {
+
+				// Check if player is jumping on the enemy
+				if (state.player.velY > 0 && state.player.y + state.player.height < enemy.y) {
+					// Kill the enemy
+					enemy.health = 0;
+					createParticles(enemy.x, enemy.y, 15, '#FF0000');
+					state.enemies.splice(i, 1);
+
+					// Bounce off the enemy
+					state.player.velY = -config.jumpPower * 0.7;
+
+					// Add score
+					state.score += 150;
+					scoreElement.textContent = `Score: ${state.score}`;
+				} else {
+					// Player is hit
+					playerHit();
+				}
+			}
+		}
+	}
+
+	// Update coins with safety check
+	function updateCoins(deltaTime) {
+		// Make sure coins is initialized
+		if (!state.coins || !Array.isArray(state.coins)) {
+			state.coins = [];
+			return;
+		}
+
+		for (let i = state.coins.length - 1; i >= 0; i--) {
+			const coin = state.coins[i];
+
+			// Animation
+			coin.animation.frameCounter++;
+			if (coin.animation.frameCounter >= coin.animation.frameSpeed) {
+				coin.animation.frameCounter = 0;
+				coin.animation.frame = (coin.animation.frame + 1) % coin.animation.maxFrames;
+			}
+
+			// Bobbing effect
+			coin.animation.offsetY = Math.sin(Date.now() / 200) * 5;
+
+			// Check collection by player
+			if (!coin.collected &&
+				state.player.x + state.player.width > coin.x - coin.width/2 &&
+				state.player.x < coin.x + coin.width/2 &&
+				state.player.y + state.player.height > coin.y - coin.height/2 + coin.animation.offsetY &&
+				state.player.y < coin.y + coin.height/2 + coin.animation.offsetY) {
+
+				coin.collected = true;
+
+				// Play coin sound
+				// if (sounds.coin) sounds.coin.play();
+
+				// Create particles
+				createParticles(coin.x, coin.y, 10, '#FFD700');
+
+				// Add score and coin counter
+				state.score += 50;
+				state.coins++;
+				scoreElement.textContent = `Score: ${state.score}`;
+				coinsElement.textContent = `Coins: ${state.coins}`;
+
+				// Remove coin
+				state.coins.splice(i, 1);
+			}
+		}
+	}
+
+	// Update camera position to follow player
+	function updateCamera() {
+		// Target X position (center on player)
+		const targetX = state.player.x - canvas.width / 2 + state.player.width / 2;
+
+		// Smoothly move camera
+		state.camera.x += (targetX - state.camera.x) * 0.1;
+
+		// Clamp camera to level bounds
+		state.camera.x = Math.max(0, Math.min(state.camera.x, config.gridWidth * config.playBlockSize - canvas.width));
+	}
+
+	// Player is hit by enemy or hazard
+	function playerHit() {
+		if (state.player.invulnerable) return;
+
+		// Play hit sound
+		// if (sounds.playerHit) sounds.playerHit.play();
+
+		// Reduce lives
+		state.lives--;
+		livesElement.textContent = `Lives: ${state.lives}`;
+
+		// Create hit particles
+		createParticles(state.player.x + state.player.width/2, state.player.y + state.player.height/2, 15, '#FF6347');
+
+		// Set invulnerability
+		state.player.invulnerable = true;
+
+		// Knockback
+		state.player.velX = (state.player.facing === 'right') ? -5 : 5;
+		state.player.velY = -5;
+
+		// Remove invulnerability after a delay
+		setTimeout(() => {
+			state.player.invulnerable = false;
+		}, 2000);
+
+		// Check for game over
+		if (state.lives <= 0) {
+			gameOver();
+		}
+	}
+
+	// Player died (fell off level or out of lives)
+	function playerDied() {
+		// Reduce lives
+		state.lives--;
+		livesElement.textContent = `Lives: ${state.lives}`;
+
+		if (state.lives <= 0) {
+			gameOver();
+		} else {
+			// Reset player position
+			resetPlayerPosition();
+		}
+	}
+
+	// Reset player to start position
+	function resetPlayerPosition() {
+		state.player.x = 50;
+		state.player.y = 100;
+		state.player.velX = 0;
+		state.player.velY = 0;
+		state.player.invulnerable = true;
+
+		// Remove invulnerability after a delay
+		setTimeout(() => {
+			state.player.invulnerable = false;
+		}, 2000);
+	}
+
+	// Game over
+	function gameOver() {
+		state.phase = 'gameover';
+		updateInstructions();
+
+		// Play game over sound
+		// if (sounds.gameOver) sounds.gameOver.play();
+	}
+
+	// Show victory screen
+	function showVictoryScreen() {
+		state.phase = 'victory';
+		updateInstructions();
+
+		// Play victory sound
+		// if (sounds.levelComplete) sounds.levelComplete.play();
+
+		// Add some score bonus for winning
+		state.score += config.levelCompleteBonus;
+		scoreElement.textContent = `Score: ${state.score}`;
+	}
+
+	// Start next level
+	function startNextLevel() {
+		state.level++;
+		levelIndicator.textContent = `Level: ${state.level}`;
+
+		// Increase difficulty
+		config.enemySpawnChance = Math.min(0.6, config.enemySpawnChance + 0.05);
+
+		// Reset grid and prepare for building phase
+		showTransition(() => {
+			resetGrid();
+
+			state.phase = 'building';
+			phaseIndicator.textContent = 'BUILDING PHASE';
+			state.currentBlock = null;
+			state.nextBlock = null;
+			state.dropTimer = 0;
+			state.goalReached = false;
+
+			generateNewBlock();
+			generateNewBlock();
+
+			updateInstructions();
+			startBuildTimer();
+		});
+	}
+
+	// Restart the game
+	function restartGame() {
+		state.level = config.initialLevel;
+		state.score = 0;
+		state.coins = 0;
+		state.lives = config.maxLives;
+
+		levelIndicator.textContent = `Level: ${state.level}`;
+		scoreElement.textContent = `Score: ${state.score}`;
+		coinsElement.textContent = `Coins: ${state.coins}`;
+		livesElement.textContent = `Lives: ${state.lives}`;
+
+		// Reset difficulty
+		config.enemySpawnChance = 0.3;
+
+		// Reset grid and prepare for building phase
+		showTransition(() => {
+			resetGrid();
+
+			state.phase = 'building';
+			phaseIndicator.textContent = 'BUILDING PHASE';
+			state.currentBlock = null;
+			state.nextBlock = null;
+			state.dropTimer = 0;
+			state.goalReached = false;
+
+			generateNewBlock();
+			generateNewBlock();
+
+			updateInstructions();
+			startBuildTimer();
+		});
+	}
+
+	// Draw the goal flag
+	function renderGoalFlag() {
+		const flagX = state.goalX;
+		const flagY = 0;
+
+		// Find the ground level at the goal position
+		for (let y = 0; y < config.gridHeight; y++) {
+			const gridX = Math.floor(flagX / config.playBlockSize);
+			if (y < config.gridHeight && gridX < config.gridWidth &&
+				state.grid[y][gridX] &&
+				blockTypes.find(t => t.id === state.grid[y][gridX].type).solid) {
+				// Found a solid block, put the flag pole on top of it
+				const poleY = y * config.playBlockSize;
+
+				// Draw flag pole
+				ctx.fillStyle = '#8B4513';
+				ctx.fillRect(flagX, poleY - 100, 6, 100);
+
+				// Draw flag
+				ctx.fillStyle = '#FF4500';
+				ctx.beginPath();
+				ctx.moveTo(flagX + 6, poleY - 100);
+				ctx.lineTo(flagX + 30, poleY - 85);
+				ctx.lineTo(flagX + 6, poleY - 70);
+				ctx.fill();
+
+				// Add flagpole top
+				ctx.fillStyle = '#FFD700';
+				ctx.beginPath();
+				ctx.arc(flagX + 3, poleY - 100, 5, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Wave animation
+				const waveOffset = Math.sin(Date.now() / 200) * 3;
+				ctx.fillStyle = '#FF4500';
+				ctx.beginPath();
+				ctx.moveTo(flagX + 6, poleY - 100);
+				ctx.lineTo(flagX + 30, poleY - 85 + waveOffset);
+				ctx.lineTo(flagX + 6, poleY - 70);
+				ctx.fill();
+
+				break;
+			}
+		}
+	}
+
+	// Render the building phase
+	function renderBuildingPhase() {
+		// Clear the canvas
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		// Draw background
+		ctx.fillStyle = '#111';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		// Draw grid background
+		ctx.fillStyle = '#101828';
+		ctx.fillRect(0, 0, config.gridWidth * config.blockSize, config.gridHeight * config.blockSize);
+
+		// Draw the grid
+		for (let y = 0; y < config.gridHeight; y++) {
+			for (let x = 0; x < config.gridWidth; x++) {
+				// Draw grid cell outlines
+				ctx.strokeStyle = '#333';
+				ctx.strokeRect(x * config.blockSize, y * config.blockSize, config.blockSize, config.blockSize);
+
+				// Draw block if there is one
+				if (state.grid[y][x]) {
+					const blockType = blockTypes.find(t => t.id === state.grid[y][x].type);
+					ctx.fillStyle = blockType.color;
+					ctx.fillRect(x * config.blockSize, y * config.blockSize, config.blockSize, config.blockSize);
+
+					// Add inner border to make blocks more visible
+					ctx.strokeStyle = '#fff';
+					ctx.lineWidth = 1;
+					ctx.strokeRect(
+						x * config.blockSize + 1,
+						y * config.blockSize + 1,
+						config.blockSize - 2,
+						config.blockSize - 2
+					);
+				}
+			}
+		}
+
+		// Draw the current block
+		if (state.currentBlock) {
+			const block = state.currentBlock;
+
+			// Draw ghost piece (preview of where the piece will land)
+			ctx.globalAlpha = 0.3;
+
+			// Make a copy of the current block
+			const ghostBlock = {
+				shape: block.shape,
+				x: block.x,
+				y: block.y,
+				type: block.type
+			};
+
+			// Drop the ghost block all the way down
+			while (doesBlockFit(ghostBlock)) {
+				ghostBlock.y += 1;
+			}
+
+			// Back up one step (we went one too far)
+			ghostBlock.y -= 1;
+
+			// Only draw if it's different from the current position
+			if (ghostBlock.y > block.y) {
+				ctx.fillStyle = block.type.color;
+				for (let y = 0; y < ghostBlock.shape.length; y++) {
+					for (let x = 0; x < ghostBlock.shape[0].length; x++) {
+						if (ghostBlock.shape[y][x] === 1) {
+							ctx.fillRect(
+								(ghostBlock.x + x) * config.blockSize,
+								(ghostBlock.y + y) * config.blockSize,
+								config.blockSize,
+								config.blockSize
+							);
+						}
+					}
+				}
+			}
+
+			ctx.globalAlpha = 1.0;
+
+			// Draw the actual block
+			ctx.fillStyle = block.type.color;
+
+			for (let y = 0; y < block.shape.length; y++) {
+				for (let x = 0; x < block.shape[0].length; x++) {
+					if (block.shape[y][x] === 1) {
+						ctx.fillRect(
+							(block.x + x) * config.blockSize,
+							(block.y + y) * config.blockSize,
+							config.blockSize,
+							config.blockSize
+						);
+
+						// Add inner border to make blocks more visible
+						ctx.strokeStyle = '#fff';
+						ctx.lineWidth = 1;
+						ctx.strokeRect(
+							(block.x + x) * config.blockSize + 1,
+							(block.y + y) * config.blockSize + 1,
+							config.blockSize - 2,
+							config.blockSize - 2
+						);
+					}
+				}
+			}
+		}
+
+		// Draw the next block preview
+		drawNextBlockPreview();
+
+		// Draw held block if there is one
+		drawHeldBlockPreview();
+
+		// Draw particles
+		renderParticles();
+
+		// Draw transition overlay if active
+		renderTransitionOverlay();
+	}
+
+	// Draw the next block preview
+	function drawNextBlockPreview() {
+		if (state.nextBlock) {
+			const block = state.nextBlock;
+
+			// Draw preview box background
+			ctx.fillStyle = '#222';
+			ctx.fillRect(canvas.width - 120, 10, 110, 100);
+			ctx.strokeStyle = '#555';
+			ctx.strokeRect(canvas.width - 120, 10, 110, 100);
+
+			// Title for next block
+			ctx.fillStyle = '#fff';
+			ctx.font = '14px Arial';
+			ctx.fillText('Next Block:', canvas.width - 110, 30);
+
+			ctx.fillStyle = block.type.color;
+
+			// Center the block in the preview box
+			const previewX = canvas.width - 75 - (block.shape[0].length * config.blockSize) / 2;
+			const previewY = 50;
+
+			for (let y = 0; y < block.shape.length; y++) {
+				for (let x = 0; x < block.shape[0].length; x++) {
+					if (block.shape[y][x] === 1) {
+						ctx.fillRect(
+							previewX + x * config.blockSize,
+							previewY + y * config.blockSize,
+							config.blockSize,
+							config.blockSize
+						);
+
+						// Add inner border
+						ctx.strokeStyle = '#fff';
+						ctx.lineWidth = 1;
+						ctx.strokeRect(
+							previewX + x * config.blockSize + 1,
+							previewY + y * config.blockSize + 1,
+							config.blockSize - 2,
+							config.blockSize - 2
+						);
+					}
+				}
+			}
+		}
+	}
+
+	// Draw the held block preview
+	function drawHeldBlockPreview() {
+		if (state.heldBlock) {
+			const block = state.heldBlock;
+
+			// Draw preview box background
+			ctx.fillStyle = '#222';
+			ctx.fillRect(canvas.width - 120, 120, 110, 100);
+			ctx.strokeStyle = '#555';
+			ctx.strokeRect(canvas.width - 120, 120, 110, 100);
+
+			// Title for held block
+			ctx.fillStyle = '#fff';
+			ctx.font = '14px Arial';
+			ctx.fillText('Held Block:', canvas.width - 110, 140);
+
+			ctx.fillStyle = block.type.color;
+
+			// Center the block in the preview box
+			const previewX = canvas.width - 75 - (block.shape[0].length * config.blockSize) / 2;
+			const previewY = 160;
+
+			for (let y = 0; y < block.shape.length; y++) {
+				for (let x = 0; x < block.shape[0].length; x++) {
+					if (block.shape[y][x] === 1) {
+						ctx.fillRect(
+							previewX + x * config.blockSize,
+							previewY + y * config.blockSize,
+							config.blockSize,
+							config.blockSize
+						);
+
+						// Add inner border
+						ctx.strokeStyle = '#fff';
+						ctx.lineWidth = 1;
+						ctx.strokeRect(
+							previewX + x * config.blockSize + 1,
+							previewY + y * config.blockSize + 1,
+							config.blockSize - 2,
+							config.blockSize - 2
+						);
+					}
+				}
+			}
+
+			// Show hold disabled indicator if can't hold
+			if (!state.canHold) {
+				ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+				ctx.fillRect(canvas.width - 120, 120, 110, 100);
+			}
+		}
+	}
+
+	// Render the playing phase
+	function renderPlayingPhase() {
+		// Clear the canvas
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		// Draw the sky
+		const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+		skyGradient.addColorStop(0, '#87CEEB');
+		skyGradient.addColorStop(1, '#E0F7FF');
+		ctx.fillStyle = skyGradient;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		// Apply camera transform
+		ctx.save();
+		ctx.translate(-state.camera.x, -state.camera.y);
+
+		// Draw parallax background
+		renderParallaxBackground();
+
+		// Draw the level
+		renderLevel();
+
+		// Draw goal flag
+		renderGoalFlag();
+
+		// Draw coins
+		renderCoins();
+
+		// Draw enemies
+		renderEnemies();
+
+		// Draw particles
+		renderParticles();
+
+		// Draw the player
+		renderPlayer();
+
+		// Draw bullets
+		renderBullets();
+
+		// Restore camera transform
+		ctx.restore();
+
+		// Draw UI elements (not affected by camera)
+		renderUI();
+
+		// Draw transition overlay if active
+		renderTransitionOverlay();
+	}
+
+	// Render parallax background
+	function renderParallaxBackground() {
+		// Render each layer
+		for (let i = 0; i < state.parallax.layers.length; i++) {
+			const layer = state.parallax.layers[i];
+
+			// Calculate parallax offset based on camera position
+			const offsetX = state.camera.x * layer.speed;
+
+			// Draw each element in the layer
+			for (const element of layer.elements) {
+				// Calculate position with parallax effect
+				const x = element.x - offsetX;
+
+				// Only draw if in view
+				if (x + element.width > state.camera.x && x < state.camera.x + canvas.width) {
+					// Draw based on element type
+					if (i === 0) { // Mountains
+						ctx.fillStyle = element.color;
+						ctx.beginPath();
+						ctx.moveTo(x, element.y + element.height);
+						ctx.lineTo(x + element.width * 0.2, element.y + element.height * 0.7);
+						ctx.lineTo(x + element.width * 0.5, element.y);
+						ctx.lineTo(x + element.width * 0.8, element.y + element.height * 0.6);
+						ctx.lineTo(x + element.width, element.y + element.height);
+						ctx.closePath();
+						ctx.fill();
+					} else if (i === 1) { // Hills
+						ctx.fillStyle = element.color;
+						ctx.beginPath();
+						ctx.moveTo(x, element.y + element.height);
+
+						// Create a smooth hill using quadratic curves
+						ctx.quadraticCurveTo(
+							x + element.width * 0.5, element.y,
+							x + element.width, element.y + element.height
+						);
+
+						ctx.closePath();
+						ctx.fill();
+					} else if (i === 2) { // Clouds
+						ctx.fillStyle = element.color;
+						ctx.beginPath();
+						ctx.arc(x + element.width * 0.3, element.y + element.height * 0.5, element.width * 0.3, 0, Math.PI * 2);
+						ctx.arc(x + element.width * 0.6, element.y + element.height * 0.3, element.width * 0.4, 0, Math.PI * 2);
+						ctx.arc(x + element.width * 0.7, element.y + element.height * 0.7, element.width * 0.3, 0, Math.PI * 2);
+						ctx.closePath();
+						ctx.fill();
+					}
+				}
+			}
+		}
+	}
+
+	// Render the level
+	function renderLevel() {
+		// Cache some values to avoid recalculating in render loops
+		const soilDots = [];
+		const grassStrands = [];
+		const caveMarkings = [];
+
+		// Pre-calculate some visual elements for reuse
+		for (let i = 0; i < 10; i++) {
+			soilDots.push({
+				x: Math.random(),
+				y: Math.random(),
+				size: 1 + Math.random() * 3
+			});
+		}
+
+		for (let g = 0; g < 8; g++) {
+			grassStrands.push({
+				x: 5 + g * 30 / 7,
+				height: 3 + Math.random() * 5
+			});
+		}
+
+		for (let i = 0; i < 5; i++) {
+			caveMarkings.push({
+				x: Math.random(),
+				y: Math.random(),
+				size: 2 + Math.random() * 5
+			});
+		}
+
+		// Draw the blocks
+		for (let y = 0; y < config.gridHeight; y++) {
+			for (let x = 0; x < config.gridWidth; x++) {
+				if (state.grid[y][x]) {
+					const blockType = blockTypes.find(t => t.id === state.grid[y][x].type);
+
+					const blockX = x * config.playBlockSize;
+					const blockY = y * config.playBlockSize;
+
+					// Skip if off-screen
+					if (blockX + config.playBlockSize < state.camera.x ||
+						blockX > state.camera.x + canvas.width ||
+						blockY + config.playBlockSize < state.camera.y ||
+						blockY > state.camera.y + canvas.height) {
+						continue;
+					}
+
+					// Draw the block
+					if (blockType.liquid) {
+						// Pre-calculated water values
+						const time = Date.now() / 500;
+						const leftEmpty = x > 0 && state.grid[y][x-1] === null;
+						const rightEmpty = x < config.gridWidth - 1 && state.grid[y][x+1] === null;
+						const bottomEmpty = y < config.gridHeight - 1 && state.grid[y+1][x] === null;
+
+						// Draw water with wave effect
+						for (let wx = 0; wx < config.playBlockSize; wx += 5) {
+							let waveHeight = 3 * Math.sin((wx / 10 + time) % Math.PI * 2);
+
+							// Add flow effect at edges
+							if (leftEmpty && wx < 10) {
+								waveHeight += 5 * (1 - wx / 10);
+							}
+							if (rightEmpty && wx > config.playBlockSize - 10) {
+								waveHeight += 5 * (1 - (config.playBlockSize - wx) / 10);
+							}
+
+							ctx.fillStyle = blockType.playColor;
+							ctx.fillRect(
+								blockX + wx,
+								blockY + waveHeight,
+								5,
+								config.playBlockSize - waveHeight + (bottomEmpty ? 5 : 0)
+							);
+						}
+
+						// Add water surface highlight
+						ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+						ctx.beginPath();
+						ctx.moveTo(blockX, blockY);
+
+						for (let wx = 0; wx <= config.playBlockSize; wx += 5) {
+							let waveHeight = 3 * Math.sin((wx / 10 + time) % Math.PI * 2);
+
+							// Add flow effect at edges
+							if (leftEmpty && wx < 10) {
+								waveHeight += 5 * (1 - wx / 10);
+							}
+							if (rightEmpty && wx > config.playBlockSize - 10) {
+								waveHeight += 5 * (1 - (config.playBlockSize - wx) / 10);
+							}
+
+							ctx.lineTo(blockX + wx, blockY + waveHeight);
+						}
+
+						ctx.lineTo(blockX + config.playBlockSize, blockY);
+						ctx.closePath();
+						ctx.fill();
+					} else {
+						// Solid blocks
+						ctx.fillStyle = blockType.playColor;
+						ctx.fillRect(blockX, blockY, config.playBlockSize, config.playBlockSize);
+
+						// Add details based on block type
+						if (blockType.topGrass && !isBlockAbove(x, y)) {
+							// Draw grass on top of ground blocks with no block above
+							const grassGradient = ctx.createLinearGradient(0, blockY, 0, blockY + 15);
+							grassGradient.addColorStop(0, '#3a3');
+							grassGradient.addColorStop(1, '#282');
+							ctx.fillStyle = grassGradient;
+							ctx.fillRect(blockX, blockY, config.playBlockSize, 8);
+
+							// Add small grass strands - using pre-calculated values
+							ctx.fillStyle = '#4a4';
+							for (const grass of grassStrands) {
+								const grassX = blockX + grass.x;
+								ctx.fillRect(grassX, blockY - grass.height, 2, grass.height);
+							}
+
+							// Draw soil texture for underground blocks
+							if (isBlockBelow(x, y) && state.grid[y+1][x].type === 'ground') {
+								// Draw dirt texture
+								ctx.fillStyle = '#7D5A38'; // Darker brown for soil
+								ctx.fillRect(blockX, blockY + 8, config.playBlockSize, config.playBlockSize - 8);
+
+								// Add some soil dots/marks using pre-calculated values
+								ctx.fillStyle = '#6B4C30';
+								for (const dot of soilDots) {
+									ctx.fillRect(
+										blockX + dot.x * config.playBlockSize,
+										blockY + 10 + dot.y * (config.playBlockSize - 10),
+										dot.size,
+										dot.size
+									);
+								}
+							}
+						} else if (blockType.id === 'ground' && isBlockAbove(x, y) &&
+							state.grid[y-1][x].type === 'ground') {
+							// This is an underground soil block
+							ctx.fillStyle = '#7D5A38'; // Darker brown for soil
+							ctx.fillRect(blockX, blockY, config.playBlockSize, config.playBlockSize);
+
+							// Add some soil dots/marks using pre-calculated values
+							ctx.fillStyle = '#6B4C30';
+							for (const dot of soilDots) {
+								ctx.fillRect(
+									blockX + dot.x * config.playBlockSize,
+									blockY + dot.y * config.playBlockSize,
+									dot.size,
+									dot.size
+								);
+							}
+						} else if (blockType.cave) {
+							// Add some cave details using pre-calculated values
+							ctx.fillStyle = '#333';
+
+							for (const mark of caveMarkings) {
+								ctx.beginPath();
+								ctx.arc(
+									blockX + mark.x * config.playBlockSize,
+									blockY + mark.y * config.playBlockSize,
+									mark.size,
+									0,
+									Math.PI * 2
+								);
+								ctx.fill();
+							}
+						} else if (blockType.bounce) {
+							// Add bounce indicator
+							ctx.fillStyle = '#ff0';
+							ctx.fillRect(blockX + 5, blockY + 5, config.playBlockSize - 10, config.playBlockSize - 10);
+
+							// Add arrows
+							ctx.strokeStyle = '#000';
+							ctx.lineWidth = 2;
+
+							// Draw up arrows
+							for (let i = 0; i < 3; i++) {
+								const arrowX = blockX + 10 + i * 10;
+
+								ctx.beginPath();
+								ctx.moveTo(arrowX, blockY + 30);
+								ctx.lineTo(arrowX, blockY + 15);
+								ctx.lineTo(arrowX - 5, blockY + 20);
+								ctx.moveTo(arrowX, blockY + 15);
+								ctx.lineTo(arrowX + 5, blockY + 20);
+								ctx.stroke();
+							}
+						}
+
+						// Draw block outlines
+						ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+						ctx.lineWidth = 1;
+						ctx.strokeRect(blockX, blockY, config.playBlockSize, config.playBlockSize);
+					}
+				}
+			}
+		}
+	}
+
+	// Check if there's a block above a given position
+	function isBlockAbove(x, y) {
+		return y > 0 && state.grid[y-1][x] !== null;
+	}
+
+	// Check if there's a block below a given position
+	function isBlockBelow(x, y) {
+		return y < config.gridHeight - 1 && state.grid[y+1][x] !== null;
+	}
+
+	// Render coins with safety check
+	function renderCoins() {
+		// Make sure coins is initialized
+		if (!state.coins || !Array.isArray(state.coins)) {
+			state.coins = [];
+			return;
+		}
+
+		for (const coin of state.coins) {
+			// Skip if off-screen
+			if (coin.x + coin.width < state.camera.x ||
+				coin.x - coin.width > state.camera.x + canvas.width ||
+				coin.y + coin.height < state.camera.y ||
+				coin.y - coin.height > state.camera.y + canvas.height) {
+				continue;
+			}
+
+			// Draw coin with animation
+			const frameAngle = coin.animation.frame * (Math.PI * 2 / coin.animation.maxFrames);
+			const coinWidth = Math.abs(Math.cos(frameAngle)) * coin.width;
+
+			// Gold gradient
+			const coinGradient = ctx.createLinearGradient(
+				coin.x - coinWidth/2,
+				coin.y - coin.height/2 + coin.animation.offsetY,
+				coin.x + coinWidth/2,
+				coin.y + coin.height/2 + coin.animation.offsetY
+			);
+			coinGradient.addColorStop(0, '#FFD700');
+			coinGradient.addColorStop(0.5, '#FFF380');
+			coinGradient.addColorStop(1, '#FFD700');
+
+			ctx.fillStyle = coinGradient;
+
+			// Draw coin (simple ellipse that changes width based on rotation)
+			ctx.beginPath();
+			ctx.ellipse(
+				coin.x,
+				coin.y + coin.animation.offsetY,
+				coinWidth/2,
+				coin.height/2,
+				0,
+				0,
+				Math.PI * 2
+			);
+			ctx.fill();
+
+			// Add shine effect
+			ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+			ctx.beginPath();
+			ctx.ellipse(
+				coin.x - coinWidth/4,
+				coin.y - coin.height/4 + coin.animation.offsetY,
+				coinWidth/6,
+				coin.height/6,
+				0,
+				0,
+				Math.PI * 2
+			);
+			ctx.fill();
+
+			// Add outer glow
+			ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.ellipse(
+				coin.x,
+				coin.y + coin.animation.offsetY,
+				coin.width/2 + 2,
+				coin.height/2 + 2,
+				0,
+				0,
+				Math.PI * 2
+			);
+			ctx.stroke();
+		}
+	}
+
+	// Render the player
+	function renderPlayer() {
+		// Skip if off-screen
+		if (state.player.x + state.player.width < state.camera.x ||
+			state.player.x > state.camera.x + canvas.width ||
+			state.player.y + state.player.height < state.camera.y ||
+			state.player.y > state.camera.y + canvas.height) {
+			return;
+		}
+
+		// Flash if invulnerable
+		if (state.player.invulnerable && Math.floor(Date.now() / 100) % 2 === 0) {
+			ctx.globalAlpha = 0.5;
+		}
+
+		// Draw player body
+		ctx.fillStyle = '#1E90FF';
+		ctx.fillRect(state.player.x, state.player.y, state.player.width, state.player.height);
+
+		// Add face details
+		const eyeX = state.player.facing === 'right' ? state.player.x + 20 : state.player.x + 7;
+		ctx.fillStyle = '#000';
+		ctx.fillRect(eyeX, state.player.y + 12, 5, 5);
+
+		// Draw animation details based on movement
+		if (state.player.velX !== 0) {
+			// Running animation (simple leg movement)
+			const legFrame = state.player.animation.frame % 4;
+			const legWidth = 6;
+			const legHeight = 12;
+
+			// Left leg
+			ctx.fillStyle = '#0066CC';
+			if (legFrame === 0) {
+				ctx.fillRect(state.player.x + 8, state.player.y + state.player.height - legHeight, legWidth, legHeight);
+			} else if (legFrame === 1) {
+				ctx.fillRect(state.player.x + 4, state.player.y + state.player.height - legHeight, legWidth, legHeight);
+			} else if (legFrame === 2) {
+				ctx.fillRect(state.player.x + 8, state.player.y + state.player.height - legHeight, legWidth, legHeight);
+			} else {
+				ctx.fillRect(state.player.x + 12, state.player.y + state.player.height - legHeight, legWidth, legHeight);
+			}
+
+			// Right leg
+			if (legFrame === 0) {
+				ctx.fillRect(state.player.x + 18, state.player.y + state.player.height - legHeight, legWidth, legHeight);
+			} else if (legFrame === 1) {
+				ctx.fillRect(state.player.x + 22, state.player.y + state.player.height - legHeight, legWidth, legHeight);
+			} else if (legFrame === 2) {
+				ctx.fillRect(state.player.x + 18, state.player.y + state.player.height - legHeight, legWidth, legHeight);
+			} else {
+				ctx.fillRect(state.player.x + 14, state.player.y + state.player.height - legHeight, legWidth, legHeight);
+			}
+		} else {
+			// Standing
+			ctx.fillStyle = '#0066CC';
+			ctx.fillRect(state.player.x + 8, state.player.y + state.player.height - 12, 6, 12);
+			ctx.fillRect(state.player.x + 18, state.player.y + state.player.height - 12, 6, 12);
+		}
+
+		// Draw arm
+		ctx.fillStyle = '#1E90FF';
+		if (state.player.shooting) {
+			// Extended arm when shooting
+			if (state.player.facing === 'right') {
+				ctx.fillRect(state.player.x + state.player.width - 5, state.player.y + 15, 10, 5);
+			} else {
+				ctx.fillRect(state.player.x - 10, state.player.y + 15, 10, 5);
+			}
+		} else {
+			// Normal arm
+			if (state.player.facing === 'right') {
+				ctx.fillRect(state.player.x + state.player.width - 5, state.player.y + 15, 5, 5);
+			} else {
+				ctx.fillRect(state.player.x, state.player.y + 15, 5, 5);
+			}
+		}
+
+		// Reset opacity
+		ctx.globalAlpha = 1.0;
+	}
+
+	// Render enemies
+	function renderEnemies() {
+		for (const enemy of state.enemies) {
+			// Skip if off-screen
+			if (enemy.x + enemy.width/2 < state.camera.x ||
+				enemy.x - enemy.width/2 > state.camera.x + canvas.width ||
+				enemy.y + enemy.height/2 < state.camera.y ||
+				enemy.y - enemy.height/2 > state.camera.y + canvas.height) {
+				continue;
+			}
+
+			if (enemy.type === 'walker') {
+				// Draw walker enemy
+				ctx.fillStyle = '#D32F2F';
+				ctx.fillRect(enemy.x - enemy.width/2, enemy.y - enemy.height/2, enemy.width, enemy.height);
+
+				// Draw eyes
+				ctx.fillStyle = '#000';
+				const eyeX = enemy.velX > 0 ? enemy.x - 5 : enemy.x + 5;
+				ctx.fillRect(eyeX - 5, enemy.y - 10, 5, 5);
+
+				// Draw legs (animation)
+				const legFrame = enemy.animation.frame;
+				ctx.fillStyle = '#B71C1C';
+
+				if (legFrame === 0 || legFrame === 2) {
+					ctx.fillRect(enemy.x - enemy.width/4 - 3, enemy.y, 6, 10);
+					ctx.fillRect(enemy.x + enemy.width/4 - 3, enemy.y, 6, 10);
+				} else {
+					ctx.fillRect(enemy.x - enemy.width/4 - 5, enemy.y, 6, 10);
+					ctx.fillRect(enemy.x + enemy.width/4 - 1, enemy.y, 6, 10);
+				}
+			} else if (enemy.type === 'jumper') {
+				// Draw jumper enemy
+				ctx.fillStyle = '#7B1FA2';
+
+				// Draw a more rounded shape for jumpers
+				ctx.beginPath();
+				ctx.arc(enemy.x, enemy.y, enemy.width/2, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Draw eyes
+				ctx.fillStyle = '#fff';
+				const eyeX = enemy.velX > 0 ? enemy.x + 5 : enemy.x - 5;
+				ctx.beginPath();
+				ctx.arc(eyeX, enemy.y - 5, 5, 0, Math.PI * 2);
+				ctx.fill();
+
+				ctx.fillStyle = '#000';
+				ctx.beginPath();
+				ctx.arc(eyeX, enemy.y - 5, 2, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Draw antenna
+				ctx.strokeStyle = '#7B1FA2';
+				ctx.lineWidth = 2;
+				const antennaAngle = Math.sin(Date.now() / 200) * 0.2;
+				ctx.beginPath();
+				ctx.moveTo(enemy.x, enemy.y - enemy.height/2);
+				ctx.lineTo(
+					enemy.x + Math.sin(antennaAngle) * 10,
+					enemy.y - enemy.height/2 - 15 - Math.abs(Math.sin(Date.now() / 300) * 3)
+				);
+				ctx.stroke();
+
+				// Draw antenna ball
+				ctx.fillStyle = '#BA68C8';
+				ctx.beginPath();
+				ctx.arc(
+					enemy.x + Math.sin(antennaAngle) * 10,
+					enemy.y - enemy.height/2 - 15 - Math.abs(Math.sin(Date.now() / 300) * 3),
+					4,
+					0,
+					Math.PI * 2
+				);
+				ctx.fill();
+			}
+		}
+	}
+
+	// Render bullets
+	function renderBullets() {
+		ctx.fillStyle = '#FFB300';
+
+		for (const bullet of state.player.bullets) {
+			// Skip if off-screen
+			if (bullet.x + bullet.width < state.camera.x ||
+				bullet.x > state.camera.x + canvas.width ||
+				bullet.y + bullet.height < state.camera.y ||
+				bullet.y > state.camera.y + canvas.height) {
+				continue;
+			}
+
+			ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+
+			// Add bullet trail
+			ctx.fillStyle = 'rgba(255, 179, 0, 0.5)';
+			ctx.fillRect(
+				bullet.x - (bullet.velX > 0 ? 10 : 0),
+				bullet.y,
+				10,
+				bullet.height
+			);
+
+			ctx.fillStyle = '#FFB300';
+		}
+	}
+
+	// Render particles
+	function renderParticles() {
+		for (const particle of state.particles) {
+			ctx.fillStyle = particle.color;
+			ctx.fillRect(
+				particle.x,
+				particle.y,
+				particle.size,
+				particle.size
+			);
+		}
+	}
+
+	// Render UI elements
+	function renderUI() {
+		// Lives display with heart icons
+		ctx.fillStyle = '#FF6B6B';
+		for (let i = 0; i < state.lives; i++) {
+			// Draw heart
+			const heartX = 100 + i * 30;
+			const heartY = 75;
+
+			ctx.beginPath();
+			ctx.moveTo(heartX, heartY);
+			ctx.bezierCurveTo(heartX, heartY - 5, heartX - 10, heartY - 10, heartX - 15, heartY);
+			ctx.bezierCurveTo(heartX - 20, heartY + 10, heartX - 5, heartY + 20, heartX, heartY + 15);
+			ctx.bezierCurveTo(heartX + 5, heartY + 20, heartX + 20, heartY + 10, heartX + 15, heartY);
+			ctx.bezierCurveTo(heartX + 10, heartY - 10, heartX, heartY - 5, heartX, heartY);
+			ctx.fill();
+		}
+	}
+
+	// Render transition overlay
+	function renderTransitionOverlay() {
+		if (state.showingTransition) {
+			ctx.fillStyle = `rgba(0, 0, 0, ${state.transitionAlpha})`;
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+		}
+	}
+
+	// Render victory screen
+	function renderVictoryScreen() {
+		// Overlay with semi-transparent background
+		ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		// Victory message
+		ctx.fillStyle = '#FFD700';
+		ctx.font = '48px Arial';
+		ctx.textAlign = 'center';
+		ctx.fillText(`Level ${state.level} Complete!`, canvas.width / 2, canvas.height / 2 - 50);
+
+		// Score display
+		ctx.fillStyle = '#FFF';
+		ctx.font = '24px Arial';
+		ctx.fillText(`Score: ${state.score}`, canvas.width / 2, canvas.height / 2);
+		ctx.fillText(`Coins: ${state.coins}`, canvas.width / 2, canvas.height / 2 + 30);
+
+		// Instruction to continue
+		ctx.font = '18px Arial';
+		ctx.fillText('Press ENTER to continue to the next level!', canvas.width / 2, canvas.height / 2 + 80);
+
+		// Reset text alignment
+		ctx.textAlign = 'left';
+	}
+
+	// Render game over screen
+	function renderGameOverScreen() {
+		// Overlay with semi-transparent background
+		ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		// Game over message
+		ctx.fillStyle = '#FF6347';
+		ctx.font = '48px Arial';
+		ctx.textAlign = 'center';
+		ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 50);
+
+		// Score display
+		ctx.fillStyle = '#FFF';
+		ctx.font = '24px Arial';
+		ctx.fillText(`Final Score: ${state.score}`, canvas.width / 2, canvas.height / 2);
+		ctx.fillText(`Levels Completed: ${state.level - 1}`, canvas.width / 2, canvas.height / 2 + 30);
+		ctx.fillText(`Coins Collected: ${state.coins}`, canvas.width / 2, canvas.height / 2 + 60);
+
+		// Instruction to play again
+		ctx.font = '18px Arial';
+		ctx.fillText('Press ENTER to play again!', canvas.width / 2, canvas.height / 2 + 100);
+
+		// Reset text alignment
+		ctx.textAlign = 'left';
+	}
+
+	// Game loop with error handling
+	function gameLoop(timestamp) {
+		try {
+			// Calculate delta time
+			const deltaTime = timestamp - state.lastTime || 16; // Default to 60fps if first frame
+			state.lastTime = timestamp;
+
+			// Cap delta time to prevent huge jumps after tab switch
+			const cappedDeltaTime = Math.min(deltaTime, 100);
+
+			// Update based on game phase
+			if (state.phase === 'building') {
+				updateBuildingPhase(cappedDeltaTime);
+				renderBuildingPhase();
+			} else if (state.phase === 'playing') {
+				updatePlayingPhase(cappedDeltaTime);
+				renderPlayingPhase();
+			} else if (state.phase === 'victory') {
+				renderPlayingPhase();
+				renderVictoryScreen();
+			} else if (state.phase === 'gameover') {
+				renderGameOverScreen();
+			}
+
+			// Continue the loop
+			requestAnimationFrame(gameLoop);
+		} catch (error) {
+			console.error("Error in game loop:", error);
+
+			// Try to recover by resetting some state
+			if (!state.recoveringFromError) {
+				state.recoveringFromError = true;
+
+				// Basic recovery - reset to a known good state
+				if (state.phase === 'playing') {
+					state.player.x = 50;
+					state.player.y = 100;
+					state.player.velX = 0;
+					state.player.velY = 0;
+					state.camera.x = 0;
+				}
+
+				// Continue the loop
+				state.recoveringFromError = false;
+				requestAnimationFrame(gameLoop);
+			}
+		}
+	}
+
+	// Start the game
+	init();
+</script>
+</body>
+</html>
